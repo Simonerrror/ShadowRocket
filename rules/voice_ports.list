@@ -1,0 +1,18 @@
+# WhatsApp/Telegram/FaceTime — Голос
+# https://faq.whatsapp.com/490531153094849/?cms_platform=iphone&helpref=platform_switcher
+# https://www.netify.ai/resources/protocols/telegram
+# https://www.netify.ai/resources/applications/whatsapp
+DST-PORT,3478,PROXY
+DST-PORT,3480,PROXY
+DST-PORT,3484,PROXY
+# WhatsApp — Видео
+# https://developers.facebook.com/docs/whatsapp/guides/network-requirements/
+DST-PORT,5222,PROXY
+# Telegram — Голос и видео (RTP / P2P)
+DST-PORT,596-599,PROXY
+# DST-PORT,50000-59999,PROXY
+# TCP порт для сигнальных звонков Telegram
+DST-PORT,1400,PROXY
+# Google Meet
+# https://support.google.com/a/answer/1279090?hl=en#zippy=%2Cavoid-using-vpns%2Cavoid-using-qos%2Cavoid-using-proxies%2Cusing-vdi%2Cusing-wi-fi%2Cconfiguring-default-video-quality%2Cstep-review-bandwidth-requirements%2Cstep-allow-access-to-google-ip-address-ranges-for-audio-and-video%2Cstep-allow-access-to-uniform-resource-identifiers-uris%2Cstep-set-up-outbound-ports-for-media-traffic
+DST-PORT,19302​–19309,PROXY
