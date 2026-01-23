@@ -136,6 +136,9 @@ module.exports.main = async function (config) {
   const providerNames = Object.keys(config['proxy-providers'] || {});
   const mainProvider = providerNames[0];
 
+  const googleFilterRegex =
+    '(?i)((Netherlands\\(R\\)|UAE).*Vless|Vless.*(Netherlands\\(R\\)|UAE))';
+
   const googleGroup = finalGoogleNames.length
     ? {
         name: 'GOOGLE',
@@ -152,7 +155,7 @@ module.exports.main = async function (config) {
         interval: 300,
         tolerance: 50,
         use: mainProvider ? [mainProvider] : [],
-        filter: '(?i)(Netherlands\\(R\\)|UAE).*Vless'
+        filter: googleFilterRegex
       };
 
   const autoMainGroup = allNames.length
@@ -171,7 +174,8 @@ module.exports.main = async function (config) {
         interval: 600,
         tolerance: 100,
         use: mainProvider ? [mainProvider] : [],
-        filter: '(?i)^(?!.*(Russia|Belarus|Ukraine)).*Vless.*$'
+        filter: '(?i)Vless',
+        'exclude-filter': '(?i)(Russia|Belarus|Ukraine)'
       };
 
   // Keep filtered proxies if already present; otherwise provider will supply them
