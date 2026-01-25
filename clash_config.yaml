@@ -57,8 +57,8 @@ dns:
 proxy-providers:
   Main-Sub:
     type: http
-    # ВСТАВЬ ССЫЛКУ на свою подписку НИЖЕ
-    url: "" 
+    # ВСТАВЬ ССЫЛКУ НИЖЕ
+    url: "<INSERT_SUBSCRIPTION_URL_HERE>" 
     interval: 3600
     path: ./proxies/main.yaml
     
