@@ -13,6 +13,7 @@ module.exports.main = async function (config) {
   config.mode = 'rule';
   config['log-level'] = 'info';
   config.ipv6 = false;
+  config['geoip-code'] = 'RU';
 
   config.tun = {
     enable: true,
@@ -28,9 +29,27 @@ module.exports.main = async function (config) {
     ipv6: false,
     'enhanced-mode': 'fake-ip',
     'fake-ip-range': '198.18.0.1/16',
-    'fake-ip-filter': ['*', '+.lan', '+.local'],
+    'fake-ip-filter': [
+      '+.lan',
+      '+.local',
+      '+.localhost',
+      '+.home.arpa',
+      '*.localdomain',
+      'time.*.com',
+      'time.*.gov',
+      'time.*.edu',
+      'time.windows.com',
+      'time.apple.com',
+      'time.android.com',
+      '*.ntp.org'
+    ],
+    'default-nameserver': ['1.1.1.1', '8.8.8.8'],
     nameserver: ['https://1.1.1.1/dns-query', 'https://8.8.8.8/dns-query'],
-    fallback: ['https://8.8.8.8/dns-query', 'https://94.140.14.14/dns-query']
+    fallback: ['https://94.140.14.14/dns-query', 'https://1.0.0.1/dns-query'],
+    'fallback-filter': {
+      geoip: false,
+      ipcidr: ['0.0.0.0/0']
+    }
   };
 
   // -------- Rule providers (exact URLs from shadowrocket.conf) --------
