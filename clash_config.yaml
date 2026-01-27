@@ -169,12 +169,12 @@ proxy-groups:
       - GOOGLE
       - DIRECT
 
-  # Спец-группа для Google (берем NL/UAE Vless)
+  # Спец-группа для Google (NL VLESS + UAE VLESS)
   - name: GOOGLE
     type: url-test
     use:
       - Main-Sub
-    filter: '(?i)((Netherlands\(R\)|UAE).*Vless|Vless.*(Netherlands\(R\)|UAE)|Netherlands\\s+WL\\s+Mobile)'
+    filter: '(?i)((Netherlands.*Vless|Vless.*Netherlands)|(UAE.*Vless|Vless.*UAE))'
     url: 'http://www.gstatic.com/generate_204'
     interval: 300
     tolerance: 50
