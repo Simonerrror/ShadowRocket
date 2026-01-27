@@ -174,7 +174,7 @@ proxy-groups:
     type: url-test
     use:
       - Main-Sub
-    filter: '(?i)((Netherlands\(R\)|UAE).*Vless|Vless.*(Netherlands\(R\)|UAE))'
+    filter: '(?i)((Netherlands\(R\)|UAE).*Vless|Vless.*(Netherlands\(R\)|UAE)|Netherlands\\s+WL\\s+Mobile)'
     url: 'http://www.gstatic.com/generate_204'
     interval: 300
     tolerance: 50
