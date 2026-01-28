@@ -15,7 +15,7 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
 2. **Добавьте свою подписку** на сервера в Shadowrocket (URL от вашего провайдера).
 3. **Проверьте группы прокси**:
    * `AUTO-MAIN` — автоматический выбор по URL-тесту (исключает RU/BY/UA, только VLESS).
-   * `GOOGLE` — отдельный автоподбор для Google (NL VLESS + UAE VLESS).
+   * `GOOGLE` — отдельный ручной выбор для Google (NL VLESS + UAE VLESS).
    * `PROXY` — главный переключатель (Select): `AUTO-MAIN`, `GOOGLE` или `DIRECT`.
 
 ## Clash Verge Rev (Windows) — установка и проверка
@@ -53,12 +53,12 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
 ## Что внутри `shadowrocket.conf`
 
 ### [General]
-* Базовые сетевые настройки: DNS-over-HTTPS, IPv6 выключен, список исключений для локальных/служебных сетей.
+* Базовые сетевые настройки: основной DNS — NextDNS (DoH), fallback — NextDNS IP → 1.1.1.1/8.8.8.8, IPv6 выключен, список исключений для локальных/служебных сетей.
 * `update-url` указывает на конфиг в репозитории.
 
 ### [Proxy Group]
 * **AUTO-MAIN** — URL-тест с фильтром по имени (исключаем Russia/Belarus/Ukraine, оставляем VLESS).
-* **GOOGLE** — отдельный URL-тест для Google/Gemini/YouTube (NL VLESS + UAE VLESS).
+* **GOOGLE** — ручной выбор из отфильтрованного списка для Google/Gemini/YouTube (NL VLESS + UAE VLESS).
 * **PROXY** — Select-группа для ручного выбора между AUTO-MAIN/GOOGLE/DIRECT.
 
 ### [Rule]
