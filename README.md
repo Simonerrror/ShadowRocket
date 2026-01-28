@@ -116,3 +116,7 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
 ## Расширение правил
 
 Если нужно добавить сервис — создайте новый список в `rules/` и подключите его в секции `[Rule]`.
+Для анти-рекламы можно использовать модуль `rules/anti_advertising.module` по ссылке:
+```
+https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.module
+```
