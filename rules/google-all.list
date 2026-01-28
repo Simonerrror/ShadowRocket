@@ -1,14 +1,35 @@
-# NAME: Google
-# AUTHOR: blackmatrix7
-# REPO: https://github.com/blackmatrix7/ios_rule_script
-# UPDATED: 2025-12-08 02:06:19
-# DOMAIN: 1
-# DOMAIN-KEYWORD: 5
-# DOMAIN-SUFFIX: 691
-# IP-CIDR: 5
-# USER-AGENT: 3
-# TOTAL: 705
+# Total Google & Gemini Bundle
+# Updated: 2026-01-28T10:51:48.052176+00:00
+DOMAIN,ai.google.dev
+DOMAIN,alkalimakersuite-pa.clients6.google.com
+DOMAIN,alt1-mtalk.google.com
+DOMAIN,alt2-mtalk.google.com
+DOMAIN,alt3-mtalk.google.com
+DOMAIN,alt4-mtalk.google.com
+DOMAIN,alt5-mtalk.google.com
+DOMAIN,alt6-mtalk.google.com
+DOMAIN,alt7-mtalk.google.com
+DOMAIN,alt8-mtalk.google.com
+DOMAIN,android.apis.google.com
+DOMAIN,device-provisioning.googleapis.com
+DOMAIN,firebaseinstallations.googleapis.com
+DOMAIN,lens.l.google.com
+DOMAIN,makersuite.google.com
+DOMAIN,mtalk-dev.google.com
+DOMAIN,mtalk-staging.google.com
+DOMAIN,mtalk.google.com
+DOMAIN,mtalk4.google.com
 DOMAIN,voice.telephony.goog
+DOMAIN,www.googleapis.com
+DOMAIN-KEYWORD,appspot
+DOMAIN-KEYWORD,blogspot
+DOMAIN-KEYWORD,colab
+DOMAIN-KEYWORD,developerprofiles
+DOMAIN-KEYWORD,generativelanguage
+DOMAIN-KEYWORD,gmail
+DOMAIN-KEYWORD,google
+DOMAIN-KEYWORD,recaptcha
+DOMAIN-KEYWORD,www.google.
 DOMAIN-SUFFIX,0emm.com
 DOMAIN-SUFFIX,1e100.net
 DOMAIN-SUFFIX,1ucrs.com
@@ -39,6 +60,7 @@ DOMAIN-SUFFIX,androidtv.com
 DOMAIN-SUFFIX,angulardart.org
 DOMAIN-SUFFIX,api.ai
 DOMAIN-SUFFIX,apigee.com
+DOMAIN-SUFFIX,apis.google.com
 DOMAIN-SUFFIX,app-analytics-services.com
 DOMAIN-SUFFIX,app-measurement-cn.com
 DOMAIN-SUFFIX,app-measurement.com
@@ -54,6 +76,7 @@ DOMAIN-SUFFIX,asp-cc.com
 DOMAIN-SUFFIX,autodraw.com
 DOMAIN-SUFFIX,avail.googleflights.net
 DOMAIN-SUFFIX,bandpage.com
+DOMAIN-SUFFIX,bard.google.com
 DOMAIN-SUFFIX,baselinestudy.com
 DOMAIN-SUFFIX,baselinestudy.org
 DOMAIN-SUFFIX,bazel.build
@@ -195,6 +218,7 @@ DOMAIN-SUFFIX,dataliberation.org
 DOMAIN-SUFFIX,debug.com
 DOMAIN-SUFFIX,debugproject.com
 DOMAIN-SUFFIX,deepmind.com
+DOMAIN-SUFFIX,deepmind.google
 DOMAIN-SUFFIX,deja.com
 DOMAIN-SUFFIX,deps.dev
 DOMAIN-SUFFIX,deps.info
@@ -203,10 +227,14 @@ DOMAIN-SUFFIX,dialogflow.com
 DOMAIN-SUFFIX,digisfera.com
 DOMAIN-SUFFIX,digitalassetlinks.org
 DOMAIN-SUFFIX,digitalattackmap.com
+DOMAIN-SUFFIX,docs.google.com
 DOMAIN-SUFFIX,doubleclick-cn.net
 DOMAIN-SUFFIX,doubleclick.com
 DOMAIN-SUFFIX,doubleclick.net
 DOMAIN-SUFFIX,download.qatp1.net
+DOMAIN-SUFFIX,drive.google.com
+DOMAIN-SUFFIX,earth-pa.clients6.google.com
+DOMAIN-SUFFIX,earth.google.com
 DOMAIN-SUFFIX,episodic.com
 DOMAIN-SUFFIX,fastlane.ci
 DOMAIN-SUFFIX,fastlane.tools
@@ -228,6 +256,8 @@ DOMAIN-SUFFIX,g.page
 DOMAIN-SUFFIX,gateway.dev
 DOMAIN-SUFFIX,gcp.gvt2.com
 DOMAIN-SUFFIX,gcr.io
+DOMAIN-SUFFIX,gemini.google.com
+DOMAIN-SUFFIX,generativeai.google
 DOMAIN-SUFFIX,gerritcodereview.com
 DOMAIN-SUFFIX,get.app
 DOMAIN-SUFFIX,get.dev
@@ -477,6 +507,7 @@ DOMAIN-SUFFIX,googlecommerce.com
 DOMAIN-SUFFIX,googlecompare.co.uk
 DOMAIN-SUFFIX,googledanmark.com
 DOMAIN-SUFFIX,googledomains.com
+DOMAIN-SUFFIX,googledrive.com
 DOMAIN-SUFFIX,googlee.com
 DOMAIN-SUFFIX,googleearth.com
 DOMAIN-SUFFIX,googlefiber.com
@@ -504,6 +535,7 @@ DOMAIN-SUFFIX,googletagservices-cn.com
 DOMAIN-SUFFIX,googletagservices.com
 DOMAIN-SUFFIX,googletraveladservices-cn.com
 DOMAIN-SUFFIX,googletraveladservices.com
+DOMAIN-SUFFIX,googleusercontent.com
 DOMAIN-SUFFIX,googlevads-cn.com
 DOMAIN-SUFFIX,googleventures.com
 DOMAIN-SUFFIX,googlr.com
@@ -545,6 +577,19 @@ DOMAIN-SUFFIX,keyhole.com
 DOMAIN-SUFFIX,keytransparency.com
 DOMAIN-SUFFIX,keytransparency.foo
 DOMAIN-SUFFIX,keytransparency.org
+DOMAIN-SUFFIX,kh.google.com
+DOMAIN-SUFFIX,khm.google.com
+DOMAIN-SUFFIX,khm.googleapis.com
+DOMAIN-SUFFIX,khm0.google.com
+DOMAIN-SUFFIX,khm0.googleapis.com
+DOMAIN-SUFFIX,khm1.google.com
+DOMAIN-SUFFIX,khm1.googleapis.com
+DOMAIN-SUFFIX,khm2.google.com
+DOMAIN-SUFFIX,khm2.googleapis.com
+DOMAIN-SUFFIX,khm3.google.com
+DOMAIN-SUFFIX,khm3.googleapis.com
+DOMAIN-SUFFIX,khmdb.google.com
+DOMAIN-SUFFIX,khmdb.googleapis.com
 DOMAIN-SUFFIX,lanternal.com
 DOMAIN-SUFFIX,like.com
 DOMAIN-SUFFIX,madewithcode.com
@@ -555,6 +600,7 @@ DOMAIN-SUFFIX,mfg-inspector.com
 DOMAIN-SUFFIX,mobileview.page
 DOMAIN-SUFFIX,monitoring.qpdp1.net
 DOMAIN-SUFFIX,moodstocks.com
+DOMAIN-SUFFIX,mw1.google.com
 DOMAIN-SUFFIX,near.by
 DOMAIN-SUFFIX,nest.com
 DOMAIN-SUFFIX,neverware.com
@@ -591,6 +637,7 @@ DOMAIN-SUFFIX,polymer-project.org
 DOMAIN-SUFFIX,polymerproject.org
 DOMAIN-SUFFIX,postini.com
 DOMAIN-SUFFIX,privacysandbox.com
+DOMAIN-SUFFIX,proactivebackend-pa.googleapis.com
 DOMAIN-SUFFIX,prod-controlbe.floonet.goog
 DOMAIN-SUFFIX,prod-databe.floonet.goog
 DOMAIN-SUFFIX,prod.databe.floonet.goog
@@ -698,18 +745,37 @@ DOMAIN-SUFFIX,xn--p8j9a0d9c9a.xn--q9jyb4c
 DOMAIN-SUFFIX,xplr.co
 DOMAIN-SUFFIX,zukunftswerkstatt.de
 DOMAIN-SUFFIX,zynamics.com
-DOMAIN-SUFFIX,googledrive.com
-DOMAIN-SUFFIX,googleusercontent.com
-DOMAIN-KEYWORD,appspot
-DOMAIN-KEYWORD,blogspot
-DOMAIN-KEYWORD,gmail
-DOMAIN-KEYWORD,google
-DOMAIN-KEYWORD,recaptcha
+IP-CIDR,108.177.125.188/32,no-resolve
+IP-CIDR,142.250.10.188/32,no-resolve
+IP-CIDR,142.250.31.188/32,no-resolve
+IP-CIDR,142.250.4.188/32,no-resolve
+IP-CIDR,142.250.96.188/32,no-resolve
+IP-CIDR,172.110.32.0/21,no-resolve
+IP-CIDR,172.217.194.188/32,no-resolve
+IP-CIDR,172.217.218.188/32,no-resolve
+IP-CIDR,172.217.219.188/32,no-resolve
+IP-CIDR,172.253.122.188/32,no-resolve
+IP-CIDR,172.253.63.188/32,no-resolve
+IP-CIDR,173.194.0.0/16,no-resolve
+IP-CIDR,173.194.175.188/32,no-resolve
+IP-CIDR,173.194.218.188/32,no-resolve
+IP-CIDR,209.85.233.188/32,no-resolve
+IP-CIDR,216.73.80.0/20,no-resolve
+IP-CIDR,2620:120:e000::/40,no-resolve
+IP-CIDR,64.233.177.188/32,no-resolve
+IP-CIDR,64.233.186.188/32,no-resolve
+IP-CIDR,64.233.187.188/32,no-resolve
+IP-CIDR,64.233.188.188/32,no-resolve
+IP-CIDR,64.233.189.188/32,no-resolve
+IP-CIDR,74.125.0.0/16,no-resolve
+IP-CIDR,74.125.127.188/32,no-resolve
+IP-CIDR,74.125.137.188/32,no-resolve
+IP-CIDR,74.125.203.188/32,no-resolve
+IP-CIDR,74.125.204.188/32,no-resolve
+IP-CIDR,74.125.206.188/32,no-resolve
+IP-CIDR,74.125.23.188/32,no-resolve
+IP-CIDR,74.125.24.188/32,no-resolve
+IP-CIDR,74.125.28.188/32,no-resolve
 USER-AGENT,%E4%BA%91%E7%AB%AF%E7%A1%AC%E7%9B%98*
 USER-AGENT,*com.google.Drive*
 USER-AGENT,Google.Drive*
-IP-CIDR,172.110.32.0/21,no-resolve
-IP-CIDR,173.194.0.0/16,no-resolve
-IP-CIDR,216.73.80.0/20,no-resolve
-IP-CIDR,2620:120:e000::/40,no-resolve
-IP-CIDR,74.125.0.0/16,no-resolve
