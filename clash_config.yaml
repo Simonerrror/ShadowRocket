@@ -40,17 +40,14 @@ dns:
     - 'time.android.com'
     - '*.ntp.org'
   default-nameserver:
-    - 45.90.28.224
-    - 45.90.30.224
-    - 1.1.1.1
-    - 8.8.8.8
+    - 76.76.2.0
+    - 76.76.10.0
   nameserver:
-    - https://dns.nextdns.io/6b556f
+    - 76.76.2.0
+    - 76.76.10.0
   fallback:
-    - 45.90.28.224
-    - 45.90.30.224
-    - 1.1.1.1
-    - 8.8.8.8
+    - tls://1.1.1.1
+    - tls://8.8.8.8
   fallback-filter:
     geoip: false
     ipcidr:
@@ -89,42 +86,12 @@ rule-providers:
     path: ./rules/greylist.yaml
     interval: 86400
 
-  google_gemini:
+  google_all:
     type: http
     behavior: classical
     format: text
-    url: "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/google-gemini.list"
-    path: ./rules/google_gemini.yaml
-    interval: 86400
-
-  google_full:
-    type: http
-    behavior: classical
-    format: text
-    url: "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/google.list"
-    path: ./rules/google.yaml
-    interval: 86400
-
-  gemini_ip:
-    type: http
-    behavior: classical
-    format: text
-    url: "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/gemini_ip.list"
-    path: ./rules/gemini_ip.yaml
-    interval: 86400
-
-  youtube:
-    type: http
-    behavior: classical
-    url: "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/youtube.list"
-    path: ./rules/youtube.yaml
-    interval: 86400
-
-  youtubemusic:
-    type: http
-    behavior: classical
-    url: "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/youtubemusic.list"
-    path: ./rules/youtubemusic.yaml
+    url: "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/google-all.list"
+    path: ./rules/google_all.yaml
     interval: 86400
 
   microsoft:
@@ -139,13 +106,6 @@ rule-providers:
     behavior: classical
     url: "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/domains_community.list"
     path: ./rules/domains_community.yaml
-    interval: 86400
-
-  domain_ips:
-    type: http
-    behavior: classical
-    url: "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/domain_ips.list"
-    path: ./rules/domain_ips.yaml
     interval: 86400
 
   voice_ports:
@@ -193,16 +153,11 @@ proxy-groups:
 rules:
   - AND,((NETWORK,UDP),(DST-PORT,443)),REJECT
   - AND,((NETWORK,UDP),(DST-PORT,853)),REJECT
-  - RULE-SET,google_gemini,GOOGLE
-  - RULE-SET,google_full,GOOGLE
-  - RULE-SET,gemini_ip,GOOGLE,no-resolve
-  - RULE-SET,youtube,GOOGLE
-  - RULE-SET,youtubemusic,GOOGLE
+  - RULE-SET,google_all,GOOGLE
   - RULE-SET,whitelist_direct,DIRECT
   - RULE-SET,greylist_proxy,PROXY
   - RULE-SET,microsoft,PROXY
   - RULE-SET,domains_community,PROXY
-  - RULE-SET,domain_ips,PROXY,no-resolve
   - RULE-SET,voice_ports,PROXY
   - RULE-SET,telegram,PROXY
   - DOMAIN-SUFFIX,ru,DIRECT
