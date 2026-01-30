@@ -1,0 +1,23 @@
+#!name=Anti-Advertising Custom (REJECT)
+#!desc=Блокировщик рекламы и трекеров через внешние rule-set списки (REJECT) с локальными исключениями.
+
+[Rule]
+# === NVIDIA WHITELIST ===
+DOMAIN-SUFFIX,telemetry.gfe.nvidia.com,DIRECT
+DOMAIN-SUFFIX,prod.otel.kaizen.nvidia.com,DIRECT
+
+# === SYSTEM SNITCHES (STEALTH) ===
+DOMAIN,optimizationguide-pa.googleapis.com,DIRECT
+DOMAIN,signaler-pa.clients6.google.com,DIRECT
+DOMAIN-SUFFIX,gvt2.com,DIRECT
+DOMAIN-SUFFIX,events.data.microsoft.com,DIRECT
+
+# === TWITCH WHITELIST ===
+DOMAIN-SUFFIX,twitch.tv,DIRECT
+DOMAIN-SUFFIX,ttvnw.net,DIRECT
+DOMAIN-KEYWORD,jtvnw,DIRECT
+DOMAIN-SUFFIX,live-video.net,DIRECT
+
+RULE-SET, https://dl.oisd.nl/oisd_big_surge.list,REJECT
+
+RULE-SET, https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/ultimate-onlydomains.txt,REJECT
