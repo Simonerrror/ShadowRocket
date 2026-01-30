@@ -72,6 +72,7 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
 | `shadowrocket.conf` | Основной конфиг для Shadowrocket |
 | `clash_config.yaml` | Локальный конфиг для Clash Verge Rev |
 | `rules/` | Списки доменов/IP для маршрутизации |
+| `modules/` | Готовые модули для Shadowrocket |
 | `scripts/` | Вспомогательные скрипты |
 
 ## Логика `shadowrocket.conf`
@@ -116,9 +117,9 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
 ## Расширение правил
 
 Если нужно добавить сервис — создайте новый список в `rules/` и подключите его в секции `[Rule]`.
-Для анти-рекламы можно использовать модуль `rules/anti_advertising.module` по ссылке:
+Для анти-рекламы можно использовать модуль `modules/anti_advertising.module` по ссылке:
 ```
-https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.module
+https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_advertising.module
 ```
 Как добавить модуль в Shadowrocket:
 1. Откройте **Config → Modules**.
