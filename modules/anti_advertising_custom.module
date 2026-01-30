@@ -1,10 +1,10 @@
 #!name=Anti-Advertising Custom (REJECT)
 #!desc=Блокировщик рекламы и трекеров через внешние rule-set списки (REJECT) с локальными исключениями.
-
 [Rule]
 # === NVIDIA WHITELIST ===
 DOMAIN-SUFFIX,telemetry.gfe.nvidia.com,DIRECT
 DOMAIN-SUFFIX,prod.otel.kaizen.nvidia.com,DIRECT
+DOMAIN-KEYWORD,nvidia,DIRECT
 
 # === SYSTEM SNITCHES (STEALTH) ===
 DOMAIN,optimizationguide-pa.googleapis.com,DIRECT
