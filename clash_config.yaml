@@ -129,6 +129,7 @@ proxy-groups:
     type: select
     proxies:
       - AUTO-MAIN
+      - MANUAL-PROXY
       - GOOGLE
       - DIRECT
 
@@ -148,6 +149,13 @@ proxy-groups:
     url: 'http://www.gstatic.com/generate_204'
     interval: 600
     tolerance: 100
+
+  # Мануал-прокси (ручной выбор, те же серверы что и в AUTO-MAIN)
+  - name: MANUAL-PROXY
+    type: select
+    use:
+      - Main-Sub
+    filter: '.*'
 
 # 5. ПРАВИЛА
 rules:
