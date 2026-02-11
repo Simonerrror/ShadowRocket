@@ -99,8 +99,14 @@ def filter_shadowrocket_rules(raw_text: str) -> list[str]:
 
 
 def compress_google_rules(rules: Iterable[str]) -> list[str]:
+    def rule_value(line: str) -> str:
+        parts = line.split(",")
+        if len(parts) < 2:
+            return ""
+        return parts[1]
+
     keyword_values = {
-        line.split(",", 1)[1]
+        rule_value(line)
         for line in rules
         if line.startswith("DOMAIN-KEYWORD,") and "," in line
     }
@@ -113,7 +119,7 @@ def compress_google_rules(rules: Iterable[str]) -> list[str]:
             and line.startswith("DOMAIN-KEYWORD,")
             and "," in line
         ):
-            keyword = line.split(",", 1)[1]
+            keyword = rule_value(line)
             if keyword != "google" and "google" in keyword:
                 continue
 
@@ -122,7 +128,7 @@ def compress_google_rules(rules: Iterable[str]) -> list[str]:
             and line.startswith("DOMAIN,")
             and "," in line
         ):
-            domain = line.split(",", 1)[1]
+            domain = rule_value(line)
             if domain == "google.com" or domain.endswith(".google.com"):
                 continue
 
