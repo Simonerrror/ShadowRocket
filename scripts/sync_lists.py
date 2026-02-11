@@ -82,6 +82,11 @@ GOOGLE_BUNDLE_URLS: tuple[str, ...] = (
     "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/GoogleVoice/GoogleVoice.list",
 )
 
+GOOGLE_BUNDLE_EXTRA_RULES: tuple[str, ...] = (
+    "DOMAIN-KEYWORD,ytimg",
+    "DOMAIN-KEYWORD,ggpht",
+)
+
 
 def filter_shadowrocket_rules(raw_text: str) -> list[str]:
     rules: list[str] = []
@@ -95,12 +100,45 @@ def filter_shadowrocket_rules(raw_text: str) -> list[str]:
     return rules
 
 
+def compress_google_rules(rules: Iterable[str]) -> list[str]:
+    keyword_values = {
+        line.split(",", 1)[1]
+        for line in rules
+        if line.startswith("DOMAIN-KEYWORD,") and "," in line
+    }
+    has_google_keyword = "google" in keyword_values
+
+    compressed: list[str] = []
+    for line in rules:
+        if (
+            has_google_keyword
+            and line.startswith("DOMAIN-KEYWORD,")
+            and "," in line
+        ):
+            keyword = line.split(",", 1)[1]
+            if keyword != "google" and "google" in keyword:
+                continue
+
+        if (
+            has_google_keyword
+            and line.startswith("DOMAIN,")
+            and "," in line
+        ):
+            domain = line.split(",", 1)[1]
+            if domain == "google.com" or domain.endswith(".google.com"):
+                continue
+
+        compressed.append(line)
+    return compressed
+
+
 def update_google_bundle(repo_root: Path) -> bool:
     output_path = repo_root / "rules/google-all.list"
     combined: list[str] = []
     for url in GOOGLE_BUNDLE_URLS:
         combined.extend(filter_shadowrocket_rules(fetch_text(url)))
-    unique_rules = sorted(set(combined))
+    combined.extend(GOOGLE_BUNDLE_EXTRA_RULES)
+    unique_rules = sorted(set(compress_google_rules(combined)))
     header = [
         "# Total Google & Gemini Bundle",
         f"# Updated: {datetime.now(timezone.utc).isoformat()}",
