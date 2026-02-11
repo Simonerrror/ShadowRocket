@@ -12,10 +12,4 @@ DOMAIN,signaler-pa.clients6.google.com,DIRECT
 DOMAIN-SUFFIX,gvt2.com,DIRECT
 DOMAIN-SUFFIX,events.data.microsoft.com,DIRECT
 
-# === TWITCH WHITELIST ===
-DOMAIN-SUFFIX,twitch.tv,DIRECT
-DOMAIN-SUFFIX,ttvnw.net,DIRECT
-DOMAIN-KEYWORD,jtvnw,DIRECT
-DOMAIN-SUFFIX,live-video.net,DIRECT
-
 RULE-SET, https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.list,REJECT
