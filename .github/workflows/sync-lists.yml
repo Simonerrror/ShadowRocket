@@ -21,7 +21,7 @@ jobs:
           python-version: "3.11"
 
       - name: Sync lists
-        run: python scripts/sync_lists.py
+        run: python scripts/sync_lists.py --no-pull
 
       - name: Commit and push changes
         run: |
