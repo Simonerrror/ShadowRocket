@@ -62,7 +62,7 @@ proxy-providers:
     interval: 3600
     path: ./proxies/main.yaml
     
-    filter: '(?i)Vless' 
+    filter: '(?i)(Vless|Netherlands\s+WL\s+Mobile)'
      
     exclude-filter: '(?i)(Russia|Belarus|Ukraine)'
 
@@ -145,7 +145,7 @@ proxy-groups:
     type: url-test
     use:
       - Main-Sub
-    filter: '.*' 
+    filter: '(?i)^(?!.*(Russia|Belarus|Ukraine)).*(Vless|Netherlands\s+WL\s+Mobile).*$'
     url: 'http://www.gstatic.com/generate_204'
     interval: 600
     tolerance: 100
@@ -155,7 +155,7 @@ proxy-groups:
     type: select
     use:
       - Main-Sub
-    filter: '.*'
+    filter: '(?i)^(?!.*(Russia|Belarus|Ukraine)).*(Vless|Netherlands\s+WL\s+Mobile).*$'
 
 # 5. ПРАВИЛА
 rules:
