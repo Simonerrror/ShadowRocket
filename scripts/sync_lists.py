@@ -80,11 +80,9 @@ GOOGLE_BUNDLE_URLS: tuple[str, ...] = (
     "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/GoogleFCM/GoogleFCM.list",
     "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/GoogleSearch/GoogleSearch.list",
     "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/GoogleVoice/GoogleVoice.list",
-)
-
-GOOGLE_BUNDLE_EXTRA_RULES: tuple[str, ...] = (
-    "DOMAIN-KEYWORD,ytimg",
-    "DOMAIN-KEYWORD,ggpht",
+    "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/YouTube/YouTube.list",
+    "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/YouTube/YouTube_Resolve.list",
+    "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/YouTubeMusic/YouTubeMusic.list",
 )
 
 
@@ -137,7 +135,6 @@ def update_google_bundle(repo_root: Path) -> bool:
     combined: list[str] = []
     for url in GOOGLE_BUNDLE_URLS:
         combined.extend(filter_shadowrocket_rules(fetch_text(url)))
-    combined.extend(GOOGLE_BUNDLE_EXTRA_RULES)
     unique_rules = sorted(set(compress_google_rules(combined)))
     header = [
         "# Total Google & Gemini Bundle",
