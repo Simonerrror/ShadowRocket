@@ -115,6 +115,7 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
 
 - Конфиг обновляется автоматически через `update-url`.
 - Списки правил обновляются при обновлении конфига или вручную через Shadowrocket.
+- Антирекламный список `rules/anti_advertising.list` собирается автоматически GitHub Actions (`.github/workflows/sync-lists.yml`) через `scripts/sync_lists.py` с дедупликацией источников OISD + HaGeZi.
 
 ## Расширение правил
 
@@ -122,6 +123,10 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
 Для анти-рекламы можно использовать модуль `modules/anti_advertising.module` по ссылке:
 ```
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_advertising.module
+```
+Модуль подключает единый список репозитория:
+```
+https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.list
 ```
 Как добавить модуль в Shadowrocket:
 1. Откройте **Config → Modules**.
