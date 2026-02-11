@@ -1,7 +1,5 @@
 #!name=Anti-Advertising (REJECT)
-#!desc=Блокировщик рекламы и трекеров через внешние rule-set списки (REJECT).
+#!desc=Блокировщик рекламы и трекеров через единый rule-set список репозитория (REJECT).
 
 [Rule]
-RULE-SET, https://dl.oisd.nl/oisd_big_surge.list,REJECT
-
-RULE-SET, https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/ultimate-onlydomains.txt,REJECT
+RULE-SET, https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.list,REJECT
