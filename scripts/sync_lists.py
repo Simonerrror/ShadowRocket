@@ -85,6 +85,17 @@ GOOGLE_BUNDLE_URLS: tuple[str, ...] = (
     "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/YouTubeMusic/YouTubeMusic.list",
 )
 
+ANTI_AD_BUNDLE_SOURCES: tuple[tuple[str, str], ...] = (
+    (
+        "https://dl.oisd.nl/oisd_big_surge.list",
+        "shadowrocket",
+    ),
+    (
+        "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/ultimate-onlydomains.txt",
+        "domain",
+    ),
+)
+
 
 def filter_shadowrocket_rules(raw_text: str) -> list[str]:
     rules: list[str] = []
@@ -136,6 +147,41 @@ def compress_google_rules(rules: Iterable[str]) -> list[str]:
     return compressed
 
 
+def dedupe_rules(rules: Iterable[str]) -> list[str]:
+    seen: set[str] = set()
+    unique: list[str] = []
+    for rule in rules:
+        if rule in seen:
+            continue
+        seen.add(rule)
+        unique.append(rule)
+    return unique
+
+
+def update_anti_advertising_bundle(repo_root: Path) -> bool:
+    output_path = repo_root / "rules/anti_advertising.list"
+    combined: list[str] = []
+    for url, source_type in ANTI_AD_BUNDLE_SOURCES:
+        raw_rules = filter_shadowrocket_rules(fetch_text(url))
+        if source_type == "domain":
+            combined.extend(f"DOMAIN-SUFFIX,{domain}" for domain in raw_rules)
+            continue
+        combined.extend(raw_rules)
+    unique_rules = dedupe_rules(combined)
+    new_content = "\n".join(unique_rules)
+    if new_content:
+        new_content += "\n"
+    if output_path.exists():
+        current_content = output_path.read_text(encoding="utf-8")
+        if current_content == new_content:
+            print("No changes for rules/anti_advertising.list")
+            return False
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(new_content, encoding="utf-8")
+    print("Updated rules/anti_advertising.list (anti-ad bundle)")
+    return True
+
+
 def update_google_bundle(repo_root: Path) -> bool:
     output_path = repo_root / "rules/google-all.list"
     combined: list[str] = []
@@ -176,6 +222,7 @@ def sync_sources(sources: Iterable[RuleSource]) -> None:
     repo_root = Path(__file__).resolve().parents[1]
     for local_rule in LOCAL_RULES:
         print(f"Skipping {local_rule}: local manual list")
+    update_anti_advertising_bundle(repo_root)
     update_google_bundle(repo_root)
     for source in sources:
         if not source.url:
