@@ -26,7 +26,7 @@
 - `GlobalProxy = true` (все, что не попало в geosite/geoip-матчинг, уходит в proxy-контур)
 - `DnsHosts` содержит bootstrap-записи для NextDNS/Cloudflare
 - `Geoipurl` и `Geositeurl` указывают на артефакты репозитория (`HAPP/geoip.dat`, `HAPP/geosite.dat`)
-- База для сборки `geoip.dat` тянется из `Loyalsoldier`, затем дополняется локальными `sr-*` правилами
+- База для сборки `geoip.dat` и `geosite.dat` берется из `roscomvpn-geoip@202602230507` и `roscomvpn-geosite@202602210214`, затем дополняется локальными `sr-*` правилами
 - timestamp обновляется на каждой сборке (`LastUpdated = unix time`)
 
 ## Что является source of truth
@@ -51,16 +51,16 @@
 | `DomesticDNSType` | `--domestic-dns-type` (дефолт `DoU`) | Не из SR напрямую | `parse_args` + `build_profile` | Домашний контур через DoU |
 | `DomesticDNSDomain` | Константа `""` | Не из SR | `build_profile` | Не используется |
 | `DomesticDNSIP` | Повторяет `DomesticDns` | Не из SR напрямую | `build_profile` | Bootstrap IP domestic DNS |
-| `Geoipurl` | `raw_base + "/geoip.dat"` | Артефакт репозитория | `repo_slug` + `build_profile` | Собирается из базы Loyalsoldier + `sr-*` |
-| `Geositeurl` | `raw_base + "/geosite.dat"` | Артефакт репозитория | `repo_slug` + `build_profile` | Собирается из `v2fly/domain-list-community` + `sr-*` |
+| `Geoipurl` | `raw_base + "/geoip.dat"` | Артефакт репозитория | `repo_slug` + `build_profile` | Собирается из `https://cdn.jsdelivr.net/gh/hydraponique/roscomvpn-geoip@202602230507/release/geoip.dat` + `sr-*`, затем экспортируются только нужные geoip-листы |
+| `Geositeurl` | `raw_base + "/geosite.dat"` | Артефакт репозитория | `repo_slug` + `build_profile` | Компилируется из `roscomvpn-geosite@202602210214/data` + `sr-*` (без доменных листов из других upstream) |
 | `LastUpdated` | `str(int(time.time()))` | Не из SR | `build_profile` | Unix timestamp сборки |
 | `DnsHosts` | Константа `DEFAULT_DNS_HOSTS` | Не из SR | `DEFAULT_DNS_HOSTS` + `build_profile` | NextDNS + Cloudflare bootstrap |
 | `RouteOrder` | `--route-order` (дефолт `block-direct-proxy`) | Не из SR напрямую | `parse_args` + `build_profile` | Приоритет block перед direct/proxy |
-| `DirectSites` | `["geosite:private","geosite:sr-direct"]` | `DIRECT` site-правила | `write_geosite_inputs` + `build_profile` | `sr-direct` строится из поддерживаемых типов |
-| `DirectIp` | `["geoip:private","geoip:ru","geoip:sr-direct"] + general-direct-ip + direct_geo` | `DIRECT` IP/GEOIP + IP/CIDR из `skip-proxy` и `bypass-tun` | `extract_general_ips` + `build_profile` | `geoip:*` и CIDR/IP одновременно |
-| `ProxySites` | `["geosite:sr-proxy"]` | `PROXY/GOOGLE` site-правила | `write_geosite_inputs` + `build_profile` | `GOOGLE` трактуется как proxy |
+| `DirectSites` | `["geosite:private","geosite:sr-direct"] + curated direct tags` | `DIRECT` site-правила + curated geosite-теги | `write_geosite_inputs` + `build_profile` | `sr-direct` строится из поддерживаемых типов |
+| `DirectIp` | `["geoip:private","geoip:direct","geoip:ru","geoip:sr-direct"] + general-direct-ip + direct_geo` | `DIRECT` IP/GEOIP + IP/CIDR из `skip-proxy` и `bypass-tun` | `extract_general_ips` + `build_profile` | Включен `geoip:direct` из roscom-базы |
+| `ProxySites` | `["geosite:sr-proxy"] + curated proxy tags` | `PROXY/GOOGLE` site-правила + curated geosite-теги | `write_geosite_inputs` + `build_profile` | Включая `geosite:twitch-ads` |
 | `ProxyIp` | `["geoip:sr-proxy"] + proxy_geo` | `PROXY/GOOGLE` IP/GEOIP | `build_profile` | Дедупликация с сохранением порядка |
-| `BlockSites` | `["geosite:sr-block"]` при наличии block site | `REJECT*` site-правила | `write_geosite_inputs` + `build_profile` | Обычно пусто в текущем профиле |
+| `BlockSites` | `["geosite:sr-block"]` (если есть) + curated block tags | `REJECT*` site-правила + curated geosite-теги | `write_geosite_inputs` + `build_profile` | Включены `geosite:win-spy`, `geosite:torrent`, `geosite:category-ads` |
 | `BlockIp` | `["geoip:sr-block"] + block_geo` при наличии block ip | `REJECT*` IP/GEOIP | `build_profile` | Обычно пусто в текущем профиле |
 | `DomainStrategy` | Константа `"IPIfNonMatch"` | Семантика порядка rule matching | `build_profile` | Сначала домены, потом IP fallback |
 | `FakeDNS` | Константа `"true"` | Не из SR напрямую | `build_profile` | DNS-перехват включен |
@@ -73,7 +73,7 @@
 4. Поддерживаемые типы: `DOMAIN-SUFFIX`, `DOMAIN`, `DOMAIN-KEYWORD`, `IP-CIDR`, `IP-CIDR6`, `GEOIP`.
 5. Неподдерживаемые типы помечаются как dropped и попадают в `REPORT.md`.
 6. В bucket-ах `direct/proxy/block` выполняется дедупликация с сохранением порядка.
-7. Собираются локальные `geosite.dat` и `geoip.dat`.
+7. Собираются локальные `geosite.dat` и `geoip.dat`: geosite компилируется из `roscomvpn-geosite@202602210214/data` + `sr-*`, geoip берется из `roscomvpn-geoip@202602230507` + `sr-*` и затем ужимается до нужных листов.
 8. Формируются `DEFAULT.JSON` и `DEFAULT.DEEPLINK`.
 
 ## Неподдерживаемые правила (реестр дропов)

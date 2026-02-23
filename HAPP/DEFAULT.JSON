@@ -12,7 +12,7 @@
   "DomesticDNSIP": "77.88.8.8",
   "Geoipurl": "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/geoip.dat",
   "Geositeurl": "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/geosite.dat",
-  "LastUpdated": "1771867104",
+  "LastUpdated": "1771880454",
   "DnsHosts": {
     "adfree.dns.nextdns.io": "76.76.2.0",
     "cloudflare-dns.com": "1.1.1.1",
@@ -21,10 +21,22 @@
   "RouteOrder": "block-direct-proxy",
   "DirectSites": [
     "geosite:private",
-    "geosite:sr-direct"
+    "geosite:sr-direct",
+    "geosite:category-ru",
+    "geosite:microsoft",
+    "geosite:apple",
+    "geosite:google-play",
+    "geosite:epicgames",
+    "geosite:riot",
+    "geosite:escapefromtarkov",
+    "geosite:steam",
+    "geosite:twitch",
+    "geosite:pinterest",
+    "geosite:faceit"
   ],
   "DirectIp": [
     "geoip:private",
+    "geoip:direct",
     "geoip:ru",
     "geoip:sr-direct",
     "127.0.0.1",
@@ -44,12 +56,20 @@
     "255.255.255.255/32"
   ],
   "ProxySites": [
-    "geosite:sr-proxy"
+    "geosite:sr-proxy",
+    "geosite:github",
+    "geosite:twitch-ads",
+    "geosite:youtube",
+    "geosite:telegram"
   ],
   "ProxyIp": [
     "geoip:sr-proxy"
   ],
-  "BlockSites": [],
+  "BlockSites": [
+    "geosite:win-spy",
+    "geosite:torrent",
+    "geosite:category-ads"
+  ],
   "BlockIp": [],
   "DomainStrategy": "IPIfNonMatch",
   "FakeDNS": "true"

@@ -1,7 +1,7 @@
 # HAPP Routing Build Report
 
 ## Source
-- Config: `/home/runner/work/ShadowRocket/ShadowRocket/shadowrocket.conf`
+- Config: `/Users/sergio/Documents/30_HOBBY_AI/shadorock/ShadowRocket/shadowrocket.conf`
 - Commit: `9e4a56551a19a4a11b433c6eab866b5647329514`
 
 ## Processed
@@ -12,12 +12,12 @@
 
 ## Output
 - Deeplink mode: `onadd`
-- JSON length (compact): 1154
-- Deeplink length: 1561
-- DirectSites: 2
-- ProxySites: 1
-- BlockSites: 0
-- DirectIp: 18
+- JSON length (compact): 1514
+- Deeplink length: 2041
+- DirectSites: 13
+- ProxySites: 5
+- BlockSites: 3
+- DirectIp: 19
 - ProxyIp: 1
 - BlockIp: 0
 

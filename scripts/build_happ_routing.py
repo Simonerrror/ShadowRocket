@@ -7,6 +7,7 @@ import argparse
 import base64
 import ipaddress
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -21,13 +22,39 @@ from urllib.parse import urlparse
 SUPPORTED_SITE_RULES = {"DOMAIN-SUFFIX", "DOMAIN", "DOMAIN-KEYWORD"}
 SUPPORTED_IP_RULES = {"IP-CIDR", "IP-CIDR6", "GEOIP"}
 DEFAULT_REMOTE_DNS_DOMAIN = "https://adfree.dns.nextdns.io/dns-query"
-LOYALSOLDIER_GEOIP_BASE_URL = "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
-GEOSITE_SOURCE_REPO = "https://github.com/v2fly/domain-list-community.git"
+GEOSITE_COMPILER_REPO = "https://github.com/v2fly/domain-list-community.git"
+ROSCOM_GEOSITE_SOURCE_REPO = "https://github.com/hydraponique/roscomvpn-geosite.git"
+ROSCOM_GEOSITE_TAG = "202602210214"
+ROSCOM_GEOIP_BASE_URL = "https://cdn.jsdelivr.net/gh/hydraponique/roscomvpn-geoip@202602230507/release/geoip.dat"
 DEFAULT_DNS_HOSTS = {
     "adfree.dns.nextdns.io": "76.76.2.0",
     "cloudflare-dns.com": "1.1.1.1",
     "one.one.one.one": "1.1.1.1",
 }
+DEFAULT_EXTRA_DIRECT_SITES = [
+    "geosite:category-ru",
+    "geosite:microsoft",
+    "geosite:apple",
+    "geosite:google-play",
+    "geosite:epicgames",
+    "geosite:riot",
+    "geosite:escapefromtarkov",
+    "geosite:steam",
+    "geosite:twitch",
+    "geosite:pinterest",
+    "geosite:faceit",
+]
+DEFAULT_EXTRA_PROXY_SITES = [
+    "geosite:github",
+    "geosite:twitch-ads",
+    "geosite:youtube",
+    "geosite:telegram",
+]
+DEFAULT_EXTRA_BLOCK_SITES = [
+    "geosite:win-spy",
+    "geosite:torrent",
+    "geosite:category-ads",
+]
 
 
 @dataclass
@@ -363,14 +390,39 @@ def write_geosite_inputs(geosite_data_dir: Path, data: BuildData) -> None:
             block_file.unlink()
 
 
+def overlay_roscom_geosite_data(geosite_data_dir: Path, roscom_data_dir: Path) -> None:
+    geosite_data_dir.mkdir(parents=True, exist_ok=True)
+    for existing in geosite_data_dir.iterdir():
+        if existing.is_file():
+            existing.unlink()
+    for src in sorted(roscom_data_dir.iterdir()):
+        if src.is_file():
+            shutil.copy2(src, geosite_data_dir / src.name)
+
+
 def build_geosite_dat(out_dir: Path, data: BuildData) -> Path:
     with tempfile.TemporaryDirectory(prefix="sr-happ-geosite-") as tmp_dir:
         tmp = Path(tmp_dir)
-        repo = tmp / "domain-list-community"
-        run(["git", "clone", "--depth", "1", GEOSITE_SOURCE_REPO, str(repo)])
-        write_geosite_inputs(repo / "data", data)
+        repo = tmp / "domain-list-community-compiler"
+        roscom_repo = tmp / "roscomvpn-geosite"
+        data_dir = tmp / "data"
+        run(["git", "clone", "--depth", "1", GEOSITE_COMPILER_REPO, str(repo)])
+        run(
+            [
+                "git",
+                "clone",
+                "--depth",
+                "1",
+                "--branch",
+                ROSCOM_GEOSITE_TAG,
+                ROSCOM_GEOSITE_SOURCE_REPO,
+                str(roscom_repo),
+            ]
+        )
+        overlay_roscom_geosite_data(data_dir, roscom_repo / "data")
+        write_geosite_inputs(data_dir, data)
         run(["go", "mod", "download"], cwd=repo)
-        run(["go", "run", "./", f"--datapath={repo / 'data'}"], cwd=repo)
+        run(["go", "run", "./", f"--datapath={data_dir}"], cwd=repo)
         candidates = [repo / "dlc.dat", repo / "output" / "dat" / "dlc.dat"]
         source = next((path for path in candidates if path.exists()), None)
         if source is None:
@@ -392,6 +444,13 @@ def write_geoip_config(geoip_repo: Path, data: BuildData) -> Path:
     direct_file = write_list("sr-direct", data.direct.cidrs)
     proxy_file = write_list("sr-proxy", data.proxy.cidrs)
     block_file = write_list("sr-block", data.block.cidrs)
+    wanted_lists = dedupe_preserve(
+        ["private", "direct", "ru", "sr-direct", "sr-proxy"]
+        + (["sr-block"] if data.block.cidrs or data.block.geo_tags else [])
+        + [tag.split(":", 1)[1] for tag in data.direct.geo_tags if tag.startswith("geoip:")]
+        + [tag.split(":", 1)[1] for tag in data.proxy.geo_tags if tag.startswith("geoip:")]
+        + [tag.split(":", 1)[1] for tag in data.block.geo_tags if tag.startswith("geoip:")]
+    )
 
     config = {
         "input": [
@@ -399,7 +458,7 @@ def write_geoip_config(geoip_repo: Path, data: BuildData) -> Path:
                 "type": "v2rayGeoIPDat",
                 "action": "add",
                 "args": {
-                    "uri": LOYALSOLDIER_GEOIP_BASE_URL,
+                    "uri": ROSCOM_GEOIP_BASE_URL,
                 },
             },
             {
@@ -417,7 +476,11 @@ def write_geoip_config(geoip_repo: Path, data: BuildData) -> Path:
             {
                 "type": "v2rayGeoIPDat",
                 "action": "output",
-                "args": {"outputDir": str(geoip_repo / "output" / "dat"), "outputName": "geoip.dat"},
+                "args": {
+                    "outputDir": str(geoip_repo / "output" / "dat"),
+                    "outputName": "geoip.dat",
+                    "wantedList": wanted_lists,
+                },
             }
         ],
     }
@@ -482,10 +545,15 @@ def build_profile(
     block_geo = dedupe_preserve(data.block.geo_tags)
 
     direct_ip = dedupe_preserve(
-        ["geoip:private", "geoip:ru", "geoip:sr-direct"] + general_direct_ips + direct_geo
+        ["geoip:private", "geoip:direct", "geoip:ru", "geoip:sr-direct"] + general_direct_ips + direct_geo
     )
     proxy_ip = dedupe_preserve(["geoip:sr-proxy"] + proxy_geo)
     block_ip = dedupe_preserve((["geoip:sr-block"] if data.block.cidrs else []) + block_geo)
+    direct_sites = dedupe_preserve(["geosite:private", "geosite:sr-direct"] + DEFAULT_EXTRA_DIRECT_SITES)
+    proxy_sites = dedupe_preserve(["geosite:sr-proxy"] + DEFAULT_EXTRA_PROXY_SITES)
+    block_sites = dedupe_preserve(
+        (["geosite:sr-block"] if data.block.site_rules else []) + DEFAULT_EXTRA_BLOCK_SITES
+    )
 
     profile = {
         "Name": "ShadowRocket-HAPP",
@@ -504,11 +572,11 @@ def build_profile(
         "LastUpdated": str(int(time.time())),
         "DnsHosts": DEFAULT_DNS_HOSTS,
         "RouteOrder": route_order,
-        "DirectSites": ["geosite:private", "geosite:sr-direct"],
+        "DirectSites": direct_sites,
         "DirectIp": direct_ip,
-        "ProxySites": ["geosite:sr-proxy"],
+        "ProxySites": proxy_sites,
         "ProxyIp": proxy_ip,
-        "BlockSites": ["geosite:sr-block"] if data.block.site_rules else [],
+        "BlockSites": block_sites,
         "BlockIp": block_ip if data.block.cidrs or block_geo else [],
         "DomainStrategy": "IPIfNonMatch",
         "FakeDNS": "true",
