@@ -144,7 +144,7 @@ proxy-groups:
     type: url-test
     use:
       - Main-Sub
-    filter: '(?i)^(?!.*(?:Belarus|Russia|Ukraine)).*\bVless\b.*$'
+    filter: '^(?!.*(Russia|Belarus|Ukraine)).*Vless.*$'
     url: 'http://www.gstatic.com/generate_204'
     interval: 600
     tolerance: 100
@@ -154,7 +154,7 @@ proxy-groups:
     type: select
     use:
       - Main-Sub
-    filter: '(?i)^(?!.*(?:Belarus|Russia|Ukraine)).*\bVless\b.*$'
+    filter: '^(?!.*(Russia|Belarus|Ukraine)).*Vless.*$'
 
 # 5. ПРАВИЛА
 rules:
