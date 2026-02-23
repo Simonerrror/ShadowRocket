@@ -20,6 +20,8 @@ from urllib.parse import urlparse
 
 SUPPORTED_SITE_RULES = {"DOMAIN-SUFFIX", "DOMAIN", "DOMAIN-KEYWORD"}
 SUPPORTED_IP_RULES = {"IP-CIDR", "IP-CIDR6", "GEOIP"}
+HAPP_EXCLUDED_RULESETS = {"google-all.list", "microsoft.list", "voice_ports.list"}
+HAPP_GEOIP_WANTED_LIST = ["ru", "private", "sr-direct", "sr-proxy"]
 
 
 @dataclass
@@ -48,6 +50,13 @@ class BuildData:
 
     def drop(self, reason: str, line: str) -> None:
         self.dropped[reason].append(line)
+
+
+@dataclass
+class DnsResolution:
+    remote_ip: str
+    domestic_ip: str
+    notes: list[str] = field(default_factory=list)
 
 
 def run(cmd: list[str], cwd: Path | None = None) -> str:
@@ -120,18 +129,65 @@ def extract_general_values(conf_path: Path) -> dict[str, str]:
     return values
 
 
-def extract_remote_dns_ip(conf_path: Path) -> str | None:
-    values = extract_general_values(conf_path)
-    dns_value = values.get("dns-server")
-    if not dns_value:
+def parse_dns_endpoint(value: str) -> str | None:
+    candidate = value.strip()
+    if not candidate:
         return None
-    first = dns_value.split(",", 1)[0].strip()
+    if "://" in candidate:
+        parsed = urlparse(candidate)
+        return parsed.hostname
+    if candidate.count(":") == 1:
+        host, port = candidate.rsplit(":", 1)
+        if host and port.isdigit():
+            candidate = host
+    return candidate or None
+
+
+def extract_first_dns_endpoint(values: dict[str, str], key: str) -> str | None:
+    raw = values.get(key)
+    if raw is None:
+        return None
+    first = raw.split(",", 1)[0].strip()
     if not first:
         return None
-    if "://" in first:
-        parsed = urlparse(first)
-        return parsed.hostname
-    return first
+    return parse_dns_endpoint(first)
+
+
+def resolve_happ_dns(conf_path: Path, args: argparse.Namespace) -> DnsResolution:
+    values = extract_general_values(conf_path)
+    notes: list[str] = []
+
+    if "--remote-dns-ip" in sys.argv:
+        remote_ip = args.remote_dns_ip
+        notes.append(f"- Remote DNS source: CLI `--remote-dns-ip` -> `{remote_ip}`")
+    else:
+        remote_ip = extract_first_dns_endpoint(values, "dns-server")
+        if remote_ip:
+            notes.append(f"- Remote DNS source: `dns-server` -> `{remote_ip}`")
+        else:
+            remote_ip = args.remote_dns_ip
+            raw = values.get("dns-server")
+            if raw is None:
+                notes.append(f"- Remote DNS source: default `{remote_ip}` (missing `dns-server` in `[General]`)")
+            else:
+                notes.append(f"- Remote DNS source: default `{remote_ip}` (invalid `dns-server`: `{raw}`)")
+
+    if "--domestic-dns-ip" in sys.argv:
+        domestic_ip = args.domestic_dns_ip
+        notes.append(f"- Domestic DNS source: CLI `--domestic-dns-ip` -> `{domestic_ip}`")
+    else:
+        domestic_ip = extract_first_dns_endpoint(values, "fallback-dns-server")
+        if domestic_ip:
+            notes.append(f"- Domestic DNS source: `fallback-dns-server` -> `{domestic_ip}`")
+        else:
+            domestic_ip = args.domestic_dns_ip
+            raw = values.get("fallback-dns-server")
+            if raw is None:
+                notes.append(f"- Domestic DNS source: default `{domestic_ip}` (missing `fallback-dns-server` in `[General]`)")
+            else:
+                notes.append(f"- Domestic DNS source: default `{domestic_ip}` (invalid `fallback-dns-server`: `{raw}`)")
+
+    return DnsResolution(remote_ip=remote_ip, domestic_ip=domestic_ip, notes=notes)
 
 
 def iter_rule_section(conf_path: Path) -> Iterable[tuple[int, str]]:
@@ -266,6 +322,9 @@ def parse_conf_and_lists(conf_path: Path, rules_dir: Path) -> BuildData:
                 data.drop("unsupported_action", f"{source}: {line}")
                 continue
             local_name = parse_ruleset_url(ruleset_url)
+            if local_name in HAPP_EXCLUDED_RULESETS:
+                data.drop("excluded_happ_ruleset", f"{source}: {local_name}")
+                continue
             list_path = rules_dir / local_name
             if not list_path.exists():
                 data.drop("missing_ruleset_file", f"{source}: {local_name}")
@@ -376,7 +435,12 @@ def write_geoip_config(geoip_repo: Path, data: BuildData) -> Path:
             {
                 "type": "v2rayGeoIPDat",
                 "action": "output",
-                "args": {"outputDir": str(geoip_repo / "output" / "dat"), "outputName": "geoip.dat"},
+                "args": {
+                    "outputDir": str(geoip_repo / "output" / "dat"),
+                    "outputName": "geoip.dat",
+                    "wantedList": HAPP_GEOIP_WANTED_LIST,
+                    "onlyIPType": "ipv4",
+                },
             }
         ],
     }
@@ -481,6 +545,7 @@ def write_report(
     sha: str,
     mode: str,
     profile: dict[str, object],
+    dns_notes: list[str],
 ) -> None:
     dropped_total = sum(len(items) for items in data.dropped.values())
 
@@ -507,6 +572,12 @@ def write_report(
     lines.append(f"- DirectIp: {len(profile['DirectIp'])}")
     lines.append(f"- ProxyIp: {len(profile['ProxyIp'])}")
     lines.append(f"- BlockIp: {len(profile['BlockIp'])}")
+    lines.append("")
+    lines.append("## DNS source")
+    for item in dns_notes:
+        lines.append(item)
+    if not dns_notes:
+        lines.append("- none")
     lines.append("")
     lines.append("## Dropped USER-AGENT")
     for item in data.dropped.get("user_agent", []):
@@ -560,9 +631,7 @@ def main() -> int:
     if not rules_dir.exists():
         raise FileNotFoundError(f"Rules directory not found: {rules_dir}")
 
-    remote_dns_ip = args.remote_dns_ip
-    if "--remote-dns-ip" not in sys.argv:
-        remote_dns_ip = extract_remote_dns_ip(conf_path) or args.remote_dns_ip
+    dns = resolve_happ_dns(conf_path, args)
 
     data = parse_conf_and_lists(conf_path, rules_dir)
     ensure_bucket_uniques(data)
@@ -576,8 +645,8 @@ def main() -> int:
         data=data,
         raw_base=raw_base,
         route_order=args.route_order,
-        remote_dns_ip=remote_dns_ip,
-        domestic_dns_ip=args.domestic_dns_ip,
+        remote_dns_ip=dns.remote_ip,
+        domestic_dns_ip=dns.domestic_ip,
         remote_dns_type=args.remote_dns_type,
         domestic_dns_type=args.domestic_dns_type,
     )
@@ -599,6 +668,7 @@ def main() -> int:
         sha=commit_sha(repo_root),
         mode=args.deeplink_mode,
         profile=profile,
+        dns_notes=dns.notes,
     )
     return 0
 
