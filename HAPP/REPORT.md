@@ -1,14 +1,14 @@
 # HAPP Routing Build Report
 
 ## Source
-- Config: `/home/runner/work/ShadowRocket/ShadowRocket/shadowrocket.conf`
+- Config: `/Users/sergio/Documents/30_HOBBY_AI/shadorock/ShadowRocket/shadowrocket.conf`
 - Commit: `50a5debfb3a369c576e89c8546712f31b9bd05e7`
 
 ## Processed
 - Rules in `[Rule]`: 12
 - RULE-SET entries parsed: 1796
-- Converted lines: 1775
-- Dropped lines: 25
+- Converted lines: 1741
+- Dropped lines: 59
 
 ## Output
 - Deeplink mode: `onadd`
@@ -56,4 +56,4 @@
 - none
 
 ## Other dropped reasons
-- none
+- domain_keyword_not_supported_in_happ: 34

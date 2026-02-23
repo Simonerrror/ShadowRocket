@@ -70,7 +70,7 @@
 1. Читается секция `[Rule]` в исходном порядке.
 2. Для `RULE-SET` берется локальный `rules/<name>.list` по имени из URL.
 3. Action маппится: `DIRECT -> direct`, `PROXY/GOOGLE -> proxy`, `REJECT* -> block`.
-4. Поддерживаемые типы: `DOMAIN-SUFFIX`, `DOMAIN`, `DOMAIN-KEYWORD`, `IP-CIDR`, `IP-CIDR6`, `GEOIP`.
+4. Поддерживаемые типы: `DOMAIN-SUFFIX`, `DOMAIN` (нормализуется в suffix), `IP-CIDR`, `IP-CIDR6`, `GEOIP`.
 5. Неподдерживаемые типы помечаются как dropped и попадают в `REPORT.md`.
 6. В bucket-ах `direct/proxy/block` выполняется дедупликация с сохранением порядка.
 7. Собираются локальные `geosite.dat` и `geoip.dat`: geosite компилируется из `roscomvpn-geosite@202602210214/data` + `sr-*`, geoip берется из `roscomvpn-geoip@202602230507` + `sr-*` и затем ужимается до нужных листов.
@@ -81,6 +81,7 @@
 | Тип | Где встречается сейчас | Почему дропается | Влияние | Workaround |
 | --- | --- | --- | --- | --- |
 | `USER-AGENT` | `rules/google-all.list`, `rules/microsoft.list` | Нет поддержки в HAPP-модели скрипта | Потеря UA-матчинга | Держать в SR/Clash, в HAPP опираться на domain/ip |
+| `DOMAIN-KEYWORD` | `rules/domains_community.list` и другие lists | В HAPP-режиме geosite используется только suffix-совместимый тип | Потеря keyword-матчинга | Переносить в `DOMAIN-SUFFIX/DOMAIN` или оставлять в SR/Clash |
 | `DST-PORT` | `rules/voice_ports.list` | Нет поддержки port-правил в конвертере | Потеря портового роутинга | Сохранять портовые правила в SR/Clash |
 | `IP-ASN` | `rules/telegram.list` | Нет ASN-матчинга в конвертере | Потеря ASN-сегментации | Замена на `IP-CIDR`/`GEOIP` по необходимости |
 | `AND` (composite) | Сейчас в активном `shadowrocket.conf` отсутствует | Композитные выражения не поддержаны | Потеря сложных комбинированных условий | Разносить на поддерживаемые типы или оставлять в SR/Clash |

@@ -21,6 +21,7 @@ from urllib.parse import urlparse
 
 SUPPORTED_SITE_RULES = {"DOMAIN-SUFFIX", "DOMAIN", "DOMAIN-KEYWORD"}
 SUPPORTED_IP_RULES = {"IP-CIDR", "IP-CIDR6", "GEOIP"}
+HAPP_SUFFIX_ONLY_GEOSITE = True
 DEFAULT_REMOTE_DNS_DOMAIN = "https://adfree.dns.nextdns.io/dns-query"
 GEOSITE_COMPILER_REPO = "https://github.com/v2fly/domain-list-community.git"
 ROSCOM_GEOSITE_SOURCE_REPO = "https://github.com/hydraponique/roscomvpn-geosite.git"
@@ -274,8 +275,15 @@ def convert_rule_line(
         if rule_type == "DOMAIN-SUFFIX":
             bucket.site_rules.append(f"domain:{normalize_domain(raw_value)}")
         elif rule_type == "DOMAIN":
-            bucket.site_rules.append(f"full:{normalize_domain(raw_value)}")
+            # HAPP compatibility: keep suffix-style matching only.
+            if HAPP_SUFFIX_ONLY_GEOSITE:
+                bucket.site_rules.append(f"domain:{normalize_domain(raw_value)}")
+            else:
+                bucket.site_rules.append(f"full:{normalize_domain(raw_value)}")
         else:
+            if HAPP_SUFFIX_ONLY_GEOSITE:
+                data.drop("domain_keyword_not_supported_in_happ", f"{source}: {line}")
+                return
             bucket.site_rules.append(f"keyword:{raw_value}")
         data.converted_lines += 1
         return
