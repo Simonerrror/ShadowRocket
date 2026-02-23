@@ -55,6 +55,9 @@ DEFAULT_EXTRA_BLOCK_SITES = [
     "geosite:torrent",
     "geosite:category-ads",
 ]
+GEOIP_TAG_ALIASES = {
+    "ru": "direct",
+}
 
 
 @dataclass
@@ -246,6 +249,11 @@ def normalize_cidr(value: str) -> str:
     return str(network)
 
 
+def normalize_geoip_tag(value: str) -> str:
+    tag = value.strip().lower()
+    return GEOIP_TAG_ALIASES.get(tag, tag)
+
+
 def convert_rule_line(
     line: str,
     action: str,
@@ -284,7 +292,7 @@ def convert_rule_line(
             except ValueError:
                 data.drop("invalid_cidr", f"{source}: {line}")
             return
-        bucket.geo_tags.append(f"geoip:{raw_value.lower()}")
+        bucket.geo_tags.append(f"geoip:{normalize_geoip_tag(raw_value)}")
         data.converted_lines += 1
         return
 
@@ -545,7 +553,7 @@ def build_profile(
     block_geo = dedupe_preserve(data.block.geo_tags)
 
     direct_ip = dedupe_preserve(
-        ["geoip:private", "geoip:direct", "geoip:ru", "geoip:sr-direct"] + general_direct_ips + direct_geo
+        ["geoip:private", "geoip:direct", "geoip:sr-direct"] + general_direct_ips + direct_geo
     )
     proxy_ip = dedupe_preserve(["geoip:sr-proxy"] + proxy_geo)
     block_ip = dedupe_preserve((["geoip:sr-block"] if data.block.cidrs else []) + block_geo)
@@ -685,7 +693,7 @@ def main() -> int:
     build_geosite_dat(out_dir, data)
     build_geoip_dat(out_dir, data)
     slug = repo_slug(repo_root)
-    raw_base = f"https://raw.githubusercontent.com/{slug}/main/{args.out_dir.strip('/')}"
+    raw_base = f"https://cdn.jsdelivr.net/gh/{slug}@main/{args.out_dir.strip('/')}"
 
     profile = build_profile(
         data=data,

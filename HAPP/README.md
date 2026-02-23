@@ -51,13 +51,13 @@
 | `DomesticDNSType` | `--domestic-dns-type` (дефолт `DoU`) | Не из SR напрямую | `parse_args` + `build_profile` | Домашний контур через DoU |
 | `DomesticDNSDomain` | Константа `""` | Не из SR | `build_profile` | Не используется |
 | `DomesticDNSIP` | Повторяет `DomesticDns` | Не из SR напрямую | `build_profile` | Bootstrap IP domestic DNS |
-| `Geoipurl` | `raw_base + "/geoip.dat"` | Артефакт репозитория | `repo_slug` + `build_profile` | Собирается из `https://cdn.jsdelivr.net/gh/hydraponique/roscomvpn-geoip@202602230507/release/geoip.dat` + `sr-*`, затем экспортируются только нужные geoip-листы |
-| `Geositeurl` | `raw_base + "/geosite.dat"` | Артефакт репозитория | `repo_slug` + `build_profile` | Компилируется из `roscomvpn-geosite@202602210214/data` + `sr-*` (без доменных листов из других upstream) |
+| `Geoipurl` | `https://cdn.jsdelivr.net/gh/<repo>@main/HAPP/geoip.dat` | Артефакт репозитория | `repo_slug` + `build_profile` | Собирается из `https://cdn.jsdelivr.net/gh/hydraponique/roscomvpn-geoip@202602230507/release/geoip.dat` + `sr-*`, затем экспортируются только нужные geoip-листы |
+| `Geositeurl` | `https://cdn.jsdelivr.net/gh/<repo>@main/HAPP/geosite.dat` | Артефакт репозитория | `repo_slug` + `build_profile` | Компилируется из `roscomvpn-geosite@202602210214/data` + `sr-*` (без доменных листов из других upstream) |
 | `LastUpdated` | `str(int(time.time()))` | Не из SR | `build_profile` | Unix timestamp сборки |
 | `DnsHosts` | Константа `DEFAULT_DNS_HOSTS` | Не из SR | `DEFAULT_DNS_HOSTS` + `build_profile` | NextDNS + Cloudflare bootstrap |
 | `RouteOrder` | `--route-order` (дефолт `block-direct-proxy`) | Не из SR напрямую | `parse_args` + `build_profile` | Приоритет block перед direct/proxy |
 | `DirectSites` | `["geosite:private","geosite:sr-direct"] + curated direct tags` | `DIRECT` site-правила + curated geosite-теги | `write_geosite_inputs` + `build_profile` | `sr-direct` строится из поддерживаемых типов |
-| `DirectIp` | `["geoip:private","geoip:direct","geoip:ru","geoip:sr-direct"] + general-direct-ip + direct_geo` | `DIRECT` IP/GEOIP + IP/CIDR из `skip-proxy` и `bypass-tun` | `extract_general_ips` + `build_profile` | Включен `geoip:direct` из roscom-базы |
+| `DirectIp` | `["geoip:private","geoip:direct","geoip:sr-direct"] + general-direct-ip + direct_geo` | `DIRECT` IP/GEOIP + IP/CIDR из `skip-proxy` и `bypass-tun` | `extract_general_ips` + `build_profile` | `GEOIP,RU` нормализуется в `geoip:direct` для roscom-базы |
 | `ProxySites` | `["geosite:sr-proxy"] + curated proxy tags` | `PROXY/GOOGLE` site-правила + curated geosite-теги | `write_geosite_inputs` + `build_profile` | Включая `geosite:twitch-ads` |
 | `ProxyIp` | `["geoip:sr-proxy"] + proxy_geo` | `PROXY/GOOGLE` IP/GEOIP | `build_profile` | Дедупликация с сохранением порядка |
 | `BlockSites` | `["geosite:sr-block"]` (если есть) + curated block tags | `REJECT*` site-правила + curated geosite-теги | `write_geosite_inputs` + `build_profile` | Включены `geosite:win-spy`, `geosite:torrent`, `geosite:category-ads` |
@@ -128,7 +128,7 @@ rg -n "## Dropped USER-AGENT|## Dropped DST-PORT|## Dropped IP-ASN|## Dropped co
 ## Сценарии приёмки
 
 1. `RULE-SET,.../google-all.list,GOOGLE` попадает в proxy bucket (`GOOGLE` трактуется как proxy).
-2. `GEOIP,RU,DIRECT` попадает в `DirectIp` как `geoip:ru`.
+2. `GEOIP,RU,DIRECT` попадает в `DirectIp` как `geoip:direct`.
 3. В `shadowrocket.conf` отсутствуют QUIC/DoT блокировки через inline `AND` (совместимость с Hysteria2).
 4. `DEFAULT.JSON` отражает defaults из раздела "Нормативные defaults".
 5. Изменения роутинга синхронно отражены в `shadowrocket.conf` и `clash_config.yaml`.
