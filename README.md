@@ -91,20 +91,18 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
 ### [Rule]
 Порядок важен: правила обрабатываются сверху вниз.
 
-1. **Блокировки протоколов**
-   - QUIC (UDP/443) и DoT (UDP/853).
-2. **Ручные списки**
+1. **Ручные списки**
    - `whitelist_direct.list` — принудительно DIRECT.
    - `greylist_proxy.list` — принудительно PROXY.
-3. **Google/Gemini/YouTube**
+2. **Google/Gemini/YouTube**
    - Домены и IP направляются в группу `GOOGLE` с `force-remote-dns` для доменных списков.
-4. **Microsoft/Office 365/Teams/OneDrive**
+3. **Microsoft/Office 365/Teams/OneDrive**
    - Уходят в `PROXY` с `force-remote-dns` для доменных списков.
-5. **Остальные правила**
+4. **Остальные правила**
    - Комьюнити-списки доменов, IP-диапазоны, голосовые сервисы, Telegram → `PROXY`.
-6. **Direct для РФ**
+5. **Direct для РФ**
    - Домены `.ru/.рф/.su` и GEOIP RU идут напрямую.
-7. **FINAL**
+6. **FINAL**
    - Всё остальное — в `PROXY`.
 
 ### [Host] / [URL Rewrite]

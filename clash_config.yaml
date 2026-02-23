@@ -158,8 +158,6 @@ proxy-groups:
 
 # 5. ПРАВИЛА
 rules:
-  - AND,((NETWORK,UDP),(DST-PORT,443)),REJECT
-  - AND,((NETWORK,UDP),(DST-PORT,853)),REJECT
   - RULE-SET,google_all,GOOGLE
   - RULE-SET,whitelist_direct,DIRECT
   - RULE-SET,greylist_proxy,PROXY

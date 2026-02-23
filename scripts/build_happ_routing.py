@@ -20,6 +20,14 @@ from urllib.parse import urlparse
 
 SUPPORTED_SITE_RULES = {"DOMAIN-SUFFIX", "DOMAIN", "DOMAIN-KEYWORD"}
 SUPPORTED_IP_RULES = {"IP-CIDR", "IP-CIDR6", "GEOIP"}
+DEFAULT_REMOTE_DNS_DOMAIN = "https://adfree.dns.nextdns.io/dns-query"
+DEFAULT_GEOIP_URL = "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
+DEFAULT_GEOSITE_URL = "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+DEFAULT_DNS_HOSTS = {
+    "adfree.dns.nextdns.io": "76.76.2.0",
+    "cloudflare-dns.com": "1.1.1.1",
+    "one.one.one.one": "1.1.1.1",
+}
 
 
 @dataclass
@@ -75,7 +83,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--route-order",
-        default="proxy-direct-block",
+        default="block-direct-proxy",
         choices=[
             "block-proxy-direct",
             "block-direct-proxy",
@@ -90,9 +98,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--domestic-dns-ip", default="77.88.8.8", help="Domestic DNS IP")
     parser.add_argument(
         "--remote-dns-type",
-        default="DoU",
+        default="DoH",
         choices=["DoH", "DoU"],
         help="Remote DNS type",
+    )
+    parser.add_argument(
+        "--remote-dns-domain",
+        default=DEFAULT_REMOTE_DNS_DOMAIN,
+        help="Remote DNS domain or URL (used for DoH)",
     )
     parser.add_argument(
         "--domestic-dns-type",
@@ -409,28 +422,15 @@ def build_geoip_dat(out_dir: Path, data: BuildData) -> Path:
         return target
 
 
-def repo_slug(repo_root: Path) -> str:
-    remote = run(["git", "-C", str(repo_root), "remote", "get-url", "origin"])
-    remote = remote.strip()
-    if remote.endswith(".git"):
-        remote = remote[:-4]
-    if remote.startswith("git@github.com:"):
-        return remote.removeprefix("git@github.com:")
-    marker = "github.com/"
-    if marker in remote:
-        return remote.split(marker, 1)[1]
-    raise RuntimeError(f"Unsupported origin URL format: {remote}")
-
-
 def commit_sha(repo_root: Path) -> str:
     return run(["git", "-C", str(repo_root), "rev-parse", "HEAD"])
 
 
 def build_profile(
     data: BuildData,
-    raw_base: str,
     route_order: str,
     remote_dns_ip: str,
+    remote_dns_domain: str,
     domestic_dns_ip: str,
     remote_dns_type: str,
     domestic_dns_type: str,
@@ -446,19 +446,19 @@ def build_profile(
     profile = {
         "Name": "ShadowRocket-HAPP",
         "GlobalProxy": "true",
-        "UseChunkFiles": "true",
+        "UseChunkFiles": "false",
         "RemoteDns": remote_dns_ip,
         "DomesticDns": domestic_dns_ip,
         "RemoteDNSType": remote_dns_type,
-        "RemoteDNSDomain": "",
+        "RemoteDNSDomain": remote_dns_domain,
         "RemoteDNSIP": remote_dns_ip,
         "DomesticDNSType": domestic_dns_type,
         "DomesticDNSDomain": "",
         "DomesticDNSIP": domestic_dns_ip,
-        "Geoipurl": f"{raw_base}/geoip.dat",
-        "Geositeurl": f"{raw_base}/geosite.dat",
+        "Geoipurl": DEFAULT_GEOIP_URL,
+        "Geositeurl": DEFAULT_GEOSITE_URL,
         "LastUpdated": str(int(time.time())),
-        "DnsHosts": {},
+        "DnsHosts": DEFAULT_DNS_HOSTS,
         "RouteOrder": route_order,
         "DirectSites": ["geosite:private", "geosite:sr-direct"],
         "DirectIp": direct_ip,
@@ -467,7 +467,7 @@ def build_profile(
         "BlockSites": ["geosite:sr-block"] if data.block.site_rules else [],
         "BlockIp": block_ip if data.block.cidrs or block_geo else [],
         "DomainStrategy": "IPIfNonMatch",
-        "FakeDNS": "false",
+        "FakeDNS": "true",
     }
     return profile
 
@@ -570,13 +570,11 @@ def main() -> int:
     build_geosite_dat(out_dir, data)
     build_geoip_dat(out_dir, data)
 
-    slug = repo_slug(repo_root)
-    raw_base = f"https://raw.githubusercontent.com/{slug}/main/{args.out_dir.strip('/')}"
     profile = build_profile(
         data=data,
-        raw_base=raw_base,
         route_order=args.route_order,
         remote_dns_ip=remote_dns_ip,
+        remote_dns_domain=args.remote_dns_domain,
         domestic_dns_ip=args.domestic_dns_ip,
         remote_dns_type=args.remote_dns_type,
         domestic_dns_type=args.domestic_dns_type,

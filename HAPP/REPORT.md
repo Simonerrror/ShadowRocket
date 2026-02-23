@@ -1,19 +1,19 @@
 # HAPP Routing Build Report
 
 ## Source
-- Config: `/home/runner/work/ShadowRocket/ShadowRocket/shadowrocket.conf`
-- Commit: `91bf6b2a9689a0ac007211c5e33dba1168d966f4`
+- Config: `/Users/sergio/Documents/30_HOBBY_AI/shadorock/ShadowRocket/shadowrocket.conf`
+- Commit: `f9374e490d7700a1141def38a0c58a1653ffb320`
 
 ## Processed
-- Rules in `[Rule]`: 14
+- Rules in `[Rule]`: 12
 - RULE-SET entries parsed: 1796
 - Converted lines: 1775
-- Dropped lines: 27
+- Dropped lines: 25
 
 ## Output
 - Deeplink mode: `onadd`
-- JSON length (compact): 783
-- Deeplink length: 1065
+- JSON length (compact): 924
+- Deeplink length: 1253
 - DirectSites: 2
 - ProxySites: 1
 - BlockSites: 0
@@ -53,8 +53,7 @@
 - telegram.list:50: IP-ASN,62041,no-resolve
 
 ## Dropped composite AND
-- shadowrocket.conf:44: AND,((PROTOCOL,UDP),(DEST-PORT,443)),REJECT-DROP
-- shadowrocket.conf:45: AND,((PROTOCOL,UDP),(DEST-PORT,853)),REJECT-NO-DROP
+- none
 
 ## Other dropped reasons
 - none
