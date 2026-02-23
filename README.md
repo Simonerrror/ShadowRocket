@@ -89,6 +89,7 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
 - DNS для HAPP берется из `[General]` `shadowrocket.conf`:
   - `dns-server` -> `RemoteDNS`
   - `fallback-dns-server` -> `DomesticDNS`
+- В HAPP сначала проверяются `DIRECT`-правила (`RouteOrder: direct-proxy-block`), затем `PROXY`.
 - `HAPP/geoip.dat` собирается в режиме IPv4-only.
 
 ## Логика `shadowrocket.conf`
