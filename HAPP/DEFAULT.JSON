@@ -12,7 +12,7 @@
   "DomesticDNSIP": "1.1.1.1",
   "Geoipurl": "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/geoip.dat",
   "Geositeurl": "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/geosite.dat",
-  "LastUpdated": "1771847395",
+  "LastUpdated": "1771847435",
   "DnsHosts": {},
   "RouteOrder": "proxy-direct-block",
   "DirectSites": [
