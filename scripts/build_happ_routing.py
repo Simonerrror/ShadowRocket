@@ -21,15 +21,16 @@ from urllib.parse import urlparse
 
 SUPPORTED_SITE_RULES = {"DOMAIN-SUFFIX", "DOMAIN", "DOMAIN-KEYWORD"}
 SUPPORTED_IP_RULES = {"IP-CIDR", "IP-CIDR6", "GEOIP"}
-HAPP_SUFFIX_ONLY_GEOSITE = True
+HAPP_SUFFIX_ONLY_GEOSITE = False
 DEFAULT_REMOTE_DNS_DOMAIN = "https://adfree.dns.nextdns.io/dns-query"
 GEOSITE_COMPILER_REPO = "https://github.com/v2fly/domain-list-community.git"
 ROSCOM_GEOSITE_SOURCE_REPO = "https://github.com/hydraponique/roscomvpn-geosite.git"
 ROSCOM_GEOSITE_TAG = "202602210214"
-ROSCOM_GEOIP_BASE_URL = "https://cdn.jsdelivr.net/gh/hydraponique/roscomvpn-geoip@202602230507/release/geoip.dat"
 ROSCOM_DEFAULT_PROFILE_URL = "https://raw.githubusercontent.com/hydraponique/roscomvpn-routing/main/HAPP/DEFAULT.JSON"
-DEFAULT_PROFILE_NAME = "роутинг"
+ROSCOM_GEOIP_SOURCE_REPO = "https://github.com/hydraponique/roscomvpn-geoip.git"
 BONUS_PROFILE_NAME = "роутинг+"
+BONUS_GEOIP_FILENAME = "bonus_geoip.dat"
+BONUS_GEOSITE_FILENAME = "bonus_geosite.dat"
 DEFAULT_DNS_HOSTS = {
     "adfree.dns.nextdns.io": "76.76.2.0",
     "cloudflare-dns.com": "1.1.1.1",
@@ -61,6 +62,21 @@ DEFAULT_EXTRA_BLOCK_SITES = [
 ]
 GEOIP_TAG_ALIASES = {
     "ru": "direct",
+}
+HYDRA_GEOIP_EXTERNAL_SOURCES = {
+    "antifilterdownloadcommunity.txt": "https://community.antifilter.download/list/community.lst",
+    "refilter.txt": "https://raw.githubusercontent.com/1andrevich/Re-filter-lists/refs/heads/main/ipsum.lst",
+    "refiltercommunity.txt": "https://raw.githubusercontent.com/1andrevich/Re-filter-lists/refs/heads/main/community_ips.lst",
+    "antifilternetwork.txt": "https://antifilter.network/download/ip.lst",
+    "antifilternetworkcommunity.txt": "https://antifilter.network/downloads/custom.lst",
+    "cdn.lst": "https://raw.githubusercontent.com/mansourjabin/cdn-ip-database/refs/heads/main/data/cdn.lst",
+    "merged.sum": "https://raw.githubusercontent.com/PentiumB/CDN-RuleSet/refs/heads/main/release/merged.sum",
+    "geolite_ru.lst": "https://raw.githubusercontent.com/hydraponique/countrydb/refs/heads/main/output/geolite2-geo-whois-asn-country-ipv4/ru.lst",
+    "geolite_by.lst": "https://raw.githubusercontent.com/hydraponique/countrydb/refs/heads/main/output/geolite2-geo-whois-asn-country-ipv4/by.lst",
+    "ipinfo_ru.lst": "https://raw.githubusercontent.com/Davoyan/ipinfo/refs/heads/main/geo/geoip/ru.lst",
+    "ipinfo_by.lst": "https://raw.githubusercontent.com/Davoyan/ipinfo/refs/heads/main/geo/geoip/by.lst",
+    "dbip_ru.lst": "https://raw.githubusercontent.com/hydraponique/countrydb/refs/heads/main/output/dbip-country-ipv4/ru.lst",
+    "dbip_by.lst": "https://raw.githubusercontent.com/hydraponique/countrydb/refs/heads/main/output/dbip-country-ipv4/by.lst",
 }
 
 
@@ -419,7 +435,7 @@ def overlay_roscom_geosite_data(geosite_data_dir: Path, roscom_data_dir: Path) -
             shutil.copy2(src, geosite_data_dir / src.name)
 
 
-def build_geosite_dat(out_dir: Path, data: BuildData) -> Path:
+def build_geosite_dat(out_dir: Path, data: BuildData, output_name: str = BONUS_GEOSITE_FILENAME) -> Path:
     with tempfile.TemporaryDirectory(prefix="sr-happ-geosite-") as tmp_dir:
         tmp = Path(tmp_dir)
         repo = tmp / "domain-list-community-compiler"
@@ -441,17 +457,22 @@ def build_geosite_dat(out_dir: Path, data: BuildData) -> Path:
         overlay_roscom_geosite_data(data_dir, roscom_repo / "data")
         write_geosite_inputs(data_dir, data)
         run(["go", "mod", "download"], cwd=repo)
-        run(["go", "run", "./", f"--datapath={data_dir}"], cwd=repo)
-        candidates = [repo / "dlc.dat", repo / "output" / "dat" / "dlc.dat"]
+        run(["go", "run", "./", f"--datapath={data_dir}", f"--outputname={output_name}"], cwd=repo)
+        candidates = [repo / output_name, repo / "output" / "dat" / output_name, repo / "dlc.dat", repo / "output" / "dat" / "dlc.dat"]
         source = next((path for path in candidates if path.exists()), None)
         if source is None:
             raise RuntimeError("Failed to build geosite.dat: dlc.dat not found")
-        target = out_dir / "geosite.dat"
+        target = out_dir / output_name
         target.write_bytes(source.read_bytes())
         return target
 
 
-def write_geoip_config(geoip_repo: Path, data: BuildData) -> Path:
+def fetch_to_file(url: str, dest: Path) -> None:
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    run(["curl", "-fsSL", "--retry", "3", "--retry-delay", "2", "--retry-connrefused", "-o", str(dest), url])
+
+
+def write_geoip_bonus_config(geoip_repo: Path, data: BuildData) -> Path:
     lists_dir = geoip_repo / "custom-lists"
     lists_dir.mkdir(parents=True, exist_ok=True)
 
@@ -464,45 +485,33 @@ def write_geoip_config(geoip_repo: Path, data: BuildData) -> Path:
     proxy_file = write_list("sr-proxy", data.proxy.cidrs)
     block_file = write_list("sr-block", data.block.cidrs)
     wanted_lists = dedupe_preserve(
-        ["private", "direct", "ru", "sr-direct", "sr-proxy"]
+        ["private", "direct", "sr-direct", "sr-proxy"]
         + (["sr-block"] if data.block.cidrs or data.block.geo_tags else [])
         + [tag.split(":", 1)[1] for tag in data.direct.geo_tags if tag.startswith("geoip:")]
         + [tag.split(":", 1)[1] for tag in data.proxy.geo_tags if tag.startswith("geoip:")]
         + [tag.split(":", 1)[1] for tag in data.block.geo_tags if tag.startswith("geoip:")]
     )
 
-    config = {
-        "input": [
-            {
-                "type": "v2rayGeoIPDat",
-                "action": "add",
-                "args": {
-                    "uri": ROSCOM_GEOIP_BASE_URL,
-                },
-            },
-            {
-                "type": "text",
-                "action": "add",
-                "args": {"name": "sr-direct", "uri": str(direct_file)},
-            },
-            {
-                "type": "text",
-                "action": "add",
-                "args": {"name": "sr-proxy", "uri": str(proxy_file)},
-            },
-        ],
-        "output": [
-            {
-                "type": "v2rayGeoIPDat",
-                "action": "output",
-                "args": {
-                    "outputDir": str(geoip_repo / "output" / "dat"),
-                    "outputName": "geoip.dat",
-                    "wantedList": wanted_lists,
-                },
-            }
-        ],
-    }
+    config = json.loads((geoip_repo / "config.json").read_text(encoding="utf-8"))
+    if "input" not in config or not isinstance(config["input"], list):
+        raise RuntimeError("Unexpected hydraponique config.json format: missing input[]")
+    if "output" not in config or not isinstance(config["output"], list) or not config["output"]:
+        raise RuntimeError("Unexpected hydraponique config.json format: missing output[]")
+
+    config["input"].append(
+        {
+            "type": "text",
+            "action": "add",
+            "args": {"name": "sr-direct", "uri": str(direct_file)},
+        }
+    )
+    config["input"].append(
+        {
+            "type": "text",
+            "action": "add",
+            "args": {"name": "sr-proxy", "uri": str(proxy_file)},
+        }
+    )
     if data.block.cidrs:
         config["input"].append(
             {
@@ -511,23 +520,93 @@ def write_geoip_config(geoip_repo: Path, data: BuildData) -> Path:
                 "args": {"name": "sr-block", "uri": str(block_file)},
             }
         )
-    config_path = geoip_repo / "config.custom.json"
+
+    output_args = config["output"][0].setdefault("args", {})
+    output_args["outputDir"] = str(geoip_repo / "output" / "dat")
+    output_args["outputName"] = BONUS_GEOIP_FILENAME
+    output_args["wantedList"] = wanted_lists
+
+    config_path = geoip_repo / "config.bonus.json"
     config_path.write_text(json.dumps(config, indent=2), encoding="utf-8")
     return config_path
 
 
-def build_geoip_dat(out_dir: Path, data: BuildData) -> Path:
+def prepare_hydra_geoip_inputs(geoip_repo: Path, hydra_repo: Path) -> None:
+    for name in ("config.json", "ipset_ops.py", "CUSTOM-LIST-ADD.txt", "CUSTOM-LIST-DEL.txt"):
+        source = hydra_repo / name
+        if not source.exists():
+            raise RuntimeError(f"Missing required hydraponique file: {name}")
+        shutil.copy2(source, geoip_repo / name)
+
+    for target_name, url in HYDRA_GEOIP_EXTERNAL_SOURCES.items():
+        fetch_to_file(url, geoip_repo / target_name)
+
+    prepare_path = geoip_repo / "tmp" / "text" / "prepare.txt"
+    prepare_path.parent.mkdir(parents=True, exist_ok=True)
+    source_files = (
+        "geolite_ru.lst",
+        "geolite_by.lst",
+        "ipinfo_ru.lst",
+        "ipinfo_by.lst",
+        "dbip_ru.lst",
+        "dbip_by.lst",
+        "CUSTOM-LIST-ADD.txt",
+    )
+    with prepare_path.open("w", encoding="utf-8") as out:
+        for file_name in source_files:
+            src = geoip_repo / file_name
+            if not src.exists():
+                continue
+            text = src.read_text(encoding="utf-8", errors="ignore")
+            out.write(text)
+            if not text.endswith("\n"):
+                out.write("\n")
+
+    b_group = ",".join(
+        [
+            "./refilter.txt",
+            "./antifilternetwork.txt",
+            "./antifilterdownloadcommunity.txt",
+            "./refiltercommunity.txt",
+            "./antifilternetworkcommunity.txt",
+            "./cdn.lst",
+            "./merged.sum",
+            "./CUSTOM-LIST-DEL.txt",
+        ]
+    )
+    run(
+        [
+            "python3",
+            "ipset_ops.py",
+            "--mode",
+            "diff",
+            "--A",
+            "./tmp/text/prepare.txt",
+            "--B",
+            b_group,
+            "--out",
+            "./tmp/text/final.txt",
+        ],
+        cwd=geoip_repo,
+    )
+
+
+def build_geoip_dat(out_dir: Path, data: BuildData, output_name: str = BONUS_GEOIP_FILENAME) -> Path:
     with tempfile.TemporaryDirectory(prefix="sr-happ-geoip-") as tmp_dir:
         tmp = Path(tmp_dir)
-        repo = tmp / "geoip"
-        run(["git", "clone", "--depth", "1", "https://github.com/v2fly/geoip.git", str(repo)])
-        run(["go", "mod", "download"], cwd=repo)
-        config_path = write_geoip_config(repo, data)
-        run(["go", "run", "./", "-c", str(config_path)], cwd=repo)
-        source = repo / "output" / "dat" / "geoip.dat"
+        geoip_repo = tmp / "geoip"
+        hydra_repo = tmp / "roscomvpn-geoip"
+        run(["git", "clone", "--depth", "1", "https://github.com/v2fly/geoip.git", str(geoip_repo)])
+        run(["git", "clone", "--depth", "1", ROSCOM_GEOIP_SOURCE_REPO, str(hydra_repo)])
+        run(["go", "mod", "download"], cwd=geoip_repo)
+        run(["go", "build", "-o", "geoip"], cwd=geoip_repo)
+        prepare_hydra_geoip_inputs(geoip_repo, hydra_repo)
+        config_path = write_geoip_bonus_config(geoip_repo, data)
+        run(["./geoip", "-c", str(config_path)], cwd=geoip_repo)
+        source = geoip_repo / "output" / "dat" / output_name
         if not source.exists():
-            raise RuntimeError("Failed to build geoip.dat: output/dat/geoip.dat not found")
-        target = out_dir / "geoip.dat"
+            raise RuntimeError(f"Failed to build {output_name}: output/dat/{output_name} not found")
+        target = out_dir / output_name
         target.write_bytes(source.read_bytes())
         return target
 
@@ -548,8 +627,18 @@ def commit_sha(repo_root: Path) -> str:
     return run(["git", "-C", str(repo_root), "rev-parse", "HEAD"])
 
 
-def fetch_roscom_profile() -> dict[str, object]:
-    payload = run(["curl", "-fsSL", ROSCOM_DEFAULT_PROFILE_URL])
+def fetch_roscom_profile_payload() -> str:
+    result = subprocess.run(
+        ["curl", "-fsSL", ROSCOM_DEFAULT_PROFILE_URL],
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    return result.stdout
+
+
+def parse_json_object(payload: str) -> dict[str, object]:
     profile = json.loads(payload)
     if not isinstance(profile, dict):
         raise RuntimeError("Unexpected roscom profile payload: expected JSON object")
@@ -566,6 +655,8 @@ def build_profile(
     remote_dns_type: str,
     domestic_dns_type: str,
     general_direct_ips: list[str],
+    geoip_filename: str = BONUS_GEOIP_FILENAME,
+    geosite_filename: str = BONUS_GEOSITE_FILENAME,
 ) -> dict[str, object]:
     direct_geo = dedupe_preserve(data.direct.geo_tags)
     proxy_geo = dedupe_preserve(data.proxy.geo_tags)
@@ -594,8 +685,8 @@ def build_profile(
         "DomesticDNSType": domestic_dns_type,
         "DomesticDNSDomain": "",
         "DomesticDNSIP": domestic_dns_ip,
-        "Geoipurl": f"{raw_base}/geoip.dat",
-        "Geositeurl": f"{raw_base}/geosite.dat",
+        "Geoipurl": f"{raw_base}/{geoip_filename}",
+        "Geositeurl": f"{raw_base}/{geosite_filename}",
         "LastUpdated": str(int(time.time())),
         "DnsHosts": DEFAULT_DNS_HOSTS,
         "RouteOrder": route_order,
@@ -708,10 +799,10 @@ def main() -> int:
         raise FileNotFoundError(f"Rules directory not found: {rules_dir}")
 
     # Pack 1 (default): pure roscom profile, copied as-is from upstream JSON.
-    default_profile = fetch_roscom_profile()
-    default_profile["Name"] = DEFAULT_PROFILE_NAME
-    default_pretty, _, default_deeplink = profile_to_deeplink(default_profile, args.deeplink_mode)
-    (out_dir / "DEFAULT.JSON").write_text(default_pretty + "\n", encoding="utf-8")
+    default_payload = fetch_roscom_profile_payload()
+    default_profile = parse_json_object(default_payload)
+    _, _, default_deeplink = profile_to_deeplink(default_profile, args.deeplink_mode)
+    (out_dir / "DEFAULT.JSON").write_text(default_payload if default_payload.endswith("\n") else default_payload + "\n", encoding="utf-8")
     (out_dir / "DEFAULT.DEEPLINK").write_text(default_deeplink + "\n", encoding="utf-8")
 
     # Pack 2 (bonus): local augmentation based on shadowrocket.conf + rules/*.list.
@@ -723,10 +814,10 @@ def main() -> int:
     )
     data = parse_conf_and_lists(conf_path, rules_dir)
     ensure_bucket_uniques(data)
-    build_geosite_dat(out_dir, data)
-    build_geoip_dat(out_dir, data)
+    build_geosite_dat(out_dir, data, BONUS_GEOSITE_FILENAME)
+    build_geoip_dat(out_dir, data, BONUS_GEOIP_FILENAME)
     slug = repo_slug(repo_root)
-    raw_base = f"https://cdn.jsdelivr.net/gh/{slug}@main/{args.out_dir.strip('/')}"
+    raw_base = f"https://raw.githubusercontent.com/{slug}/main/{args.out_dir.strip('/')}"
     bonus_profile = build_profile(
         data=data,
         raw_base=raw_base,
@@ -737,6 +828,8 @@ def main() -> int:
         remote_dns_type=args.remote_dns_type,
         domestic_dns_type=args.domestic_dns_type,
         general_direct_ips=general_direct_ips,
+        geoip_filename=BONUS_GEOIP_FILENAME,
+        geosite_filename=BONUS_GEOSITE_FILENAME,
     )
     bonus_profile["Name"] = BONUS_PROFILE_NAME
     bonus_pretty, bonus_compact, bonus_deeplink = profile_to_deeplink(bonus_profile, args.deeplink_mode)

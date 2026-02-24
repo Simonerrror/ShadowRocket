@@ -1,19 +1,19 @@
 # HAPP Routing Build Report
 
 ## Source
-- Config: `/home/runner/work/ShadowRocket/ShadowRocket/shadowrocket.conf`
-- Commit: `1697024ee3f79ce2c449ae767c37938b200c8a7a`
+- Config: `/Users/sergio/Documents/30_HOBBY_AI/shadorock/ShadowRocket/shadowrocket.conf`
+- Commit: `7be76a3a304918c19854a4aa178ebdadda3c9a8c`
 
 ## Processed
 - Rules in `[Rule]`: 10
 - RULE-SET entries parsed: 1749
-- Converted lines: 1707
-- Dropped lines: 46
+- Converted lines: 1740
+- Dropped lines: 13
 
 ## Output
 - Deeplink mode: `onadd`
-- JSON length (compact): 1482
-- Deeplink length: 2009
+- JSON length (compact): 1506
+- Deeplink length: 2041
 - DirectSites: 13
 - ProxySites: 5
 - BlockSites: 3
@@ -46,4 +46,4 @@
 - none
 
 ## Other dropped reasons
-- domain_keyword_not_supported_in_happ: 33
+- none
