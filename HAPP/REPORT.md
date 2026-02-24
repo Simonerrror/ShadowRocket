@@ -2,13 +2,13 @@
 
 ## Source
 - Config: `/home/runner/work/ShadowRocket/ShadowRocket/shadowrocket.conf`
-- Commit: `2e880aaa38f8defd59414edf7831fa71e3022f26`
+- Commit: `4a06e71ff31c54e027552c64e921f375a0b09869`
 
 ## Processed
-- Rules in `[Rule]`: 12
-- RULE-SET entries parsed: 1796
-- Converted lines: 1741
-- Dropped lines: 59
+- Rules in `[Rule]`: 10
+- RULE-SET entries parsed: 1749
+- Converted lines: 1707
+- Dropped lines: 46
 
 ## Output
 - Deeplink mode: `onadd`
@@ -37,23 +37,13 @@
 - microsoft.list:680: USER-AGENT,OneDriveiOSApp*
 
 ## Dropped DST-PORT
-- voice_ports.list:5: DST-PORT,3478,PROXY
-- voice_ports.list:6: DST-PORT,3480,PROXY
-- voice_ports.list:7: DST-PORT,3484,PROXY
-- voice_ports.list:10: DST-PORT,5222,PROXY
-- voice_ports.list:12: DST-PORT,596-599,PROXY
-- voice_ports.list:15: DST-PORT,1400,PROXY
-- voice_ports.list:18: DST-PORT,19302​–19309,PROXY
+- none
 
 ## Dropped IP-ASN
-- telegram.list:46: IP-ASN,211157,no-resolve
-- telegram.list:47: IP-ASN,44907,no-resolve
-- telegram.list:48: IP-ASN,59930,no-resolve
-- telegram.list:49: IP-ASN,62014,no-resolve
-- telegram.list:50: IP-ASN,62041,no-resolve
+- none
 
 ## Dropped composite AND
 - none
 
 ## Other dropped reasons
-- domain_keyword_not_supported_in_happ: 34
+- domain_keyword_not_supported_in_happ: 33

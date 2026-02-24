@@ -12,7 +12,7 @@
   "DomesticDNSIP": "77.88.8.8",
   "Geoipurl": "https://cdn.jsdelivr.net/gh/Simonerrror/ShadowRocket@main/HAPP/geoip.dat",
   "Geositeurl": "https://cdn.jsdelivr.net/gh/Simonerrror/ShadowRocket@main/HAPP/geosite.dat",
-  "LastUpdated": "1771911429",
+  "LastUpdated": "1771939867",
   "DnsHosts": {
     "adfree.dns.nextdns.io": "76.76.2.0",
     "cloudflare-dns.com": "1.1.1.1",
