@@ -2,7 +2,7 @@
 
 ## Source
 - Config: `/home/runner/work/ShadowRocket/ShadowRocket/shadowrocket.conf`
-- Commit: `4a06e71ff31c54e027552c64e921f375a0b09869`
+- Commit: `1697024ee3f79ce2c449ae767c37938b200c8a7a`
 
 ## Processed
 - Rules in `[Rule]`: 10
