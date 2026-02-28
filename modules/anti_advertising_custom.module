@@ -1,4 +1,4 @@
-#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/refs/heads/main/modules/anti_advertising_custom.module
+#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_advertising_custom.module
 #!name=Anti-Advertising Custom (REJECT)
 #!desc=Блокировщик рекламы и трекеров через единый rule-set список репозитория (REJECT) с локальными исключениями.
 [Rule]

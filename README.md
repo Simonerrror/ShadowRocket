@@ -37,7 +37,7 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
 
 Кастомный профиль для GFN/NVIDIA (с `always-real-ip`):
 ```
-https://raw.githubusercontent.com/Simonerrror/ShadowRocket/refs/heads/main/shadowrocket_custom.conf
+https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_custom.conf
 ```
 
 ## Clash Verge Rev (Windows)
@@ -135,7 +135,7 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_adv
 ```
 Или кастомный модуль с локальными исключениями для GFN/NVIDIA:
 ```
-https://raw.githubusercontent.com/Simonerrror/ShadowRocket/refs/heads/main/modules/anti_advertising_custom.module
+https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_advertising_custom.module
 ```
 Модуль подключает единый список репозитория:
 ```
