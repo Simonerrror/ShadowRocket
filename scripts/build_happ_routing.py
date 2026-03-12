@@ -561,11 +561,79 @@ def write_geoip_bonus_config(geoip_repo: Path, data: BuildData) -> Path:
     return config_path
 
 
+def write_release_direct_fallback_config(geoip_repo: Path) -> None:
+    inputs: list[dict[str, object]] = [
+        {
+            "type": "text",
+            "action": "add",
+            "args": {
+                "name": "direct",
+                "uri": "./fallback-direct.txt",
+                "onlyIPType": "ipv4",
+            },
+        },
+        {
+            "type": "text",
+            "action": "add",
+            "args": {
+                "name": "whitelist",
+                "uri": "./whitelist.txt",
+                "onlyIPType": "ipv4",
+            },
+        },
+        {
+            "type": "private",
+            "action": "add",
+        },
+        {
+            "type": "text",
+            "action": "remove",
+            "args": {
+                "name": "private",
+                "ipOrCIDR": ["0.0.0.0/8", "::/128"],
+            },
+        },
+    ]
+    custom_whitelist = geoip_repo / "CUSTOM-WHITELIST.txt"
+    if custom_whitelist.exists():
+        inputs.insert(
+            2,
+            {
+                "type": "text",
+                "action": "add",
+                "args": {
+                    "name": "whitelist",
+                    "uri": "./CUSTOM-WHITELIST.txt",
+                },
+            },
+        )
+
+    fallback_config = {
+        "input": inputs,
+        "output": [
+            {
+                "type": "v2rayGeoIPDat",
+                "action": "output",
+                "args": {
+                    "outputName": "geoip.dat",
+                },
+            },
+            {
+                "type": "text",
+                "action": "output",
+            },
+        ],
+    }
+    (geoip_repo / "config.json").write_text(json.dumps(fallback_config, indent=2), encoding="utf-8")
+
+
 def sync_hydra_text_inputs(geoip_repo: Path, hydra_repo: Path) -> None:
     config = json.loads((geoip_repo / "config.json").read_text(encoding="utf-8"))
     inputs = config.get("input", [])
     if not isinstance(inputs, list):
         raise RuntimeError("Unexpected hydraponique config.json format: missing input[]")
+
+    fallback_reasons: list[str] = []
 
     for item in inputs:
         if not isinstance(item, dict) or item.get("type") != "text":
@@ -574,106 +642,71 @@ def sync_hydra_text_inputs(geoip_repo: Path, hydra_repo: Path) -> None:
         if not isinstance(args, dict):
             continue
         uri = args.get("uri")
-        if not isinstance(uri, str) or not uri.startswith("./") or not uri.endswith(".txt"):
+        if not isinstance(uri, str) or not uri.startswith("./"):
             continue
 
         relative = Path(uri.removeprefix("./"))
-        if relative.is_absolute() or len(relative.parts) != 1:
+        if relative.is_absolute():
             continue
 
-        dest = geoip_repo / relative.name
+        dest = geoip_repo / relative
         if dest.exists():
             continue
 
         candidates = (
+            hydra_repo / relative,
             hydra_repo / relative.name,
             hydra_repo / "release" / "text" / relative.name,
         )
         source = next((path for path in candidates if path.exists()), None)
         if source is not None:
+            dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, dest)
             continue
 
+        source_url = HYDRA_GEOIP_EXTERNAL_SOURCES.get(relative.name)
+        if source_url is not None:
+            try:
+                fetch_to_file(source_url, dest)
+            except RuntimeError as exc:
+                fallback_reasons.append(str(exc))
+            continue
+
         if relative.name.startswith("CUSTOM-"):
+            dest.parent.mkdir(parents=True, exist_ok=True)
             dest.write_text("", encoding="utf-8")
             continue
 
-        raise RuntimeError(f"Missing required hydraponique file referenced by config.json: {relative.name}")
+        if relative == Path("tmp/text/final.txt"):
+            fallback_reasons.append("Upstream config requires tmp/text/final.txt but no generator is present.")
+            continue
+
+        raise RuntimeError(f"Missing required hydraponique file referenced by config.json: {relative}")
+
+    if not fallback_reasons:
+        return
+
+    fallback_direct = hydra_repo / "release" / "text" / "direct.txt"
+    if not fallback_direct.exists():
+        raise RuntimeError(
+            "Failed to prepare live geoip inputs and fallback release/text/direct.txt is missing"
+        )
+    shutil.copy2(fallback_direct, geoip_repo / "fallback-direct.txt")
+    write_release_direct_fallback_config(geoip_repo)
+    print(
+        "Warning: using fallback release/text/direct.txt for geoip input because live inputs are unavailable.\n"
+        + "\n".join(fallback_reasons),
+        file=sys.stderr,
+    )
 
 
 def prepare_hydra_geoip_inputs(geoip_repo: Path, hydra_repo: Path) -> None:
-    for name in ("config.json", "ipset_ops.py", "CUSTOM-LIST-ADD.txt", "CUSTOM-LIST-DEL.txt"):
+    for name in ("config.json",):
         source = hydra_repo / name
         if not source.exists():
             raise RuntimeError(f"Missing required hydraponique file: {name}")
         shutil.copy2(source, geoip_repo / name)
     sync_hydra_text_inputs(geoip_repo, hydra_repo)
-
-    prepare_path = geoip_repo / "tmp" / "text" / "prepare.txt"
-    final_path = geoip_repo / "tmp" / "text" / "final.txt"
-    prepare_path.parent.mkdir(parents=True, exist_ok=True)
-
-    try:
-        for target_name, url in HYDRA_GEOIP_EXTERNAL_SOURCES.items():
-            fetch_to_file(url, geoip_repo / target_name)
-
-        source_files = (
-            "geolite_ru.lst",
-            "geolite_by.lst",
-            "ipinfo_ru.lst",
-            "ipinfo_by.lst",
-            "dbip_ru.lst",
-            "dbip_by.lst",
-            "CUSTOM-LIST-ADD.txt",
-        )
-        with prepare_path.open("w", encoding="utf-8") as out:
-            for file_name in source_files:
-                src = geoip_repo / file_name
-                if not src.exists():
-                    continue
-                text = src.read_text(encoding="utf-8", errors="ignore")
-                out.write(text)
-                if not text.endswith("\n"):
-                    out.write("\n")
-
-        b_group = ",".join(
-            [
-                "./refilter.txt",
-                "./antifilternetwork.txt",
-                "./antifilterdownloadcommunity.txt",
-                "./refiltercommunity.txt",
-                "./antifilternetworkcommunity.txt",
-                "./cdn.lst",
-                "./merged.sum",
-                "./CUSTOM-LIST-DEL.txt",
-            ]
-        )
-        run(
-            [
-                "python3",
-                "ipset_ops.py",
-                "--mode",
-                "diff",
-                "--A",
-                "./tmp/text/prepare.txt",
-                "--B",
-                b_group,
-                "--out",
-                "./tmp/text/final.txt",
-            ],
-            cwd=geoip_repo,
-        )
-    except RuntimeError as exc:
-        fallback_direct = hydra_repo / "release" / "text" / "direct.txt"
-        if not fallback_direct.exists():
-            raise RuntimeError(
-                f"Failed to prepare live geoip inputs and fallback direct.txt is missing\n{exc}"
-            ) from exc
-        shutil.copy2(fallback_direct, final_path)
-        print(
-            f"Warning: using fallback release/text/direct.txt for geoip input because live sources failed.\n{exc}",
-            file=sys.stderr,
-        )
 
 
 def build_geoip_dat(out_dir: Path, data: BuildData, output_name: str = BONUS_GEOIP_FILENAME) -> Path:
