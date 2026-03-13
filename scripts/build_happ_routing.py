@@ -29,12 +29,11 @@ OBSOLETE_HAPP_FILES = (
     "bonus_geosite.dat",
     "REPORT.md",
 )
-DEFAULT_REMOTE_DNS_DOMAIN = "https://adfree.dns.nextdns.io/dns-query"
-DEFAULT_DNS_HOSTS = {
-    "adfree.dns.nextdns.io": "76.76.2.0",
-    "cloudflare-dns.com": "1.1.1.1",
-    "one.one.one.one": "1.1.1.1",
-}
+DEFAULT_REMOTE_DNS_IP = "8.8.8.8"
+DEFAULT_REMOTE_DNS_DOMAIN = "https://8.8.8.8/dns-query"
+DEFAULT_DOMESTIC_DNS_IP = "77.88.8.8"
+DEFAULT_DOMESTIC_DNS_DOMAIN = "https://77.88.8.8/dns-query"
+DEFAULT_DNS_HOSTS: dict[str, str] = {}
 @dataclass
 class Bucket:
     site_rules: list[str] = field(default_factory=list)
@@ -106,8 +105,8 @@ def parse_args() -> argparse.Namespace:
         ],
         help="RouteOrder value for HAPP profile",
     )
-    parser.add_argument("--remote-dns-ip", default="76.76.2.0", help="Remote DNS IP")
-    parser.add_argument("--domestic-dns-ip", default="77.88.8.8", help="Domestic DNS IP")
+    parser.add_argument("--remote-dns-ip", default=DEFAULT_REMOTE_DNS_IP, help="Remote DNS IP")
+    parser.add_argument("--domestic-dns-ip", default=DEFAULT_DOMESTIC_DNS_IP, help="Domestic DNS IP")
     parser.add_argument(
         "--remote-dns-type",
         default="DoH",
@@ -121,7 +120,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--domestic-dns-type",
-        default="DoU",
+        default="DoH",
         choices=["DoH", "DoU"],
         help="Domestic DNS type",
     )
@@ -252,7 +251,7 @@ def build_profile(
         "RemoteDNSDomain": remote_dns_domain,
         "RemoteDNSIP": remote_dns_ip,
         "DomesticDNSType": domestic_dns_type,
-        "DomesticDNSDomain": "",
+        "DomesticDNSDomain": DEFAULT_DOMESTIC_DNS_DOMAIN if domestic_dns_type == "DoH" else "",
         "DomesticDNSIP": domestic_dns_ip,
         "Geoipurl": f"{geodata_base}/geoip.dat",
         "Geositeurl": f"{geodata_base}/geosite.dat",
@@ -266,7 +265,7 @@ def build_profile(
         "BlockSites": block_sites,
         "BlockIp": block_ip,
         "DomainStrategy": "IPIfNonMatch",
-        "FakeDNS": "true",
+        "FakeDNS": "false",
     }
 
 
@@ -301,8 +300,6 @@ def main() -> int:
     remove_obsolete_happ_files(out_dir)
 
     remote_dns_ip = args.remote_dns_ip
-    if "--remote-dns-ip" not in sys.argv:
-        remote_dns_ip = extract_remote_dns_ip(conf_path) or args.remote_dns_ip
     general_direct_ips = dedupe_preserve(extract_skip_proxy_ips(conf_path) + extract_bypass_tun_ips(conf_path))
     data = load_build_data_from_distillate(distillate_dir)
 
