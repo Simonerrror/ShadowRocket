@@ -1,15 +1,24 @@
+#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_advertising_custom.module
 #!name=Anti-Advertising Custom (REJECT)
 #!desc=Блокировщик рекламы и трекеров через единый rule-set список репозитория (REJECT) с локальными исключениями.
 [Rule]
-# === NVIDIA WHITELIST ===
-DOMAIN-SUFFIX,telemetry.gfe.nvidia.com,DIRECT
-DOMAIN-SUFFIX,prod.otel.kaizen.nvidia.com,DIRECT
-DOMAIN-KEYWORD,nvidia,DIRECT
 
-# === SYSTEM SNITCHES (STEALTH) ===
-DOMAIN,optimizationguide-pa.googleapis.com,DIRECT
-DOMAIN,signaler-pa.clients6.google.com,DIRECT
-DOMAIN-SUFFIX,gvt2.com,DIRECT
-DOMAIN-SUFFIX,events.data.microsoft.com,DIRECT
+DOMAIN-SUFFIX,fscdn.eppo.cloud,DIRECT
+DOMAIN-SUFFIX,default.exp-tas.com,DIRECT
+DOMAIN-SUFFIX,singular.net,DIRECT
+
+# NVIDIA/GFN DIRECT whitelist
+DOMAIN-KEYWORD,nvidia,DIRECT
+DOMAIN-KEYWORD,geforce,DIRECT
+DOMAIN-KEYWORD,geforcenow,DIRECT
+DOMAIN-SUFFIX,nvidia.com,DIRECT
+DOMAIN-SUFFIX,nvidiagrid.net,DIRECT
+DOMAIN-SUFFIX,geforcenow.com,DIRECT
+DOMAIN,static.nvidiagrid.net,DIRECT
+DOMAIN,assets.nvidiagrid.net,DIRECT
+DOMAIN,img.nvidiagrid.net,DIRECT
+
+IP-CIDR,37.186.111.0/24,DIRECT,no-resolve
+IP-CIDR,17.253.150.10/32,DIRECT,no-resolve
 
 RULE-SET, https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.list,REJECT
