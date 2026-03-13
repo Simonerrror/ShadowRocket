@@ -33,11 +33,10 @@ IGNORED_RULE_TYPES = {
 }
 MANIFEST_PATH = Path("distillate/manifest.json")
 TEXT_DIR = Path("distillate/text")
-MIHOMO_DIR = Path("distillate/mihomo")
-SING_BOX_DIR = Path("distillate/sing-box")
 DAT_DIR = Path("distillate/dat")
 SUMMARY_PATH = Path("distillate/summary.json")
 UPSTREAM_DIR = Path("distillate/upstream")
+OBSOLETE_COMPILED_DIRS = (Path("distillate/mihomo"), Path("distillate/sing-box"))
 GEOIP_REPO = "https://github.com/v2fly/geoip.git"
 GEOSITE_REPO = "https://github.com/v2fly/domain-list-community.git"
 RULE_HEADER = "# Generated from distillate/manifest.json"
@@ -63,10 +62,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--skip-compiled",
         action="store_true",
-        help="Skip .mrs/.srs/.dat compilation and only refresh canonical text + legacy rules.",
+        help="Skip .dat compilation and only refresh canonical text + legacy rules.",
     )
-    parser.add_argument("--mihomo-bin", default="mihomo", help="mihomo binary name/path")
-    parser.add_argument("--sing-box-bin", default="sing-box", help="sing-box binary name/path")
     return parser.parse_args()
 
 
@@ -550,19 +547,16 @@ def prepare_output_dirs(repo_root: Path, skip_compiled: bool) -> None:
         if subdir.exists():
             shutil.rmtree(subdir)
         subdir.mkdir(parents=True, exist_ok=True)
+    for obsolete_dir in OBSOLETE_COMPILED_DIRS:
+        target = repo_root / obsolete_dir
+        if target.exists():
+            shutil.rmtree(target)
     if skip_compiled:
         return
-    for output_dir in (repo_root / MIHOMO_DIR, repo_root / SING_BOX_DIR, repo_root / DAT_DIR):
-        if output_dir.exists():
-            shutil.rmtree(output_dir)
-        output_dir.mkdir(parents=True, exist_ok=True)
-    for subdir in (
-        repo_root / MIHOMO_DIR / "domain",
-        repo_root / MIHOMO_DIR / "ip",
-        repo_root / SING_BOX_DIR / "domain",
-        repo_root / SING_BOX_DIR / "ip",
-    ):
-        subdir.mkdir(parents=True, exist_ok=True)
+    output_dir = repo_root / DAT_DIR
+    if output_dir.exists():
+        shutil.rmtree(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
 
 def write_text_outputs(
@@ -619,91 +613,6 @@ def compiled_categories(
             compiled[name] = result
     compiled.update(aggregates)
     return compiled
-
-
-def ensure_binary(name: str) -> str:
-    binary = shutil.which(name)
-    if binary is None:
-        raise DistillateError(f"Required binary not found in PATH: {name}")
-    return binary
-
-
-def domain_lines_for_mihomo(lines: list[str]) -> list[str]:
-    output: list[str] = []
-    for line in lines:
-        if line.startswith("full:"):
-            output.append(line[5:])
-            continue
-        if line.startswith("domain:"):
-            value = line[7:].lstrip(".")
-            if value:
-                output.append(f"+.{value}")
-            continue
-        if line.startswith("keyword:"):
-            value = line[8:].lstrip(".")
-            if value:
-                output.append(f"+.{value}")
-    return output
-
-
-def compile_mihomo(repo_root: Path, categories: dict[str, CategoryResult], mihomo_bin: str) -> None:
-    for name, result in categories.items():
-        domain_input = domain_lines_for_mihomo(result.domain_rules)
-        domain_dest = repo_root / MIHOMO_DIR / "domain" / f"{name}.mrs"
-        ip_dest = repo_root / MIHOMO_DIR / "ip" / f"{name}.mrs"
-        if domain_input:
-            with tempfile.NamedTemporaryFile("w", encoding="utf-8", delete=False) as tmp_file:
-                tmp_path = Path(tmp_file.name)
-                tmp_file.write("\n".join(domain_input) + "\n")
-            try:
-                run([mihomo_bin, "convert-ruleset", "domain", "text", str(tmp_path), str(domain_dest)])
-            finally:
-                tmp_path.unlink(missing_ok=True)
-
-        if result.ip_cidrs:
-            ip_source = repo_root / TEXT_DIR / "ip" / f"{name}.txt"
-            run([mihomo_bin, "convert-ruleset", "ipcidr", "text", str(ip_source), str(ip_dest)])
-
-
-def compile_sing_box(repo_root: Path, categories: dict[str, CategoryResult], sing_box_bin: str) -> None:
-    for name, result in categories.items():
-        domain_payload: dict[str, Any] = {"version": 3, "rules": [{}]}
-        bucket = domain_payload["rules"][0]
-        for line in result.domain_rules:
-            if line.startswith("full:"):
-                bucket.setdefault("domain", []).append(line[5:])
-            elif line.startswith("domain:"):
-                bucket.setdefault("domain_suffix", []).append(line[7:])
-            elif line.startswith("keyword:"):
-                bucket.setdefault("domain_keyword", []).append(line[8:])
-        domain_payload["rules"][0] = {key: value for key, value in bucket.items() if value}
-        if not domain_payload["rules"][0]:
-            domain_payload["rules"] = []
-
-        ip_payload: dict[str, Any]
-        if result.ip_cidrs:
-            ip_payload = {"version": 3, "rules": [{"ip_cidr": list(result.ip_cidrs)}]}
-        else:
-            ip_payload = {"version": 3, "rules": []}
-
-        domain_dest = repo_root / SING_BOX_DIR / "domain" / f"{name}.srs"
-        ip_dest = repo_root / SING_BOX_DIR / "ip" / f"{name}.srs"
-        if domain_payload["rules"]:
-            with tempfile.NamedTemporaryFile("w", encoding="utf-8", delete=False) as domain_file:
-                json.dump(domain_payload, domain_file, ensure_ascii=False)
-                domain_json = Path(domain_file.name)
-            try:
-                run([sing_box_bin, "rule-set", "compile", "--output", str(domain_dest), str(domain_json)])
-            finally:
-                domain_json.unlink(missing_ok=True)
-        if ip_payload["rules"]:
-            with tempfile.NamedTemporaryFile("w", encoding="utf-8", delete=False) as ip_file:
-                json.dump(ip_payload, ip_file, ensure_ascii=False)
-                ip_json = Path(ip_file.name)
-            try:
-                run([sing_box_bin, "rule-set", "compile", "--output", str(ip_dest), str(ip_json)])
-            finally:
-                ip_json.unlink(missing_ok=True)
 
 
 def compile_geosite_dat(repo_root: Path, categories: dict[str, CategoryResult]) -> None:
@@ -829,11 +738,7 @@ def main() -> int:
     if args.skip_compiled:
         return 0
 
-    mihomo_bin = ensure_binary(args.mihomo_bin)
-    sing_box_bin = ensure_binary(args.sing_box_bin)
     artifacts = compiled_categories(spec_by_name, published, aggregates)
-    compile_mihomo(repo_root, artifacts, mihomo_bin)
-    compile_sing_box(repo_root, artifacts, sing_box_bin)
     compile_geosite_dat(repo_root, artifacts)
     compile_geoip_dat(repo_root, artifacts)
     return 0
