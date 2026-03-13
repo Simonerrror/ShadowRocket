@@ -8,7 +8,6 @@ import base64
 import ipaddress
 import json
 import shlex
-import shutil
 import subprocess
 import sys
 import time
@@ -19,8 +18,17 @@ from urllib.parse import urlparse
 
 
 DEFAULT_PROFILE_NAME = "роут-MotivatoPotato"
-DEFAULT_GEOIP_FILENAME = "default_geoip.dat"
-DEFAULT_GEOSITE_FILENAME = "default_geosite.dat"
+OBSOLETE_HAPP_FILES = (
+    "geoip.dat",
+    "geosite.dat",
+    "default_geoip.dat",
+    "default_geosite.dat",
+    "BONUS.JSON",
+    "BONUS.DEEPLINK",
+    "bonus_geoip.dat",
+    "bonus_geosite.dat",
+    "REPORT.md",
+)
 DEFAULT_REMOTE_DNS_DOMAIN = "https://adfree.dns.nextdns.io/dns-query"
 DEFAULT_DNS_HOSTS = {
     "adfree.dns.nextdns.io": "76.76.2.0",
@@ -214,13 +222,9 @@ def repo_slug(repo_root: Path) -> str:
     raise RuntimeError(f"Unsupported origin URL format: {remote}")
 
 
-def commit_sha(repo_root: Path) -> str:
-    return run(["git", "-C", str(repo_root), "rev-parse", "HEAD"])
-
-
 def build_profile(
     data: BuildData,
-    raw_base: str,
+    geodata_base: str,
     route_order: str,
     remote_dns_ip: str,
     remote_dns_domain: str,
@@ -229,8 +233,6 @@ def build_profile(
     domestic_dns_type: str,
     general_direct_ips: list[str],
     profile_name: str,
-    geoip_filename: str,
-    geosite_filename: str,
     block_geosite_tag: str | None,
 ) -> dict[str, object]:
     direct_ip = dedupe_preserve(general_direct_ips + (["geoip:sr-direct"] if data.direct.cidrs else []))
@@ -252,8 +254,8 @@ def build_profile(
         "DomesticDNSType": domestic_dns_type,
         "DomesticDNSDomain": "",
         "DomesticDNSIP": domestic_dns_ip,
-        "Geoipurl": f"{raw_base}/{geoip_filename}",
-        "Geositeurl": f"{raw_base}/{geosite_filename}",
+        "Geoipurl": f"{geodata_base}/geoip.dat",
+        "Geositeurl": f"{geodata_base}/geosite.dat",
         "LastUpdated": str(int(time.time())),
         "DnsHosts": DEFAULT_DNS_HOSTS,
         "RouteOrder": route_order,
@@ -274,17 +276,9 @@ def profile_to_deeplink(profile: dict[str, object], mode: str) -> tuple[str, str
     encoded = base64.b64encode(json_compact.encode("utf-8")).decode("ascii")
     deeplink = f"happ://routing/{mode}/{encoded}"
     return json_pretty, json_compact, deeplink
-
-
-def copy_distillate_dat_files(distillate_dir: Path, out_dir: Path) -> None:
-    geosite_source = distillate_dir / "dat" / "geosite.dat"
-    geoip_source = distillate_dir / "dat" / "geoip.dat"
-    if not geosite_source.exists() or not geoip_source.exists():
-        raise FileNotFoundError(
-            "distillate dat artifacts are missing; run scripts/build_distillate.py before build_happ_routing.py"
-        )
-    shutil.copy2(geosite_source, out_dir / DEFAULT_GEOSITE_FILENAME)
-    shutil.copy2(geoip_source, out_dir / DEFAULT_GEOIP_FILENAME)
+def remove_obsolete_happ_files(out_dir: Path) -> None:
+    for name in OBSOLETE_HAPP_FILES:
+        (out_dir / name).unlink(missing_ok=True)
 
 
 def main() -> int:
@@ -299,20 +293,25 @@ def main() -> int:
         raise FileNotFoundError(f"Config not found: {conf_path}")
     if not distillate_dir.exists():
         raise FileNotFoundError(f"Distillate directory not found: {distillate_dir}")
+    if not (distillate_dir / "dat" / "geosite.dat").exists() or not (distillate_dir / "dat" / "geoip.dat").exists():
+        raise FileNotFoundError(
+            "distillate dat artifacts are missing; run scripts/build_distillate.py before build_happ_routing.py"
+        )
+
+    remove_obsolete_happ_files(out_dir)
 
     remote_dns_ip = args.remote_dns_ip
     if "--remote-dns-ip" not in sys.argv:
         remote_dns_ip = extract_remote_dns_ip(conf_path) or args.remote_dns_ip
     general_direct_ips = dedupe_preserve(extract_skip_proxy_ips(conf_path) + extract_bypass_tun_ips(conf_path))
     data = load_build_data_from_distillate(distillate_dir)
-    copy_distillate_dat_files(distillate_dir, out_dir)
 
     slug = repo_slug(repo_root)
-    raw_base = f"https://raw.githubusercontent.com/{slug}/main/{args.out_dir.strip('/')}"
+    geodata_base = f"https://raw.githubusercontent.com/{slug}/main/{args.distillate_dir.strip('/')}/dat"
     block_site_tag = "motivato-block" if read_text_lines(distillate_dir / "text" / "domain" / "motivato_block.txt") else None
     default_profile = build_profile(
         data=data,
-        raw_base=raw_base,
+        geodata_base=geodata_base,
         route_order=args.route_order,
         remote_dns_ip=remote_dns_ip,
         remote_dns_domain=args.remote_dns_domain,
@@ -321,8 +320,6 @@ def main() -> int:
         domestic_dns_type=args.domestic_dns_type,
         general_direct_ips=general_direct_ips,
         profile_name=DEFAULT_PROFILE_NAME,
-        geoip_filename=DEFAULT_GEOIP_FILENAME,
-        geosite_filename=DEFAULT_GEOSITE_FILENAME,
         block_geosite_tag=block_site_tag,
     )
     default_pretty, _, default_deeplink = profile_to_deeplink(default_profile, args.deeplink_mode)

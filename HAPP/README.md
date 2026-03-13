@@ -7,15 +7,15 @@
 - DEFAULT (`роут-MotivatoPotato`), JSON:  
   [DEFAULT.JSON](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/DEFAULT.JSON)
 - Local geodata:
-  [default_geoip.dat](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/default_geoip.dat)  
-  [default_geosite.dat](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/default_geosite.dat)
+  [distillate/dat/geoip.dat](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/distillate/dat/geoip.dat)  
+  [distillate/dat/geosite.dat](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/distillate/dat/geosite.dat)
 
 ## Пакет
 
 - `HAPP/DEFAULT.JSON` строится локально из `distillate/`.
 - Имя профиля: `роут-MotivatoPotato`.
 - `BlockSites` указывает на `geosite:motivato-block`.
-- `Geoipurl` и `Geositeurl` указывают на `default_*` файлы в этом репозитории.
+- `Geoipurl` и `Geositeurl` указывают напрямую на `distillate/dat/*`.
 
 ## Source Of Truth
 
@@ -46,7 +46,7 @@ p = Path("/Users/sergio/Documents/30_HOBBY_AI/shadorock/ShadowRocket/HAPP/DEFAUL
 data = json.loads(p.read_text(encoding="utf-8"))
 assert data["Name"] == "роут-MotivatoPotato"
 assert data["BlockSites"] == ["geosite:motivato-block"]
-assert data["Geositeurl"].endswith("/HAPP/default_geosite.dat")
+assert data["Geositeurl"].endswith("/distillate/dat/geosite.dat")
 print("OK")
 PY
 ```
