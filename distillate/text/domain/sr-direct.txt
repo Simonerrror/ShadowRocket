@@ -1,0 +1,4 @@
+keyword:lichess
+domain:ru
+domain:xn--p1ai
+domain:su

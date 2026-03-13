@@ -1,234 +1,20 @@
 #!/usr/bin/env python3
-"""Sync rule lists from upstream repositories."""
+"""Refresh vendored upstream lists plus canonical distillate text outputs."""
 
 from __future__ import annotations
 
 import argparse
 import subprocess
-from datetime import datetime, timezone
-from dataclasses import dataclass
+import sys
 from pathlib import Path
-from typing import Iterable
-from urllib.request import Request, urlopen
 
-
-@dataclass(frozen=True)
-class RuleSource:
-    path: Path
-    url: str
-    reason: str
-
-
-RULE_SOURCES: tuple[RuleSource, ...] = (
-    RuleSource(
-        path=Path("rules/microsoft.list"),
-        url=(
-            "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/"
-            "master/rule/Shadowrocket/Microsoft/Microsoft.list"
-        ),
-        reason="Upstream list from blackmatrix7 for MS365/Teams/Office",
-    ),
-    RuleSource(
-        path=Path("rules/telegram.list"),
-        url=(
-            "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/"
-            "master/rule/Shadowrocket/Telegram/Telegram.list"
-        ),
-        reason="Upstream list from blackmatrix7",
-    ),
-    RuleSource(
-        path=Path("rules/voice_ports.list"),
-        url=(
-            "https://raw.githubusercontent.com/misha-tgshv/"
-            "shadowrocket-configuration-file/main/rules/voice_ports.list"
-        ),
-        reason="Upstream list from misha-tgshv",
-    ),
-    # RuleSource(
-    #     path=Path("rules/domains_community.list"),
-    #     url=(
-    #         "https://raw.githubusercontent.com/misha-tgshv/"
-    #         "shadowrocket-configuration-file/main/rules/domains_community.list"
-    #     ),
-    #     reason="Manual list in this repo; keep manual control",
-    # ),
-    # RuleSource(
-    #     path=Path("rules/russia_extended.list"),
-    #     url="",
-    #     reason="Local list in this repo; keep manual control",
-    # ),
+from build_distillate import (
+    DistillateError,
+    MANIFEST_PATH,
+    fetch_text,
+    iter_external_sources,
+    load_manifest,
 )
-
-LOCAL_RULES: tuple[Path, ...] = (
-    Path("rules/whitelist_direct.list"),
-    Path("rules/greylist_proxy.list"),
-)
-
-
-def fetch_text(url: str) -> str:
-    request = Request(url, headers={"User-Agent": "ShadowRocketSync/1.0"})
-    with urlopen(request, timeout=30) as response:
-        content = response.read().decode("utf-8")
-    return content
-
-
-GOOGLE_BUNDLE_URLS: tuple[str, ...] = (
-    "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Gemini/Gemini.list",
-    "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Google/Google.list",
-    "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/GoogleDrive/GoogleDrive.list",
-    "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/GoogleEarth/GoogleEarth.list",
-    "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/GoogleFCM/GoogleFCM.list",
-    "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/GoogleSearch/GoogleSearch.list",
-    "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/GoogleVoice/GoogleVoice.list",
-    "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/YouTube/YouTube.list",
-    "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/YouTube/YouTube_Resolve.list",
-    "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/YouTubeMusic/YouTubeMusic.list",
-)
-
-ANTI_AD_BUNDLE_SOURCES: tuple[tuple[str, str], ...] = (
-    (
-        "https://dl.oisd.nl/oisd_big_surge.list",
-        "shadowrocket",
-    ),
-    (
-        "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/ultimate-onlydomains.txt",
-        "domain",
-    ),
-)
-
-
-def filter_shadowrocket_rules(raw_text: str) -> list[str]:
-    rules: list[str] = []
-    for line in raw_text.splitlines():
-        stripped = line.strip()
-        if not stripped:
-            continue
-        if stripped.startswith(("#", "!", ";", "[")):
-            continue
-        rules.append(stripped)
-    return rules
-
-
-def compress_google_rules(rules: Iterable[str]) -> list[str]:
-    def rule_value(line: str) -> str:
-        parts = line.split(",")
-        if len(parts) < 2:
-            return ""
-        return parts[1]
-
-    keyword_values = {
-        rule_value(line)
-        for line in rules
-        if line.startswith("DOMAIN-KEYWORD,") and "," in line
-    }
-    has_google_keyword = "google" in keyword_values
-
-    compressed: list[str] = []
-    for line in rules:
-        if (
-            has_google_keyword
-            and line.startswith("DOMAIN-KEYWORD,")
-            and "," in line
-        ):
-            keyword = rule_value(line)
-            if keyword != "google" and "google" in keyword:
-                continue
-
-        if (
-            has_google_keyword
-            and line.startswith("DOMAIN,")
-            and "," in line
-        ):
-            domain = rule_value(line)
-            if domain == "google.com" or domain.endswith(".google.com"):
-                continue
-
-        compressed.append(line)
-    return compressed
-
-
-def dedupe_rules(rules: Iterable[str]) -> list[str]:
-    seen: set[str] = set()
-    unique: list[str] = []
-    for rule in rules:
-        if rule in seen:
-            continue
-        seen.add(rule)
-        unique.append(rule)
-    return unique
-
-
-def update_anti_advertising_bundle(repo_root: Path) -> bool:
-    output_path = repo_root / "rules/anti_advertising.list"
-    combined: list[str] = []
-    for url, source_type in ANTI_AD_BUNDLE_SOURCES:
-        raw_rules = filter_shadowrocket_rules(fetch_text(url))
-        if source_type == "domain":
-            combined.extend(f"DOMAIN-SUFFIX,{domain}" for domain in raw_rules)
-            continue
-        combined.extend(raw_rules)
-    unique_rules = dedupe_rules(combined)
-    new_content = "\n".join(unique_rules)
-    if new_content:
-        new_content += "\n"
-    if output_path.exists():
-        current_content = output_path.read_text(encoding="utf-8")
-        if current_content == new_content:
-            print("No changes for rules/anti_advertising.list")
-            return False
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(new_content, encoding="utf-8")
-    print("Updated rules/anti_advertising.list (anti-ad bundle)")
-    return True
-
-
-def update_google_bundle(repo_root: Path) -> bool:
-    output_path = repo_root / "rules/google-all.list"
-    combined: list[str] = []
-    for url in GOOGLE_BUNDLE_URLS:
-        combined.extend(filter_shadowrocket_rules(fetch_text(url)))
-    unique_rules = sorted(set(compress_google_rules(combined)))
-    header = [
-        "# Total Google & Gemini Bundle",
-        f"# Updated: {datetime.now(timezone.utc).isoformat()}",
-    ]
-    new_content = "\n".join(header + unique_rules) + "\n"
-    if output_path.exists():
-        current_content = output_path.read_text(encoding="utf-8")
-        if current_content == new_content:
-            print("No changes for rules/google-all.list")
-            return False
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(new_content, encoding="utf-8")
-    print("Updated rules/google-all.list (Google/Gemini bundle)")
-    return True
-
-
-def update_file(source: RuleSource, repo_root: Path) -> bool:
-    target_path = repo_root / source.path
-    target_path.parent.mkdir(parents=True, exist_ok=True)
-    new_content = fetch_text(source.url)
-    if target_path.exists():
-        current_content = target_path.read_text(encoding="utf-8")
-        if current_content == new_content:
-            print(f"No changes for {source.path}")
-            return False
-    target_path.write_text(new_content, encoding="utf-8")
-    print(f"Updated {source.path} ({source.reason})")
-    return True
-
-
-def sync_sources(sources: Iterable[RuleSource]) -> None:
-    repo_root = Path(__file__).resolve().parents[1]
-    for local_rule in LOCAL_RULES:
-        print(f"Skipping {local_rule}: local manual list")
-    update_anti_advertising_bundle(repo_root)
-    update_google_bundle(repo_root)
-    for source in sources:
-        if not source.url:
-            print(f"Skipping {source.path}: missing URL")
-            continue
-        update_file(source, repo_root)
 
 
 def pull_latest(repo_root: Path) -> None:
@@ -238,18 +24,50 @@ def pull_latest(repo_root: Path) -> None:
     subprocess.run(["git", "-C", str(repo_root), "pull", "--rebase"], check=True)
 
 
+def refresh_vendored_sources(repo_root: Path) -> None:
+    manifest = load_manifest(repo_root / MANIFEST_PATH)
+    targets = iter_external_sources(repo_root, manifest)
+    for target in targets:
+        cache_path = Path(target["cache_path"])
+        url = target["url"]
+        label = target["label"]
+        try:
+            payload = fetch_text(url)
+        except DistillateError as exc:
+            if cache_path.exists():
+                print(f"Warning: keeping cached copy for {label}: {cache_path} ({exc})")
+                continue
+            raise RuntimeError(f"Failed to fetch required source {label} and no cached copy exists: {exc}") from exc
+
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        tmp_path = cache_path.with_suffix(cache_path.suffix + ".tmp")
+        tmp_path.write_text(payload, encoding="utf-8")
+        tmp_path.replace(cache_path)
+        print(f"Updated vendored source {label} -> {cache_path.relative_to(repo_root)}")
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Sync rule lists from upstream repositories.")
+    parser = argparse.ArgumentParser(description="Sync distillate text outputs and legacy rule lists.")
     parser.add_argument(
         "--no-pull",
         action="store_true",
         help="Skip git pull --rebase before syncing.",
     )
     args = parser.parse_args()
+
     repo_root = Path(__file__).resolve().parents[1]
     if not args.no_pull:
         pull_latest(repo_root)
-    sync_sources(RULE_SOURCES)
+    refresh_vendored_sources(repo_root)
+
+    cmd = [
+        sys.executable,
+        str(repo_root / "scripts" / "build_distillate.py"),
+        "--manifest",
+        str(repo_root / MANIFEST_PATH),
+        "--skip-compiled",
+    ]
+    subprocess.run(cmd, check=True)
     return 0
 
 

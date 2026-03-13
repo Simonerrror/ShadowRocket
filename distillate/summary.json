@@ -1,0 +1,297 @@
+{
+  "published_categories": [
+    {
+      "name": "ai_bundle",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 67,
+      "ip_cidrs": 2,
+      "ip_asns": 0,
+      "dropped": {
+        "ignored_ip_asn": 3
+      }
+    },
+    {
+      "name": "anti_advertising",
+      "bucket": null,
+      "legacy_rule_path": "rules/anti_advertising.list",
+      "domains": 550924,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {}
+    },
+    {
+      "name": "claude",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 3,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {}
+    },
+    {
+      "name": "copilot",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 47,
+      "ip_cidrs": 2,
+      "ip_asns": 0,
+      "dropped": {
+        "ignored_ip_asn": 2
+      }
+    },
+    {
+      "name": "domains_community",
+      "bucket": "proxy",
+      "legacy_rule_path": "rules/domains_community.list",
+      "domains": 380,
+      "ip_cidrs": 22,
+      "ip_asns": 5,
+      "dropped": {
+        "ignored_process_name": 7
+      }
+    },
+    {
+      "name": "ea",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 165,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {}
+    },
+    {
+      "name": "epic",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 15,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {}
+    },
+    {
+      "name": "gemini",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 13,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {}
+    },
+    {
+      "name": "github",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 31,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {}
+    },
+    {
+      "name": "google",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 697,
+      "ip_cidrs": 5,
+      "ip_asns": 0,
+      "dropped": {
+        "ignored_process_name": 6
+      }
+    },
+    {
+      "name": "google_all",
+      "bucket": "proxy",
+      "legacy_rule_path": "rules/google-all.list",
+      "domains": 926,
+      "ip_cidrs": 31,
+      "ip_asns": 0,
+      "dropped": {
+        "ignored_process_name": 7
+      }
+    },
+    {
+      "name": "google_drive",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 5,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {
+        "ignored_process_name": 1
+      }
+    },
+    {
+      "name": "google_earth",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 16,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {}
+    },
+    {
+      "name": "google_fcm",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 15,
+      "ip_cidrs": 26,
+      "ip_asns": 0,
+      "dropped": {}
+    },
+    {
+      "name": "google_search",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 1,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {}
+    },
+    {
+      "name": "google_voice",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 1,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {}
+    },
+    {
+      "name": "greylist_proxy",
+      "bucket": "proxy",
+      "legacy_rule_path": "rules/greylist_proxy.list",
+      "domains": 0,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {}
+    },
+    {
+      "name": "microsoft",
+      "bucket": "proxy",
+      "legacy_rule_path": "rules/microsoft.list",
+      "domains": 668,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {
+        "ignored_process_name": 2
+      }
+    },
+    {
+      "name": "openai",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 32,
+      "ip_cidrs": 2,
+      "ip_asns": 0,
+      "dropped": {
+        "ignored_ip_asn": 1
+      }
+    },
+    {
+      "name": "origin",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 7,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {}
+    },
+    {
+      "name": "pinterest",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 23,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {}
+    },
+    {
+      "name": "riot",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 55,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {}
+    },
+    {
+      "name": "ru_direct",
+      "bucket": "direct",
+      "legacy_rule_path": null,
+      "domains": 3,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {}
+    },
+    {
+      "name": "steam",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 54,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {}
+    },
+    {
+      "name": "telegram",
+      "bucket": null,
+      "legacy_rule_path": "rules/telegram.list",
+      "domains": 25,
+      "ip_cidrs": 10,
+      "ip_asns": 5,
+      "dropped": {
+        "ignored_process_name": 6
+      }
+    },
+    {
+      "name": "twitch",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 9,
+      "ip_cidrs": 12,
+      "ip_asns": 0,
+      "dropped": {
+        "ignored_process_name": 1
+      }
+    },
+    {
+      "name": "whitelist_direct",
+      "bucket": "direct",
+      "legacy_rule_path": "rules/whitelist_direct.list",
+      "domains": 1,
+      "ip_cidrs": 2,
+      "ip_asns": 0,
+      "dropped": {}
+    },
+    {
+      "name": "youtube",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 180,
+      "ip_cidrs": 3,
+      "ip_asns": 0,
+      "dropped": {}
+    },
+    {
+      "name": "youtube_music",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 1,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {}
+    }
+  ],
+  "aggregates": [
+    {
+      "name": "sr-direct",
+      "domains": 4,
+      "ip_cidrs": 2
+    },
+    {
+      "name": "sr-proxy",
+      "domains": 1973,
+      "ip_cidrs": 53
+    }
+  ]
+}

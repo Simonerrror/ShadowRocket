@@ -2,15 +2,15 @@ name: Build HAPP routing
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "15 4 * * *"
   push:
     branches:
       - main
     paths:
       - "shadowrocket.conf"
       - "rules/*.list"
+      - "distillate/**"
       - "scripts/sync_lists.py"
+      - "scripts/build_distillate.py"
       - "scripts/build_happ_routing.py"
       - ".github/workflows/sync-lists.yml"
       - ".github/workflows/build-happ-routing.yml"
@@ -20,7 +20,6 @@ permissions:
 
 jobs:
   build:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -31,25 +30,17 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.22"
-
-      - name: Sync rule lists
-        run: python scripts/sync_lists.py --no-pull
-
       - name: Build HAPP artifacts
         run: python scripts/build_happ_routing.py
 
       - name: Commit and push changes
         run: |
           set -euo pipefail
-          if [[ -n "$(git status --porcelain rules HAPP)" ]]; then
+          if [[ -n "$(git status --porcelain HAPP)" ]]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add rules/*.list HAPP/*
-            git commit -m "chore: sync rule lists and build happ artifacts"
+            git add HAPP/*
+            git commit -m "chore: rebuild happ artifacts from vendored distillate"
             git push
           else
             echo "No changes to commit."

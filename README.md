@@ -1,8 +1,9 @@
 # ShadowRocket: конфиг и правила маршрутизации
 
-Готовые конфиги для Shadowrocket и Clash Verge Rev (Mihomo), построенные на общем наборе правил в `rules/`.
+Готовые конфиги для Shadowrocket и Clash Verge Rev (Mihomo), построенные на manifest-driven
+distillate-пайплайне в `distillate/` с публикацией consumer-списков в `rules/`.
 Проект поддерживает автообновление по URL и разделённую маршрутизацию (Google/Gemini/YouTube,
-Microsoft, Telegram, голосовые сервисы и т.д.).
+Microsoft и curated community/AI bundles).
 
 ## Содержание
 
@@ -19,7 +20,8 @@ Microsoft, Telegram, голосовые сервисы и т.д.).
 - `shadowrocket.conf` — основной конфиг для Shadowrocket с автообновлением.
 - `shadowrocket_custom.conf` — кастомный конфиг для GFN/NVIDIA (отдельный `update-url`, без изменения основного).
 - `clash_config.yaml` — локальный YAML для Clash Verge Rev, повторяющий логику Shadowrocket.
-- `rules/` — общий набор списков доменов и IP для маршрутизации.
+- `distillate/` — канонический manifest, локальные overlays и собранные text/`mrs`/`srs`/`dat`.
+- `rules/` — публикуемые consumer-списки для Shadowrocket/Clash, генерируются из `distillate/`.
 
 ## Быстрый старт (Shadowrocket)
 
@@ -81,7 +83,8 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_cus
 | `shadowrocket.conf` | Основной конфиг для Shadowrocket |
 | `shadowrocket_custom.conf` | Кастомный конфиг Shadowrocket для GFN/NVIDIA |
 | `clash_config.yaml` | Локальный конфиг для Clash Verge Rev |
-| `rules/` | Списки доменов/IP для маршрутизации |
+| `distillate/` | Канонический manifest, overlays и собранные артефакты |
+| `rules/` | Генерируемые consumer-списки для Shadowrocket/Clash |
 | `modules/` | Готовые модули для Shadowrocket |
 | `scripts/` | Вспомогательные скрипты |
 
@@ -101,15 +104,16 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_cus
 ### [Rule]
 Порядок важен: правила обрабатываются сверху вниз.
 
-1. **Ручные списки**
-   - `whitelist_direct.list` — принудительно DIRECT.
-   - `greylist_proxy.list` — принудительно PROXY.
+1. **Ручные overlays**
+   - `distillate/overlays/whitelist_direct.add.list` — принудительно DIRECT.
+   - `distillate/overlays/greylist_proxy.add.list` — принудительно PROXY.
 2. **Google/Gemini/YouTube**
+   - Категория `google_all` собирается из BM7 `Google`/`GoogleDrive`/`GoogleEarth`/`GoogleFCM`/`GoogleSearch`/`GoogleVoice`/`YouTube`/`YouTubeMusic`/`Gemini`.
    - Домены и IP направляются в группу `GOOGLE` с `force-remote-dns` для доменных списков.
 3. **Microsoft/Office 365/Teams/OneDrive**
-   - Уходят в `PROXY` с `force-remote-dns` для доменных списков.
-4. **Остальные правила**
-   - Комьюнити-списки доменов, IP-диапазоны, голосовые сервисы, Telegram → `PROXY`.
+   - Категория `microsoft` собирается из BM7 `Microsoft` и уходит в `PROXY`.
+4. **Community bundle**
+   - Категория `domains_community` собирается из BM7 `Telegram`/`GitHub`/`Steam`/`Riot`/`Origin`/`EA`/`Epic`/`Twitch`/`Pinterest` и уходит в `PROXY`.
 5. **Direct для РФ**
    - Домены `.ru/.рф/.su` и GEOIP RU идут напрямую.
 6. **FINAL**
@@ -122,13 +126,33 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_cus
 ## Обновление
 
 - Конфиг обновляется автоматически через `update-url`.
-- Списки правил обновляются при обновлении конфига или вручную через Shadowrocket.
-- Списки `rules/*.list` синхронизируются в GitHub Actions (`.github/workflows/build-happ-routing.yml`) через `scripts/sync_lists.py`, после чего в той же джобе пересобираются HAPP-артефакты.
-- Антирекламный список `rules/anti_advertising.list` собирается с дедупликацией источников OISD + HaGeZi.
+- Канонический источник истины находится в `distillate/manifest.json`.
+- `scripts/sync_lists.py` раз в неделю подтягивает upstream-листы в `distillate/upstream/*`, затем обновляет `distillate/text/*`, `distillate/summary.json` и публикуемые `rules/*.list`.
+- `scripts/build_distillate.py` работает только с уже закешированными файлами из `distillate/upstream/*` и собирает `distillate/mihomo/*.mrs`, `distillate/sing-box/*.srs`, `distillate/dat/geosite.dat` и `distillate/dat/geoip.dat`.
+- `scripts/build_happ_routing.py` не ходит в BM7: он берет агрегаты `sr-direct`/`sr-proxy`/`sr-block` из `distillate/text/*` и копирует `distillate/dat/*` в `HAPP/`.
+- Антирекламный список `rules/anti_advertising.list` собирается в том же distillate-пайплайне из OISD + HaGeZi.
+
+Fallback policy:
+- если weekly sync не может скачать очередной upstream-лист, последний закоммиченный файл в `distillate/upstream/*` сохраняется;
+- сборка `distillate` и HAPP продолжается на этой локальной копии;
+- удаление cache-файла из-за временной недоступности upstream не допускается.
+
+Локальная последовательность сборки:
+```bash
+python3 scripts/sync_lists.py --no-pull
+python3 scripts/build_distillate.py
+python3 scripts/build_happ_routing.py
+```
+
+GitHub Actions:
+- `.github/workflows/sync-lists.yml` запускается вручную или по weekly cron и обновляет vendored upstream + `distillate/*` + `rules/*.list`.
+- `.github/workflows/build-happ-routing.yml` запускается по push/вручную и собирает только `HAPP/*` из уже закоммиченного `distillate/`.
 
 ## Расширение правил
 
-Если нужно добавить сервис — создайте новый список в `rules/` и подключите его в секции `[Rule]`.
+Если нужно добавить сервис — добавьте новую категорию в `distillate/manifest.json`,
+при необходимости создайте `distillate/overlays/*.list`, затем при необходимости подключите
+сгенерированный `rules/*.list` в секции `[Rule]`.
 Для анти-рекламы можно использовать модуль `modules/anti_advertising.module` по ссылке:
 ```
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_advertising.module
@@ -137,7 +161,7 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_adv
 ```
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_advertising_custom.module
 ```
-Модуль подключает единый список репозитория:
+Модуль подключает единый сгенерированный список репозитория:
 ```
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.list
 ```
