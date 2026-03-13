@@ -177,6 +177,51 @@
       }
     },
     {
+      "name": "motivato_ads",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 2,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {}
+    },
+    {
+      "name": "motivato_block",
+      "bucket": "block",
+      "legacy_rule_path": null,
+      "domains": 462,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {}
+    },
+    {
+      "name": "motivato_telemetry_ms",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 3,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {}
+    },
+    {
+      "name": "motivato_telemetry_ru",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 26,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {}
+    },
+    {
+      "name": "motivato_torrent",
+      "bucket": null,
+      "legacy_rule_path": null,
+      "domains": 431,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {}
+    },
+    {
       "name": "openai",
       "bucket": null,
       "legacy_rule_path": null,
@@ -283,6 +328,11 @@
     }
   ],
   "aggregates": [
+    {
+      "name": "sr-block",
+      "domains": 462,
+      "ip_cidrs": 0
+    },
     {
       "name": "sr-direct",
       "domains": 23,

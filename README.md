@@ -129,8 +129,8 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_cus
 - Канонический источник истины находится в `distillate/manifest.json`.
 - `scripts/sync_lists.py` раз в неделю подтягивает upstream-листы в `distillate/upstream/*`, затем обновляет `distillate/text/*`, `distillate/summary.json` и публикуемые `rules/*.list`.
 - `scripts/build_distillate.py` работает только с уже закешированными файлами из `distillate/upstream/*` и собирает `distillate/mihomo/*.mrs`, `distillate/sing-box/*.srs`, `distillate/dat/geosite.dat` и `distillate/dat/geoip.dat`.
-- `scripts/build_happ_routing.py` не ходит в BM7: он берет агрегаты `sr-direct`/`sr-proxy`/`sr-block` из `distillate/text/*` и копирует `distillate/dat/*` в `HAPP/`.
-- Антирекламный список `rules/anti_advertising.list` собирается в том же distillate-пайплайне из OISD + HaGeZi.
+- `scripts/build_happ_routing.py` не ходит в BM7: он берет агрегаты `sr-direct`/`sr-proxy` и `motivato_block` из `distillate/text/*`, затем собирает локальный `HAPP/DEFAULT.*` (`роут-MotivatoPotato`).
+- Антирекламный список `rules/anti_advertising.list` собирается в том же distillate-пайплайне из OISD + HaGeZi, но не включается в compiled `geosite/mrs/srs` и не используется в HAPP. Для него предполагается отдельный модуль Shadowrocket.
 
 Fallback policy:
 - если weekly sync не может скачать очередной upstream-лист, последний закоммиченный файл в `distillate/upstream/*` сохраняется;

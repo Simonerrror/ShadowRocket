@@ -98,8 +98,50 @@
       }
     },
     {
+      "name": "motivato_telemetry_ru",
+      "publish": true,
+      "sources": [
+        {"type": "bm7", "pack": "Privacy", "include_exact": "distillate/filters/motivato_telemetry_ru.include.list"},
+        {"type": "bm7", "pack": "EasyPrivacy", "include_exact": "distillate/filters/motivato_telemetry_ru.include.list"}
+      ]
+    },
+    {
+      "name": "motivato_telemetry_ms",
+      "publish": true,
+      "sources": [
+        {"type": "bm7", "pack": "Privacy", "include_exact": "distillate/filters/motivato_telemetry_ms.include.list"},
+        {"type": "bm7", "pack": "EasyPrivacy", "include_exact": "distillate/filters/motivato_telemetry_ms.include.list"}
+      ]
+    },
+    {
+      "name": "motivato_torrent",
+      "publish": true,
+      "overlays": {
+        "add": "distillate/overlays/motivato_torrent.add.list"
+      }
+    },
+    {
+      "name": "motivato_ads",
+      "publish": true,
+      "overlays": {
+        "add": "distillate/overlays/motivato_ads.add.list"
+      }
+    },
+    {
+      "name": "motivato_block",
+      "publish": true,
+      "bucket": "block",
+      "sources": [
+        {"type": "category", "name": "motivato_telemetry_ru"},
+        {"type": "category", "name": "motivato_telemetry_ms"},
+        {"type": "category", "name": "motivato_torrent"},
+        {"type": "category", "name": "motivato_ads"}
+      ]
+    },
+    {
       "name": "anti_advertising",
       "publish": true,
+      "compiled": false,
       "legacy_rule_path": "rules/anti_advertising.list",
       "sources": [
         {"type": "url", "url": "https://dl.oisd.nl/oisd_big_surge.list", "format": "shadowrocket", "cache_path": "distillate/upstream/external/oisd_big_surge.list"},

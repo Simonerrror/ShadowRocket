@@ -371,6 +371,41 @@ def load_overlay(path: Path, retain_ip_asn: bool, label: str) -> CategoryResult:
     )
 
 
+def load_exact_filter(path: Path, label: str) -> tuple[set[str], set[str], set[str]]:
+    if not path.exists():
+        raise DistillateError(f"Exact filter file is missing for {label}: {path}")
+    domains: set[str] = set()
+    cidrs: set[str] = set()
+    asns: set[str] = set()
+    for line in clean_input_lines(path.read_text(encoding="utf-8")):
+        if line.startswith(("full:", "domain:", "keyword:")):
+            domains.add(line)
+            continue
+        if "/" in line:
+            cidrs.add(normalize_cidr(line))
+            continue
+        if line.upper().startswith("AS") or line.isdigit():
+            asns.add(normalize_asn(line))
+            continue
+        raise DistillateError(f"Unsupported exact filter line in {label}: {line}")
+    return domains, cidrs, asns
+
+
+def apply_exact_filter(
+    domain_rules: list[str],
+    ip_cidrs: list[str],
+    ip_asns: list[str],
+    filter_path: Path,
+    label: str,
+) -> tuple[list[str], list[str], list[str]]:
+    exact_domains, exact_cidrs, exact_asns = load_exact_filter(filter_path, label)
+    return (
+        [rule for rule in domain_rules if rule in exact_domains],
+        [rule for rule in ip_cidrs if rule in exact_cidrs],
+        [rule for rule in ip_asns if rule in exact_asns],
+    )
+
+
 def build_categories(manifest: dict[str, Any], repo_root: Path) -> tuple[dict[str, dict[str, Any]], dict[str, CategoryResult]]:
     specs = manifest["categories"]
     spec_by_name: dict[str, dict[str, Any]] = {}
@@ -427,6 +462,17 @@ def build_categories(manifest: dict[str, Any], repo_root: Path) -> tuple[dict[st
                 raise DistillateError(f"Unsupported source type {source_type!r} in {name}")
 
             domain_rules, ip_cidrs, ip_asns, dropped = parsed
+            include_exact = source.get("include_exact")
+            if include_exact is not None:
+                if not isinstance(include_exact, str) or not include_exact:
+                    raise DistillateError(f"include_exact must be a non-empty string in {name}")
+                domain_rules, ip_cidrs, ip_asns = apply_exact_filter(
+                    domain_rules,
+                    ip_cidrs,
+                    ip_asns,
+                    repo_root / include_exact,
+                    f"{name}:{source_type}:include_exact",
+                )
             result.domain_rules.extend(domain_rules)
             result.ip_cidrs.extend(ip_cidrs)
             result.ip_asns.extend(ip_asns)
@@ -559,6 +605,20 @@ def build_bucket_aggregates(
         write_text_file(repo_root / TEXT_DIR / "domain" / f"{aggregate.name}.txt", aggregate.domain_rules)
         write_text_file(repo_root / TEXT_DIR / "ip" / f"{aggregate.name}.txt", aggregate.ip_cidrs)
     return aggregates
+
+
+def compiled_categories(
+    spec_by_name: dict[str, dict[str, Any]],
+    published: dict[str, CategoryResult],
+    aggregates: dict[str, CategoryResult],
+) -> dict[str, CategoryResult]:
+    compiled: dict[str, CategoryResult] = {}
+    for name, result in published.items():
+        spec = spec_by_name[name]
+        if spec.get("compiled", True):
+            compiled[name] = result
+    compiled.update(aggregates)
+    return compiled
 
 
 def ensure_binary(name: str) -> str:
@@ -771,11 +831,11 @@ def main() -> int:
 
     mihomo_bin = ensure_binary(args.mihomo_bin)
     sing_box_bin = ensure_binary(args.sing_box_bin)
-    compiled_categories = {**published, **aggregates}
-    compile_mihomo(repo_root, compiled_categories, mihomo_bin)
-    compile_sing_box(repo_root, compiled_categories, sing_box_bin)
-    compile_geosite_dat(repo_root, compiled_categories)
-    compile_geoip_dat(repo_root, compiled_categories)
+    artifacts = compiled_categories(spec_by_name, published, aggregates)
+    compile_mihomo(repo_root, artifacts, mihomo_bin)
+    compile_sing_box(repo_root, artifacts, sing_box_bin)
+    compile_geosite_dat(repo_root, artifacts)
+    compile_geoip_dat(repo_root, artifacts)
     return 0
 
 
