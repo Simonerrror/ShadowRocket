@@ -68,8 +68,8 @@ proxy-providers:
 
     health-check:
       enable: true
-      interval: 600
-      url: http://www.gstatic.com/generate_204
+      interval: 780
+      url: https://abs.twimg.com/favicon.ico
 
 rule-providers:
   whitelist_direct:
@@ -130,7 +130,6 @@ proxy-groups:
     proxies:
       - AUTO-MAIN
       - MANUAL-PROXY
-      - GOOGLE
       - DIRECT
 
   # Спец-группа для Google (NL VLESS + UAE VLESS, ручной выбор)
@@ -140,27 +139,25 @@ proxy-groups:
       - Main-Sub
     filter: '(?i)((Netherlands.*Vless|Vless.*Netherlands)|(UAE.*Vless|Vless.*UAE))'
 
-  # Автовыбор (все остальные "чистые" Vless серверы)
+  # Автовыбор (только VLESS, исключаем RU/BY/UA)
   - name: AUTO-MAIN
     type: url-test
     use:
       - Main-Sub
-    filter: '(?i)^(?!.*(Russia|Belarus|Ukraine)).*(Vless|Netherlands\s+WL\s+Mobile).*$'
-    url: 'http://www.gstatic.com/generate_204'
-    interval: 600
-    tolerance: 100
+    filter: '^(?!.*(Russia|Belarus|Ukraine)).*Vless.*$'
+    url: 'https://abs.twimg.com/favicon.ico'
+    interval: 780
+    tolerance: 200
 
   # Мануал-прокси (ручной выбор, те же серверы что и в AUTO-MAIN)
   - name: MANUAL-PROXY
     type: select
     use:
       - Main-Sub
-    filter: '(?i)^(?!.*(Russia|Belarus|Ukraine)).*(Vless|Netherlands\s+WL\s+Mobile).*$'
+    filter: '^(?!.*(Russia|Belarus|Ukraine)).*Vless.*$'
 
 # 5. ПРАВИЛА
 rules:
-  - AND,((NETWORK,UDP),(DST-PORT,443)),REJECT
-  - AND,((NETWORK,UDP),(DST-PORT,853)),REJECT
   - RULE-SET,google_all,GOOGLE
   - RULE-SET,whitelist_direct,DIRECT
   - RULE-SET,greylist_proxy,PROXY

@@ -1,0 +1,152 @@
+{
+  "bm7_base_url": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash",
+  "upstream_dir": "distillate/upstream",
+  "categories": [
+    {"name": "google", "publish": true, "sources": [{"type": "bm7", "pack": "Google"}]},
+    {"name": "google_drive", "publish": true, "sources": [{"type": "bm7", "pack": "GoogleDrive"}]},
+    {"name": "google_earth", "publish": true, "sources": [{"type": "bm7", "pack": "GoogleEarth"}]},
+    {"name": "google_fcm", "publish": true, "sources": [{"type": "bm7", "pack": "GoogleFCM"}]},
+    {"name": "google_search", "publish": true, "sources": [{"type": "bm7", "pack": "GoogleSearch"}]},
+    {"name": "google_voice", "publish": true, "sources": [{"type": "bm7", "pack": "GoogleVoice"}]},
+    {"name": "youtube", "publish": true, "sources": [{"type": "bm7", "pack": "YouTube"}]},
+    {"name": "youtube_music", "publish": true, "sources": [{"type": "bm7", "pack": "YouTubeMusic"}]},
+    {"name": "gemini", "publish": true, "sources": [{"type": "bm7", "pack": "Gemini"}]},
+    {"name": "microsoft", "publish": true, "bucket": "proxy", "legacy_rule_path": "rules/microsoft.list", "sources": [{"type": "bm7", "pack": "Microsoft"}]},
+    {"name": "telegram", "publish": true, "legacy_rule_path": "rules/telegram.list", "sources": [{"type": "bm7", "pack": "Telegram"}], "retain_ip_asn": true},
+    {"name": "github", "publish": true, "sources": [{"type": "bm7", "pack": "GitHub"}]},
+    {"name": "steam", "publish": true, "sources": [{"type": "bm7", "pack": "Steam"}]},
+    {"name": "riot", "publish": true, "sources": [{"type": "bm7", "pack": "Riot"}]},
+    {"name": "origin", "publish": true, "sources": [{"type": "bm7", "pack": "Origin"}]},
+    {"name": "ea", "publish": true, "sources": [{"type": "bm7", "pack": "EA"}]},
+    {"name": "epic", "publish": true, "sources": [{"type": "bm7", "pack": "Epic"}]},
+    {"name": "twitch", "publish": true, "sources": [{"type": "bm7", "pack": "Twitch"}]},
+    {"name": "pinterest", "publish": true, "sources": [{"type": "bm7", "pack": "Pinterest"}]},
+    {"name": "openai", "publish": true, "sources": [{"type": "bm7", "pack": "OpenAI"}]},
+    {"name": "claude", "publish": true, "sources": [{"type": "bm7", "pack": "Claude"}]},
+    {"name": "copilot", "publish": true, "sources": [{"type": "bm7", "pack": "Copilot"}]},
+    {
+      "name": "google_all",
+      "publish": true,
+      "bucket": "proxy",
+      "legacy_rule_path": "rules/google-all.list",
+      "sources": [
+        {"type": "category", "name": "google"},
+        {"type": "category", "name": "google_drive"},
+        {"type": "category", "name": "google_earth"},
+        {"type": "category", "name": "google_fcm"},
+        {"type": "category", "name": "google_search"},
+        {"type": "category", "name": "google_voice"},
+        {"type": "category", "name": "youtube"},
+        {"type": "category", "name": "youtube_music"},
+        {"type": "category", "name": "gemini"}
+      ]
+    },
+    {
+      "name": "domains_community",
+      "publish": true,
+      "bucket": "proxy",
+      "legacy_rule_path": "rules/domains_community.list",
+      "sources": [
+        {"type": "category", "name": "telegram"},
+        {"type": "category", "name": "github"},
+        {"type": "category", "name": "steam"},
+        {"type": "category", "name": "riot"},
+        {"type": "category", "name": "origin"},
+        {"type": "category", "name": "ea"},
+        {"type": "category", "name": "epic"},
+        {"type": "category", "name": "twitch"},
+        {"type": "category", "name": "pinterest"}
+      ]
+    },
+    {
+      "name": "ai_bundle",
+      "publish": true,
+      "sources": [
+        {"type": "category", "name": "openai"},
+        {"type": "category", "name": "claude"},
+        {"type": "category", "name": "copilot"},
+        {"type": "category", "name": "gemini"}
+      ]
+    },
+    {
+      "name": "whitelist_direct",
+      "publish": true,
+      "bucket": "direct",
+      "legacy_rule_path": "rules/whitelist_direct.list",
+      "overlays": {
+        "add": "distillate/overlays/whitelist_direct.add.list",
+        "remove": "distillate/overlays/whitelist_direct.remove.list"
+      }
+    },
+    {
+      "name": "greylist_proxy",
+      "publish": true,
+      "bucket": "proxy",
+      "legacy_rule_path": "rules/greylist_proxy.list",
+      "overlays": {
+        "add": "distillate/overlays/greylist_proxy.add.list",
+        "remove": "distillate/overlays/greylist_proxy.remove.list"
+      }
+    },
+    {
+      "name": "ru_direct",
+      "publish": true,
+      "bucket": "direct",
+      "overlays": {
+        "add": "distillate/overlays/ru_direct.add.list",
+        "remove": "distillate/overlays/ru_direct.remove.list"
+      }
+    },
+    {
+      "name": "motivato_telemetry_ru",
+      "publish": true,
+      "sources": [
+        {"type": "bm7", "pack": "Privacy", "include_exact": "distillate/filters/motivato_telemetry_ru.include.list"},
+        {"type": "bm7", "pack": "EasyPrivacy", "include_exact": "distillate/filters/motivato_telemetry_ru.include.list"}
+      ]
+    },
+    {
+      "name": "motivato_telemetry_ms",
+      "publish": true,
+      "sources": [
+        {"type": "bm7", "pack": "Privacy", "include_exact": "distillate/filters/motivato_telemetry_ms.include.list"},
+        {"type": "bm7", "pack": "EasyPrivacy", "include_exact": "distillate/filters/motivato_telemetry_ms.include.list"}
+      ]
+    },
+    {
+      "name": "motivato_torrent",
+      "publish": true,
+      "overlays": {
+        "add": "distillate/overlays/motivato_torrent.add.list"
+      }
+    },
+    {
+      "name": "motivato_ads",
+      "publish": true,
+      "overlays": {
+        "add": "distillate/overlays/motivato_ads.add.list"
+      }
+    },
+    {
+      "name": "motivato_block",
+      "publish": true,
+      "bucket": "block",
+      "sources": [
+        {"type": "category", "name": "motivato_telemetry_ru"},
+        {"type": "category", "name": "motivato_telemetry_ms"},
+        {"type": "category", "name": "motivato_torrent"},
+        {"type": "category", "name": "motivato_ads"}
+      ]
+    },
+    {
+      "name": "anti_advertising",
+      "publish": true,
+      "compiled": false,
+      "legacy_rule_path": "rules/anti_advertising.list",
+      "sources": [
+        {"type": "url", "url": "https://dl.oisd.nl/oisd_big_surge.list", "format": "shadowrocket", "cache_path": "distillate/upstream/external/oisd_big_surge.list"},
+        {"type": "url", "url": "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/ultimate-onlydomains.txt", "format": "domain-lines", "cache_path": "distillate/upstream/external/hagezi_ultimate_onlydomains.txt"}
+      ]
+    }
+  ]
+}

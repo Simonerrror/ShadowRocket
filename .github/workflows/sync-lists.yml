@@ -1,9 +1,9 @@
 name: Sync rule lists
 
 on:
-  schedule:
-    - cron: "0 3 * * *"
   workflow_dispatch:
+  schedule:
+    - cron: "15 4 * * 0"
 
 permissions:
   contents: write
@@ -20,8 +20,16 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
       - name: Sync lists
         run: python scripts/sync_lists.py --no-pull
+
+      - name: Build compiled distillate artifacts
+        run: python scripts/build_distillate.py
 
       - name: Commit and push changes
         run: |
@@ -29,8 +37,8 @@ jobs:
           if [[ -n "$(git status --porcelain)" ]]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add rules/*.list
-            git commit -m "chore: sync upstream rule lists"
+            git add -A distillate rules
+            git commit -m "chore: refresh vendored distillate sources"
             git push
           else
             echo "No changes to commit."
