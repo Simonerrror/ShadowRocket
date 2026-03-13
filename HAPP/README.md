@@ -27,7 +27,7 @@
 
 - `motivato_telemetry_ru` собирается из BM7 `Privacy` + `EasyPrivacy` по локальному exact allowlist.
 - `motivato_telemetry_ms` собирается из тех же BM7 privacy-pack'ов по отдельному allowlist Microsoft telemetry.
-- `motivato_torrent` хранится локально как overlay, seed-нутый из hydra `torrent`, но дальше живёт в репозитории.
+- `motivato_torrent` хранится локально как поддерживаемый overlay и дальше живёт в репозитории.
 - `motivato_ads` содержит только `ad.mail.ru` и `alt-ad.mail.ru`.
 - `motivato_block` агрегирует все четыре источника и публикуется в `geosite.dat`.
 
