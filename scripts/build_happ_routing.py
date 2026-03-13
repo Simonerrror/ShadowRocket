@@ -95,7 +95,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--route-order",
-        default="block-direct-proxy",
+        default="block-proxy-direct",
         choices=[
             "block-proxy-direct",
             "block-direct-proxy",
