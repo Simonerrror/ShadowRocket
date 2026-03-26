@@ -15,7 +15,7 @@
       "name": "anti_advertising",
       "bucket": null,
       "legacy_rule_path": "rules/anti_advertising.list",
-      "domains": 476255,
+      "domains": 476230,
       "ip_cidrs": 0,
       "ip_asns": 0,
       "dropped": {}
@@ -303,7 +303,7 @@
       "name": "whitelist_direct",
       "bucket": "direct",
       "legacy_rule_path": "rules/whitelist_direct.list",
-      "domains": 20,
+      "domains": 21,
       "ip_cidrs": 2,
       "ip_asns": 0,
       "dropped": {}
@@ -335,7 +335,7 @@
     },
     {
       "name": "sr-direct",
-      "domains": 23,
+      "domains": 24,
       "ip_cidrs": 2
     },
     {

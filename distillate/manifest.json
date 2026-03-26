@@ -143,6 +143,8 @@
       "publish": true,
       "compiled": false,
       "legacy_rule_path": "rules/anti_advertising.list",
+      "exclude_domain_substrings": ["nvidia", "geforce", "geforcenow", "nvidiagrid"],
+      "exclude_domain_suffixes": ["discord.com", "discord.gg", "discordapp.com", "discordapp.net", "discordapp.gg", "discord.media", "discordcdn.com", "discordstatus.com", "discordsays.com"],
       "sources": [
         {"type": "url", "url": "https://dl.oisd.nl/oisd_big_surge.list", "format": "shadowrocket", "cache_path": "distillate/upstream/external/oisd_big_surge.list"},
         {"type": "url", "url": "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/ultimate-onlydomains.txt", "format": "domain-lines", "cache_path": "distillate/upstream/external/hagezi_ultimate_onlydomains.txt"}

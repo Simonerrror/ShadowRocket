@@ -403,6 +403,38 @@ def apply_exact_filter(
     )
 
 
+def domain_rule_value(rule: str) -> str:
+    if ":" not in rule:
+        raise DistillateError(f"Unsupported canonical domain rule: {rule}")
+    return rule.split(":", 1)[1]
+
+
+def apply_domain_substring_excludes(domain_rules: list[str], substrings: list[str]) -> list[str]:
+    normalized = [item.strip().lower() for item in substrings if item.strip()]
+    if not normalized:
+        return domain_rules
+    filtered: list[str] = []
+    for rule in domain_rules:
+        value = domain_rule_value(rule).lower()
+        if any(token in value for token in normalized):
+            continue
+        filtered.append(rule)
+    return filtered
+
+
+def apply_domain_suffix_excludes(domain_rules: list[str], suffixes: list[str]) -> list[str]:
+    normalized = [item.strip().lower().strip(".") for item in suffixes if item.strip()]
+    if not normalized:
+        return domain_rules
+    filtered: list[str] = []
+    for rule in domain_rules:
+        value = domain_rule_value(rule).lower().strip(".")
+        if any(value == suffix or value.endswith(f".{suffix}") for suffix in normalized):
+            continue
+        filtered.append(rule)
+    return filtered
+
+
 def build_categories(manifest: dict[str, Any], repo_root: Path) -> tuple[dict[str, dict[str, Any]], dict[str, CategoryResult]]:
     specs = manifest["categories"]
     spec_by_name: dict[str, dict[str, Any]] = {}
@@ -495,6 +527,24 @@ def build_categories(manifest: dict[str, Any], repo_root: Path) -> tuple[dict[st
                 result.ip_asns = [rule for rule in result.ip_asns if rule not in remove_ip_asns]
                 for reason, count in remove_overlay.dropped.items():
                     result.dropped[reason] = result.dropped.get(reason, 0) + count
+
+        exclude_domain_substrings = spec.get("exclude_domain_substrings")
+        if exclude_domain_substrings is not None:
+            if (
+                not isinstance(exclude_domain_substrings, list)
+                or not all(isinstance(item, str) for item in exclude_domain_substrings)
+            ):
+                raise DistillateError(f"exclude_domain_substrings must be an array of strings in {name}")
+            result.domain_rules = apply_domain_substring_excludes(result.domain_rules, exclude_domain_substrings)
+
+        exclude_domain_suffixes = spec.get("exclude_domain_suffixes")
+        if exclude_domain_suffixes is not None:
+            if (
+                not isinstance(exclude_domain_suffixes, list)
+                or not all(isinstance(item, str) for item in exclude_domain_suffixes)
+            ):
+                raise DistillateError(f"exclude_domain_suffixes must be an array of strings in {name}")
+            result.domain_rules = apply_domain_suffix_excludes(result.domain_rules, exclude_domain_suffixes)
 
         result.domain_rules = dedupe_preserve(result.domain_rules)
         result.ip_cidrs = dedupe_preserve(result.ip_cidrs)
