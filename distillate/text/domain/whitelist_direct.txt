@@ -18,3 +18,4 @@ domain:vk.me
 domain:vk.cc
 domain:userapi.com
 domain:mycdn.me
+full:73001ed9a665c420ee07c76a.netcraze.io
