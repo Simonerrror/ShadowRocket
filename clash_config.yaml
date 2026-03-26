@@ -129,15 +129,23 @@ proxy-groups:
     type: select
     proxies:
       - AUTO-MAIN
+      - WL
       - MANUAL-PROXY
       - DIRECT
 
-  # Спец-группа для Google (NL VLESS + UAE VLESS, ручной выбор)
+  # Спец-группа для Google (NL VLESS + UAE VLESS + WL, ручной выбор)
   - name: GOOGLE
     type: select
     use:
       - Main-Sub
-    filter: '(?i)((Netherlands.*Vless|Vless.*Netherlands)|(UAE.*Vless|Vless.*UAE))'
+    filter: '(?i)(.*WL.*|(Netherlands.*Vless|Vless.*Netherlands)|(UAE.*Vless|Vless.*UAE))'
+
+  # Группа WL (ручной выбор по имени узла)
+  - name: WL
+    type: select
+    use:
+      - Main-Sub
+    filter: '(?i).*WL.*'
 
   # Автовыбор (только VLESS, исключаем RU/BY/UA)
   - name: AUTO-MAIN
