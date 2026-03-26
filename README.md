@@ -33,9 +33,10 @@ Microsoft и curated community/AI bundles).
 2. **Добавьте подписку** на сервера в Shadowrocket (URL от вашего провайдера).
 3. **Проверьте группы прокси**:
    - `AUTO-MAIN` — автоматический выбор по URL-тесту (только VLESS, исключает RU/BY/UA).
+   - `WL` — ручной выбор узлов, чьё имя содержит `WL`.
    - `MANUAL-PROXY` — ручной выбор из тех же серверов, что и `AUTO-MAIN`.
    - `GOOGLE` — отдельный ручной выбор для Google/Gemini/YouTube (NL VLESS + UAE VLESS).
-   - `PROXY` — главный переключатель (Select): `AUTO-MAIN`, `MANUAL-PROXY` или `DIRECT`.
+   - `PROXY` — главный переключатель (Select): `AUTO-MAIN`, `WL`, `MANUAL-PROXY` или `DIRECT`.
 
 Кастомный профиль для GFN/NVIDIA (с `always-real-ip`):
 ```
@@ -91,15 +92,16 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_cus
 ## Логика `shadowrocket.conf`
 
 ### [General]
-- Базовые сетевые настройки: DNS — `77.88.8.8` и `8.8.8.8`, fallback — `tls://77.88.8.8` и `tls://8.8.8.8`, IPv6 выключен.
+- Базовые сетевые настройки: DNS — `76.76.2.0` и `76.76.10.0`, fallback — `tls://1.1.1.1` и `tls://8.8.8.8`, IPv6 выключен.
 - `update-url` указывает на конфиг в репозитории.
 
 ### [Proxy Group]
 - **AUTO-MAIN** — URL-тест с фильтром по имени (только VLESS, исключаем RU/BY/UA):
   `url=https://abs.twimg.com/favicon.ico`, `interval=780`, `tolerance=200`, `timeout=7`.
+- **WL** — ручной выбор узлов по regex `(?i).*WL.*`.
 - **MANUAL-PROXY** — ручной выбор из тех же серверов, что и AUTO-MAIN.
-- **GOOGLE** — ручной выбор из отфильтрованного списка для Google/Gemini/YouTube (NL VLESS + UAE VLESS).
-- **PROXY** — Select-группа для ручного выбора между AUTO-MAIN/MANUAL-PROXY/DIRECT.
+- **GOOGLE** — ручной выбор из отфильтрованного списка для Google/Gemini/YouTube (NL VLESS + UAE VLESS + узлы с `WL` в имени).
+- **PROXY** — Select-группа для ручного выбора между AUTO-MAIN/WL/MANUAL-PROXY/DIRECT.
 
 ### [Rule]
 Порядок важен: правила обрабатываются сверху вниз.
@@ -131,6 +133,8 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_cus
 - `scripts/build_distillate.py` работает только с уже закешированными файлами из `distillate/upstream/*` и собирает канонические `distillate/text/*` плюс `distillate/dat/geosite.dat` и `distillate/dat/geoip.dat`.
 - `scripts/build_happ_routing.py` не ходит в BM7: он берет агрегаты `sr-direct`/`sr-proxy` и `motivato_block` из `distillate/text/*`, затем собирает локальный `HAPP/DEFAULT.*` (`роут-MotivatoPotato`).
 - Антирекламный список `rules/anti_advertising.list` собирается в том же distillate-пайплайне из OISD + HaGeZi, но не включается в compiled `geosite.dat` и не используется в HAPP. Для него предполагается отдельный модуль Shadowrocket.
+- На этапе сборки из `anti_advertising` дополнительно вычищаются домены, содержащие `nvidia`/`geforce`/`geforcenow`/`nvidiagrid`, чтобы anti-ad модуль не ломал GeForce NOW и связанные NVIDIA API.
+- Там же вычищаются official suffix'ы Discord (`discord.com`, `discord.gg`, `discordapp.com`, `discordapp.net` и смежные), чтобы upstream anti-ad не зацепил клиентские API, gateway и служебные поддомены Discord.
 
 Fallback policy:
 - если weekly sync не может скачать очередной upstream-лист, последний закоммиченный файл в `distillate/upstream/*` сохраняется;
