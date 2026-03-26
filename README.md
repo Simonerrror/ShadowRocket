@@ -92,7 +92,7 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_cus
 ## Логика `shadowrocket.conf`
 
 ### [General]
-- Базовые сетевые настройки: DNS — `76.76.2.0` и `76.76.10.0`, fallback — `tls://1.1.1.1` и `tls://8.8.8.8`, IPv6 выключен.
+- Базовые сетевые настройки: DNS — `77.88.8.8` и `8.8.8.8`, fallback — `tls://77.88.8.8` и `tls://8.8.8.8`, IPv6 выключен.
 - `update-url` указывает на конфиг в репозитории.
 
 ### [Proxy Group]
