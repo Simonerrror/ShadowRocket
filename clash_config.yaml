@@ -40,13 +40,13 @@ dns:
     - 'time.android.com'
     - '*.ntp.org'
   default-nameserver:
-    - 76.76.2.0
-    - 76.76.10.0
+    - 77.88.8.8
+    - 8.8.8.8
   nameserver:
-    - 76.76.2.0
-    - 76.76.10.0
+    - 77.88.8.8
+    - 8.8.8.8
   fallback:
-    - tls://1.1.1.1
+    - tls://77.88.8.8
     - tls://8.8.8.8
   fallback-filter:
     geoip: false
