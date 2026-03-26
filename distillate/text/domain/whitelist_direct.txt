@@ -18,4 +18,5 @@ domain:vk.me
 domain:vk.cc
 domain:userapi.com
 domain:mycdn.me
+domain:pathofexile.com
 full:73001ed9a665c420ee07c76a.netcraze.io
