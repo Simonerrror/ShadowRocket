@@ -108,7 +108,7 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_cus
 
 1. **Ручные overlays**
    - `distillate/overlays/whitelist_direct.add.list` — принудительно DIRECT.
-   - Точечное DIRECT-исключение для Path of Exile (`pathofexile.com`) также ведётся через `whitelist_direct`.
+   - Точечное DIRECT-исключение для Path of Exile (`DOMAIN-KEYWORD,pathofexile`) также ведётся через `whitelist_direct`.
    - `distillate/overlays/greylist_proxy.add.list` — принудительно PROXY.
 2. **Google/Gemini/YouTube**
    - Категория `google_all` собирается из BM7 `Google`/`GoogleDrive`/`GoogleEarth`/`GoogleFCM`/`GoogleSearch`/`GoogleVoice`/`YouTube`/`YouTubeMusic`/`Gemini`.

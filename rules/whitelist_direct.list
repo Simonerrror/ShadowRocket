@@ -1,5 +1,4 @@
 # Generated from distillate/manifest.json
-DOMAIN-KEYWORD,lichess
 DOMAIN,ipify.org
 DOMAIN,checkip.amazonaws.com
 DOMAIN,ifconfig.me
@@ -19,6 +18,6 @@ DOMAIN-SUFFIX,vk.me
 DOMAIN-SUFFIX,vk.cc
 DOMAIN-SUFFIX,userapi.com
 DOMAIN-SUFFIX,mycdn.me
-DOMAIN-SUFFIX,pathofexile.com
+DOMAIN-KEYWORD,pathofexile
 IP-CIDR,34.116.233.9/32
 IP-CIDR,34.159.147.250/32

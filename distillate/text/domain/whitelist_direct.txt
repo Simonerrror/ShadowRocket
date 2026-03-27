@@ -1,4 +1,3 @@
-keyword:lichess
 full:ipify.org
 full:checkip.amazonaws.com
 full:ifconfig.me
@@ -18,4 +17,4 @@ domain:vk.me
 domain:vk.cc
 domain:userapi.com
 domain:mycdn.me
-domain:pathofexile.com
+keyword:pathofexile
