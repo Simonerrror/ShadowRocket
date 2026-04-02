@@ -17,6 +17,8 @@ domain:vk.me
 domain:vk.cc
 domain:userapi.com
 domain:mycdn.me
+domain:pathofexile.com
+domain:poecdn.com
 keyword:pathofexile
 domain:ru
 domain:xn--p1ai
