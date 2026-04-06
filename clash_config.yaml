@@ -128,9 +128,10 @@ proxy-groups:
   - name: PROXY
     type: select
     proxies:
+      - AUTO-WL
       - AUTO-MAIN
-      - WL
       - MANUAL-PROXY
+      - WL
       - DIRECT
 
   # Спец-группа для Google (NL VLESS + UAE VLESS + WL, ручной выбор)
@@ -139,6 +140,16 @@ proxy-groups:
     use:
       - Main-Sub
     filter: '(?i)(.*WL.*|(Netherlands.*Vless|Vless.*Netherlands)|(UAE.*Vless|Vless.*UAE))'
+
+  # Автовыбор только для WL-узлов
+  - name: AUTO-WL
+    type: url-test
+    use:
+      - Main-Sub
+    filter: '(?i).*WL.*'
+    url: 'https://abs.twimg.com/favicon.ico'
+    interval: 780
+    tolerance: 200
 
   # Группа WL (ручной выбор по имени узла)
   - name: WL
