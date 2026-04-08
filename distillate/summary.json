@@ -15,7 +15,7 @@
       "name": "anti_advertising",
       "bucket": null,
       "legacy_rule_path": "rules/anti_advertising.list",
-      "domains": 621588,
+      "domains": 531024,
       "ip_cidrs": 0,
       "ip_asns": 0,
       "dropped": {}
