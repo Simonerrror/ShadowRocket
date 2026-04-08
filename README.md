@@ -1,9 +1,13 @@
 # ShadowRocket: конфиг и правила маршрутизации
 
-Готовые конфиги для Shadowrocket и Clash Verge Rev (Mihomo), построенные на manifest-driven
-distillate-пайплайне в `distillate/` с публикацией consumer-списков в `rules/`.
-Проект поддерживает автообновление по URL и разделённую маршрутизацию (Google/Gemini/YouTube,
-Microsoft и curated community/AI bundles).
+Готовые конфиги для Shadowrocket, Clash Verge Rev (Mihomo) и XKeen (Xray),
+построенные на manifest-driven distillate-пайплайне в `distillate/` с публикацией
+consumer-списков в `rules/`. Проект поддерживает автообновление по URL и разделённую
+маршрутизацию (Google/Gemini/YouTube, Microsoft и curated community/AI bundles).
+
+Текущая ветка предназначена для source-изменений. Публичные raw URL продолжают
+раздаваться из release-ветки `main`, поэтому ссылки вида
+`https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/...` не меняются.
 
 ## Содержание
 
@@ -19,9 +23,10 @@ Microsoft и curated community/AI bundles).
 
 - `shadowrocket.conf` — основной конфиг для Shadowrocket с автообновлением.
 - `shadowrocket_custom.conf` — кастомный конфиг для GFN/NVIDIA (отдельный `update-url`, без изменения основного).
-- `clash_config.yaml` — локальный YAML для Clash Verge Rev, повторяющий логику Shadowrocket.
-- `distillate/` — канонический manifest, локальные overlays и собранные text/`mrs`/`srs`/`dat`.
-- `rules/` — публикуемые consumer-списки для Shadowrocket/Clash, генерируются из `distillate/`.
+- `clash_config.yaml` — локальный YAML для Clash Verge Rev на общей базе Shadowrocket с локальными extras для voice/telegram.
+- `XKeen/05_routing.json` — публикуемый Xray-routing для XKeen; в source-ветке он не хранится и собирается из базового `shadowrocket.conf`.
+- `distillate/` — канонический manifest, overlays и filters; generated `upstream/text/dat/summary` публикуются только в release-ветку.
+- `rules/` — вручную поддерживаемые rule-list'ы source-ветки и публикуемые generated consumer-списки release-ветки.
 
 ## Быстрый старт (Shadowrocket)
 
@@ -33,10 +38,11 @@ Microsoft и curated community/AI bundles).
 2. **Добавьте подписку** на сервера в Shadowrocket (URL от вашего провайдера).
 3. **Проверьте группы прокси**:
    - `AUTO-MAIN` — автоматический выбор по URL-тесту (только VLESS, исключает RU/BY/UA).
+   - `AUTO-WL` — автоматический выбор только среди `WL`-узлов вне RU/BY/UA.
    - `WL` — ручной выбор узлов, чьё имя содержит `WL`.
-   - `MANUAL-PROXY` — ручной выбор из тех же серверов, что и `AUTO-MAIN`.
+   - `MANUAL-PROXY` — ручной выбор всех VLESS-узлов, включая RU/BY/UA.
    - `GOOGLE` — отдельный ручной выбор для Google/Gemini/YouTube (NL VLESS + UAE VLESS).
-   - `PROXY` — главный переключатель (Select): `AUTO-MAIN`, `WL`, `MANUAL-PROXY` или `DIRECT`.
+   - `PROXY` — главный переключатель (Select): по умолчанию выбран `AUTO-WL`; вручную можно переключаться между `AUTO-WL`, `AUTO-MAIN`, `WL`, `MANUAL-PROXY` и `DIRECT`.
 
 Кастомный профиль для GFN/NVIDIA (с `always-real-ip`):
 ```
@@ -45,7 +51,8 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_cus
 
 ## Clash Verge Rev (Windows)
 
-> Используется локальный `clash_config.yaml`, который повторяет логику `shadowrocket.conf`.
+> Используется локальный `clash_config.yaml`, который следует общей логике `shadowrocket.conf`,
+> но дополнительно хранит локальные Clash-only наборы `voice_ports` и `telegram`.
 > Для автопроверки серверов секции `proxy-providers.Main-Sub.health-check` и `proxy-groups.AUTO-MAIN`
 > используют `https://abs.twimg.com/favicon.ico` (интервал 780; для `AUTO-MAIN` tolerance 200).
 > В него нужно вручную вставить ссылку на вашу подписку.
@@ -84,8 +91,9 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_cus
 | `shadowrocket.conf` | Основной конфиг для Shadowrocket |
 | `shadowrocket_custom.conf` | Кастомный конфиг Shadowrocket для GFN/NVIDIA |
 | `clash_config.yaml` | Локальный конфиг для Clash Verge Rev |
-| `distillate/` | Канонический manifest, overlays и собранные артефакты |
-| `rules/` | Генерируемые consumer-списки для Shadowrocket/Clash |
+| `XKeen/05_routing.json` | Routing-конфиг для XKeen / Xray в release-ветке `main` |
+| `distillate/` | Канонический manifest, overlays и filters; generated артефакты не коммитятся в source-ветку |
+| `rules/` | Source rule-list'ы и публикуемые generated consumer-списки |
 | `modules/` | Готовые модули для Shadowrocket |
 | `scripts/` | Вспомогательные скрипты |
 
@@ -98,10 +106,12 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_cus
 ### [Proxy Group]
 - **AUTO-MAIN** — URL-тест с фильтром по имени (только VLESS, исключаем RU/BY/UA):
   `url=https://abs.twimg.com/favicon.ico`, `interval=780`, `tolerance=200`, `timeout=7`.
+- **AUTO-WL** — URL-тест только по `WL`-узлам вне RU/BY/UA:
+  `url=https://abs.twimg.com/favicon.ico`, `interval=780`, `tolerance=200`, `timeout=7`.
 - **WL** — ручной выбор узлов по regex `(?i).*WL.*`.
-- **MANUAL-PROXY** — ручной выбор из тех же серверов, что и AUTO-MAIN.
+- **MANUAL-PROXY** — ручной выбор всех VLESS-узлов, включая RU/BY/UA.
 - **GOOGLE** — ручной выбор из отфильтрованного списка для Google/Gemini/YouTube (NL VLESS + UAE VLESS + узлы с `WL` в имени).
-- **PROXY** — Select-группа для ручного выбора между AUTO-MAIN/WL/MANUAL-PROXY/DIRECT.
+- **PROXY** — Select-группа; по умолчанию выбран AUTO-WL, вручную можно переключаться между AUTO-WL/AUTO-MAIN/WL/MANUAL-PROXY/DIRECT.
 
 ### [Rule]
 Порядок важен: правила обрабатываются сверху вниз.
@@ -129,30 +139,39 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_cus
 
 ## Обновление
 
+Branch model:
+- `main` — release/publish-ветка с неизменными public raw URL.
+- `source/main` — shared source-of-truth.
+- `custom/sergio` — personal source-ветка для GFN/NVIDIA и single-user изменений.
+
+Подробности: [docs/branch-model.md](/Users/sergio/Documents/30_HOBBY_AI/shadorock/ShadowRocket/docs/branch-model.md)
+
 - Конфиг обновляется автоматически через `update-url`.
 - Канонический источник истины находится в `distillate/manifest.json`.
-- `scripts/sync_lists.py` раз в неделю подтягивает upstream-листы в `distillate/upstream/*`, затем обновляет `distillate/text/*`, `distillate/summary.json` и публикуемые `rules/*.list`.
-- `scripts/build_distillate.py` работает только с уже закешированными файлами из `distillate/upstream/*` и собирает канонические `distillate/text/*` плюс `distillate/dat/geosite.dat` и `distillate/dat/geoip.dat`.
-- `scripts/build_happ_routing.py` не ходит в BM7: он берет агрегаты `sr-direct`/`sr-proxy` и `motivato_block` из `distillate/text/*`, затем собирает локальный `HAPP/DEFAULT.*` (`роут-MotivatoPotato`).
-- Антирекламный список `rules/anti_advertising.list` собирается в том же distillate-пайплайне из OISD + HaGeZi, но не включается в compiled `geosite.dat` и не используется в HAPP. Для него предполагается отдельный модуль Shadowrocket.
+- `scripts/publish_release.py` собирает source-ветку во временный release workspace и публикует результат обратно в `main` только при содержательном diff.
+- `scripts/sync_lists.py` подтягивает upstream-листы в локальный `distillate/upstream/*`, затем обновляет generated `distillate/text/*`, `distillate/summary.json` и `rules/*.list` для публикации.
+- `scripts/build_distillate.py` работает только с уже закешированными файлами из `distillate/upstream/*` и собирает generated `distillate/text/*` плюс `distillate/dat/geosite.dat` и `distillate/dat/geoip.dat`.
+- `scripts/build_xkeen_routing.py` читает порядок `[Rule]` из базового `shadowrocket.conf` и собирает `XKeen/05_routing.json` в том же порядке, резолвя связанные `rules/*.list`.
+- `scripts/build_happ_routing.py` не ходит в BM7: он берет агрегаты `sr-direct`/`sr-proxy` и `motivato_block` из `distillate/text/*`, затем собирает `HAPP/DEFAULT.*` (`роут-MotivatoPotato`) с детерминированным `LastUpdated`.
+- Антирекламный список собирается в том же distillate-пайплайне из OISD + HaGeZi, но публикуется чанками `rules/anti_advertising.01.list`, `.02.list`, `.03.list` и далее по мере необходимости. Количество чанков выбирается автоматически так, чтобы вес каждого был не больше примерно 7 МБ. Он не включается в compiled `geosite.dat` и не используется в HAPP. Для него предполагается отдельный модуль Shadowrocket.
 - На этапе сборки из `anti_advertising` дополнительно вычищаются домены, содержащие `nvidia`/`geforce`/`geforcenow`/`nvidiagrid`, чтобы anti-ad модуль не ломал GeForce NOW и связанные NVIDIA API.
 - Там же вычищаются official suffix'ы Discord (`discord.com`, `discord.gg`, `discordapp.com`, `discordapp.net` и смежные), чтобы upstream anti-ad не зацепил клиентские API, gateway и служебные поддомены Discord.
 
 Fallback policy:
-- если weekly sync не может скачать очередной upstream-лист, последний закоммиченный файл в `distillate/upstream/*` сохраняется;
-- сборка `distillate` и HAPP продолжается на этой локальной копии;
+- если очередной upstream-лист недоступен, publish workflow использует последний snapshot из release-ветки `main`;
+- сборка `distillate`, XKeen и HAPP продолжается на этой локальной копии;
 - удаление cache-файла из-за временной недоступности upstream не допускается.
 
 Локальная последовательность сборки:
 ```bash
 python3 scripts/sync_lists.py --no-pull
 python3 scripts/build_distillate.py
+python3 scripts/build_xkeen_routing.py
 python3 scripts/build_happ_routing.py
 ```
 
 GitHub Actions:
-- `.github/workflows/sync-lists.yml` запускается вручную или по weekly cron и обновляет vendored upstream + `distillate/*` + `rules/*.list`.
-- `.github/workflows/build-happ-routing.yml` запускается по push/вручную и собирает только `HAPP/*` из уже закоммиченного `distillate/`.
+- `.github/workflows/publish-release.yml` публикует shared артефакты из `source/main` по расписанию/вручную и обновляет custom release paths из `custom/sergio` по push/вручную.
 
 ## Расширение правил
 
@@ -167,9 +186,12 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_adv
 ```
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_advertising_custom.module
 ```
-Модуль подключает единый сгенерированный список репозитория:
-```
-https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.list
+В кастомный модуль также отдельно добавлен Adobe telemetry blocklist из `a-dove-is-dumb`; он применяется только там и не затрагивает основной anti-ad модуль.
+Модуль подключает все доступные anti-ad чанки репозитория; в release-ветке список `RULE-SET` подставляется автоматически по фактически собранным файлам:
+``` 
+https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.01.list
+https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.02.list
+https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.03.list
 ```
 Как добавить модуль в Shadowrocket:
 1. Откройте **Config → Modules**.

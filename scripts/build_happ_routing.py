@@ -10,7 +10,6 @@ import json
 import shlex
 import subprocess
 import sys
-import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable
@@ -34,6 +33,8 @@ DEFAULT_REMOTE_DNS_DOMAIN = "https://8.8.8.8/dns-query"
 DEFAULT_DOMESTIC_DNS_IP = "77.88.8.8"
 DEFAULT_DOMESTIC_DNS_DOMAIN = "https://77.88.8.8/dns-query"
 DEFAULT_DNS_HOSTS: dict[str, str] = {}
+
+
 @dataclass
 class Bucket:
     site_rules: list[str] = field(default_factory=list)
@@ -65,6 +66,12 @@ def dedupe_preserve(items: Iterable[str]) -> list[str]:
         seen.add(item)
         output.append(item)
     return output
+
+
+def write_text_if_changed(path: Path, content: str) -> None:
+    if path.exists() and path.read_text(encoding="utf-8") == content:
+        return
+    path.write_text(content, encoding="utf-8")
 
 
 def run(cmd: list[str], cwd: Path | None = None) -> str:
@@ -123,6 +130,11 @@ def parse_args() -> argparse.Namespace:
         default="DoH",
         choices=["DoH", "DoU"],
         help="Domestic DNS type",
+    )
+    parser.add_argument(
+        "--build-stamp",
+        default="",
+        help="Stable LastUpdated value written into DEFAULT.JSON/DEEPLINK.",
     )
     return parser.parse_args()
 
@@ -221,9 +233,19 @@ def repo_slug(repo_root: Path) -> str:
     raise RuntimeError(f"Unsupported origin URL format: {remote}")
 
 
+def resolve_build_stamp(repo_root: Path, explicit_value: str) -> str:
+    if explicit_value:
+        return explicit_value
+    try:
+        return run(["git", "-C", str(repo_root), "log", "-1", "--format=%ct"])
+    except RuntimeError:
+        return "0"
+
+
 def build_profile(
     data: BuildData,
     geodata_base: str,
+    last_updated: str,
     route_order: str,
     remote_dns_ip: str,
     remote_dns_domain: str,
@@ -255,7 +277,7 @@ def build_profile(
         "DomesticDNSIP": domestic_dns_ip,
         "Geoipurl": f"{geodata_base}/geoip.dat",
         "Geositeurl": f"{geodata_base}/geosite.dat",
-        "LastUpdated": str(int(time.time())),
+        "LastUpdated": last_updated,
         "DnsHosts": DEFAULT_DNS_HOSTS,
         "RouteOrder": route_order,
         "DirectSites": direct_sites,
@@ -275,6 +297,8 @@ def profile_to_deeplink(profile: dict[str, object], mode: str) -> tuple[str, str
     encoded = base64.b64encode(json_compact.encode("utf-8")).decode("ascii")
     deeplink = f"happ://routing/{mode}/{encoded}"
     return json_pretty, json_compact, deeplink
+
+
 def remove_obsolete_happ_files(out_dir: Path) -> None:
     for name in OBSOLETE_HAPP_FILES:
         (out_dir / name).unlink(missing_ok=True)
@@ -306,9 +330,11 @@ def main() -> int:
     slug = repo_slug(repo_root)
     geodata_base = f"https://raw.githubusercontent.com/{slug}/main/{args.distillate_dir.strip('/')}/dat"
     block_site_tag = "motivato-block" if read_text_lines(distillate_dir / "text" / "domain" / "motivato_block.txt") else None
+    build_stamp = resolve_build_stamp(repo_root, args.build_stamp)
     default_profile = build_profile(
         data=data,
         geodata_base=geodata_base,
+        last_updated=build_stamp,
         route_order=args.route_order,
         remote_dns_ip=remote_dns_ip,
         remote_dns_domain=args.remote_dns_domain,
@@ -320,8 +346,8 @@ def main() -> int:
         block_geosite_tag=block_site_tag,
     )
     default_pretty, _, default_deeplink = profile_to_deeplink(default_profile, args.deeplink_mode)
-    (out_dir / "DEFAULT.JSON").write_text(default_pretty + "\n", encoding="utf-8")
-    (out_dir / "DEFAULT.DEEPLINK").write_text(default_deeplink + "\n", encoding="utf-8")
+    write_text_if_changed(out_dir / "DEFAULT.JSON", default_pretty + "\n")
+    write_text_if_changed(out_dir / "DEFAULT.DEEPLINK", default_deeplink + "\n")
     return 0
 
 

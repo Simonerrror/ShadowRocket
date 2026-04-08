@@ -1,3 +1,0 @@
-domain:browser.pipe.aria.microsoft.com
-domain:g.msn.com
-domain:vortex.data.microsoft.com
