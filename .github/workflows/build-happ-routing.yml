@@ -1,0 +1,62 @@
+name: Build release artifacts
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "clash_config.yaml"
+      - "shadowrocket.conf"
+      - "shadowrocket_custom.conf"
+      - "modules/**"
+      - "rules/*.list"
+      - "distillate/manifest.json"
+      - "distillate/filters/**"
+      - "distillate/overlays/**"
+      - "scripts/build_distillate.py"
+      - "scripts/build_happ_routing.py"
+      - "scripts/build_xkeen_routing.py"
+      - ".github/workflows/sync-lists.yml"
+      - ".github/workflows/build-happ-routing.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Rebuild release artifacts
+        run: |
+          python scripts/build_distillate.py
+          python scripts/build_xkeen_routing.py --conf shadowrocket.conf
+          BUILD_STAMP="$(git log -1 --format=%ct)"
+          python scripts/build_happ_routing.py --build-stamp "$BUILD_STAMP"
+
+      - name: Commit and push changes
+        run: |
+          set -euo pipefail
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add -A distillate rules HAPP XKeen modules
+            git commit -m "chore: rebuild release artifacts"
+            git push
+          else
+            echo "No changes to commit."
+          fi

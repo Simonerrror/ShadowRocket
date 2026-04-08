@@ -1,0 +1,26 @@
+# Generated from distillate/manifest.json
+DOMAIN,ipify.org
+DOMAIN,checkip.amazonaws.com
+DOMAIN,ifconfig.me
+DOMAIN,2ip.ru
+DOMAIN-SUFFIX,government.ru
+DOMAIN-SUFFIX,gov.ru
+DOMAIN-SUFFIX,gosuslugi.ru
+DOMAIN-SUFFIX,cbr.ru
+DOMAIN-SUFFIX,nalog.ru
+DOMAIN-SUFFIX,mos.ru
+DOMAIN-SUFFIX,yandex.com
+DOMAIN-SUFFIX,yandex.net
+DOMAIN-SUFFIX,yandexcloud.net
+DOMAIN-SUFFIX,yastatic.net
+DOMAIN-SUFFIX,vk.com
+DOMAIN-SUFFIX,vk.me
+DOMAIN-SUFFIX,vk.cc
+DOMAIN-SUFFIX,userapi.com
+DOMAIN-SUFFIX,mycdn.me
+DOMAIN-SUFFIX,pathofexile.com
+DOMAIN-SUFFIX,poecdn.com
+DOMAIN-KEYWORD,pathofexile
+DOMAIN,73001ed9a665c420ee07c76a.netcraze.io
+IP-CIDR,34.116.233.9/32
+IP-CIDR,34.159.147.250/32
