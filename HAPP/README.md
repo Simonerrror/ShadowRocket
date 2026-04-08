@@ -12,7 +12,7 @@
 
 ## Пакет
 
-- `HAPP/DEFAULT.JSON` публикуется из release-ветки `main`, а в source-ветках не коммитится.
+- `HAPP/DEFAULT.JSON` хранится и обновляется в этой же ветке вместе с generated distillate-артефактами.
 - Имя профиля: `роут-MotivatoPotato`.
 - `BlockSites` указывает на `geosite:motivato-block`.
 - `Geoipurl` и `Geositeurl` указывают напрямую на `distillate/dat/*`.
@@ -53,4 +53,5 @@ PY
 
 ## CI
 
-- `/.github/workflows/publish-release.yml` собирает `DEFAULT` из `source/main` и публикует его в release-ветку `main`.
+- `/.github/workflows/sync-lists.yml` обновляет vendored upstream, distillate, XKeen и HAPP.
+- `/.github/workflows/build-happ-routing.yml` пересобирает `DEFAULT` при изменениях в конфиге или сборочных входах.
