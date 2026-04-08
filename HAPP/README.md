@@ -12,16 +12,16 @@
 
 ## Пакет
 
-- `HAPP/DEFAULT.JSON` строится локально из `distillate/`.
+- `HAPP/DEFAULT.JSON` хранится и обновляется в этой же ветке вместе с generated distillate-артефактами.
 - Имя профиля: `роут-MotivatoPotato`.
 - `BlockSites` указывает на `geosite:motivato-block`.
 - `Geoipurl` и `Geositeurl` указывают напрямую на `distillate/dat/*`.
 
 ## Source Of Truth
 
-- Routing logic: `/Users/sergio/Documents/30_HOBBY_AI/shadorock/ShadowRocket/scripts/build_happ_routing.py`
-- Distillate builder: `/Users/sergio/Documents/30_HOBBY_AI/shadorock/ShadowRocket/scripts/build_distillate.py`
-- Manifest и overlays: `/Users/sergio/Documents/30_HOBBY_AI/shadorock/ShadowRocket/distillate/manifest.json`
+- Routing logic: `scripts/build_happ_routing.py`
+- Distillate builder: `scripts/build_distillate.py`
+- Manifest и overlays: `distillate/manifest.json`
 
 ## Block Logic
 
@@ -34,15 +34,15 @@
 ## Ручная проверка
 
 ```bash
-python3 /Users/sergio/Documents/30_HOBBY_AI/shadorock/ShadowRocket/scripts/build_distillate.py
-python3 /Users/sergio/Documents/30_HOBBY_AI/shadorock/ShadowRocket/scripts/build_happ_routing.py
+python3 scripts/build_distillate.py
+python3 scripts/build_happ_routing.py --build-stamp "$(git log -1 --format=%ct)"
 ```
 
 ```bash
 python3 - <<'PY'
 import json
 from pathlib import Path
-p = Path("/Users/sergio/Documents/30_HOBBY_AI/shadorock/ShadowRocket/HAPP/DEFAULT.JSON")
+p = Path("HAPP/DEFAULT.JSON")
 data = json.loads(p.read_text(encoding="utf-8"))
 assert data["Name"] == "роут-MotivatoPotato"
 assert data["BlockSites"] == ["geosite:motivato-block"]
@@ -53,5 +53,5 @@ PY
 
 ## CI
 
-- `/.github/workflows/sync-lists.yml` обновляет vendored upstream и `distillate/*`.
-- `/.github/workflows/build-happ-routing.yml` собирает локальный `DEFAULT` из уже закоммиченного `distillate/`.
+- `/.github/workflows/sync-lists.yml` обновляет vendored upstream, distillate, XKeen и HAPP.
+- `/.github/workflows/build-happ-routing.yml` пересобирает `DEFAULT` при изменениях в конфиге или сборочных входах.
