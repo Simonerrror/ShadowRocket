@@ -5,12 +5,12 @@ from __future__ import annotations
 
 import argparse
 import subprocess
-import sys
 from pathlib import Path
 
 from build_distillate import (
     DistillateError,
     MANIFEST_PATH,
+    build_distillate,
     fetch_text,
     iter_external_sources,
     load_manifest,
@@ -59,15 +59,7 @@ def main() -> int:
     if not args.no_pull:
         pull_latest(repo_root)
     refresh_vendored_sources(repo_root)
-
-    cmd = [
-        sys.executable,
-        str(repo_root / "scripts" / "build_distillate.py"),
-        "--manifest",
-        str(repo_root / MANIFEST_PATH),
-        "--skip-compiled",
-    ]
-    subprocess.run(cmd, check=True)
+    build_distillate(repo_root, repo_root / MANIFEST_PATH, skip_compiled=True)
     return 0
 
 

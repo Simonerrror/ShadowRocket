@@ -7,15 +7,17 @@ import argparse
 import ipaddress
 import json
 import math
+import socket
 import shlex
 import shutil
+import ssl
 import subprocess
-import sys
 import tempfile
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 
@@ -60,7 +62,7 @@ class DistillateError(RuntimeError):
     pass
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build distillate artifacts from BM7 manifest.")
     parser.add_argument("--manifest", default=str(MANIFEST_PATH), help="Path to manifest JSON")
     parser.add_argument(
@@ -68,7 +70,7 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Skip .dat compilation and only refresh canonical text + legacy rules.",
     )
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def run(cmd: list[str], cwd: Path | None = None) -> str:
@@ -104,37 +106,35 @@ def run_with_retry(
     raise last_error
 
 
-def fetch_text(url: str, attempts: int = 3) -> str:
+def is_retryable_http_status(status_code: int) -> bool:
+    return status_code in {429, 500, 502, 503, 504}
+
+
+def is_retryable_transport_error(exc: Exception) -> bool:
+    if isinstance(exc, (socket.timeout, TimeoutError, ConnectionResetError, ssl.SSLError)):
+        return True
+    if isinstance(exc, URLError):
+        reason = exc.reason
+        return isinstance(reason, (socket.timeout, TimeoutError, ConnectionResetError, ssl.SSLError, OSError))
+    return isinstance(exc, OSError)
+
+
+def fetch_text(url: str, attempts: int = 3, timeout_seconds: int = 30, backoff_factor: float = 2.0) -> str:
     last_error: Exception | None = None
     request = Request(url, headers={"User-Agent": FETCH_USER_AGENT})
     for attempt in range(1, attempts + 1):
         try:
-            with urlopen(request, timeout=30) as response:
+            with urlopen(request, timeout=timeout_seconds) as response:
                 return response.read().decode("utf-8")
+        except HTTPError as exc:
+            last_error = exc
+            if not is_retryable_http_status(exc.code) or attempt == attempts:
+                break
         except Exception as exc:  # noqa: BLE001
             last_error = exc
-            try:
-                return run_with_retry(
-                    [
-                        "curl",
-                        "-fsSL",
-                        "--retry",
-                        "5",
-                        "--retry-delay",
-                        "2",
-                        "--retry-connrefused",
-                        "-A",
-                        FETCH_USER_AGENT,
-                        url,
-                    ],
-                    attempts=2,
-                    delay_seconds=2.0,
-                )
-            except DistillateError as curl_exc:
-                last_error = curl_exc
-            if attempt == attempts:
+            if not is_retryable_transport_error(exc) or attempt == attempts:
                 break
-            time.sleep(2.0 * attempt)
+        time.sleep(backoff_factor * attempt)
     raise DistillateError(f"Failed to fetch {url}: {last_error}")
 
 
@@ -843,28 +843,32 @@ def dat_category_name(name: str) -> str:
     return name.replace("_", "-")
 
 
-def main() -> int:
-    args = parse_args()
-    repo_root = Path.cwd()
-    manifest_path = (repo_root / args.manifest).resolve()
+def build_distillate(repo_root: Path, manifest_path: Path, skip_compiled: bool) -> int:
     if not manifest_path.exists():
         raise FileNotFoundError(f"Manifest not found: {manifest_path}")
 
     manifest = load_manifest(manifest_path)
-    prepare_output_dirs(repo_root, skip_compiled=args.skip_compiled)
+    prepare_output_dirs(repo_root, skip_compiled=skip_compiled)
     spec_by_name, results = build_categories(manifest, repo_root)
     published = write_text_outputs(repo_root, spec_by_name, results)
     aggregates = build_bucket_aggregates(repo_root, spec_by_name, results)
     write_summary(repo_root, spec_by_name, published, aggregates)
     rewrite_anti_ad_modules(repo_root)
 
-    if args.skip_compiled:
+    if skip_compiled:
         return 0
 
     artifacts = compiled_categories(spec_by_name, published, aggregates)
     compile_geosite_dat(repo_root, artifacts)
     compile_geoip_dat(repo_root, artifacts)
     return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
+    repo_root = Path.cwd()
+    manifest_path = (repo_root / args.manifest).resolve()
+    return build_distillate(repo_root, manifest_path, skip_compiled=args.skip_compiled)
 
 
 if __name__ == "__main__":
