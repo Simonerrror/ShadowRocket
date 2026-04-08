@@ -1,0 +1,16 @@
+.DS_Store
+distillate/upstream/
+distillate/text/
+distillate/dat/
+distillate/summary.json
+rules/anti_advertising.list
+rules/anti_advertising.[0-9][0-9].list
+rules/domains_community.list
+rules/google-all.list
+rules/greylist_proxy.list
+rules/microsoft.list
+rules/telegram.list
+rules/whitelist_direct.list
+HAPP/DEFAULT.JSON
+HAPP/DEFAULT.DEEPLINK
+XKeen/05_routing.json
