@@ -1,6 +1,6 @@
-﻿# CLASH VERGE REV (MIHOMO) CONFIG
-# Filter: Vless Only | No RU/BY/UA
-# Target: Windows (Tun Mode)
+# CLASH VERGE REV (MIHOMO) CONFIG
+# AUTO-GENERATED FROM shadowrocket.conf
+# Derived routing truth: proxy groups, rule-providers, rules
 
 port: 7890
 socks-port: 7891
@@ -13,7 +13,7 @@ geoip-code: RU
 # 1. TUN MODE
 tun:
   enable: true
-  stack: system 
+  stack: system
   dns-hijack:
     - any:53
   auto-route: true
@@ -27,18 +27,18 @@ dns:
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
   fake-ip-filter:
-    - '+.lan'
-    - '+.local'
-    - '+.localhost'
-    - '+.home.arpa'
-    - '*.localdomain'
-    - 'time.*.com'
-    - 'time.*.gov'
-    - 'time.*.edu'
-    - 'time.windows.com'
-    - 'time.apple.com'
-    - 'time.android.com'
-    - '*.ntp.org'
+    - "+.lan"
+    - "+.local"
+    - "+.localhost"
+    - "+.home.arpa"
+    - "*.localdomain"
+    - "time.*.com"
+    - "time.*.gov"
+    - "time.*.edu"
+    - "time.windows.com"
+    - "time.apple.com"
+    - "time.android.com"
+    - "*.ntp.org"
   default-nameserver:
     - 77.88.8.8
     - 8.8.8.8
@@ -53,43 +53,39 @@ dns:
     ipcidr:
       - 0.0.0.0/0
 
-# 3. ПРОВАЙДЕРЫ 
+# 3. PROVIDERS
 proxy-providers:
   Main-Sub:
     type: http
-    # ВСТАВЬ ССЫЛКУ НИЖЕ
-    url: "<INSERT_SUBSCRIPTION_URL_HERE>" 
+    url: "<INSERT_SUBSCRIPTION_URL_HERE>"
     interval: 3600
     path: ./proxies/main.yaml
-    
-    filter: '(?i)(Vless|Netherlands\s+WL\s+Mobile)'
-     
-    exclude-filter: '(?i)(Russia|Belarus|Ukraine)'
-
+    filter: "(?i)(Vless|Netherlands\\s+WL\\s+Mobile)"
+    exclude-filter: "(?i)(Russia|Belarus|Ukraine)"
     health-check:
       enable: true
       interval: 780
-      url: https://abs.twimg.com/favicon.ico
+      url: "https://abs.twimg.com/favicon.ico"
 
+# 4. RULE PROVIDERS
 rule-providers:
   whitelist_direct:
     type: http
     behavior: classical
     url: "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/whitelist_direct.list"
-    path: ./rules/whitelist.yaml
+    path: ./rules/whitelist_direct.yaml
     interval: 86400
 
   greylist_proxy:
     type: http
     behavior: classical
     url: "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/greylist_proxy.list"
-    path: ./rules/greylist.yaml
+    path: ./rules/greylist_proxy.yaml
     interval: 86400
 
   google_all:
     type: http
     behavior: classical
-    format: text
     url: "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/google-all.list"
     path: ./rules/google_all.yaml
     interval: 86400
@@ -108,82 +104,60 @@ rule-providers:
     path: ./rules/domains_community.yaml
     interval: 86400
 
-  voice_ports:
-    type: http
-    behavior: classical
-    url: "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/voice_ports.list"
-    path: ./rules/voice_ports.yaml
-    interval: 86400
-
-  telegram:
-    type: http
-    behavior: classical
-    url: "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/telegram.list"
-    path: ./rules/telegram.yaml
-    interval: 86400
-
-# 4. ГРУППЫ
+# 5. PROXY GROUPS
 proxy-groups:
-  # Главный селектор
+  - name: AUTO-MAIN
+    type: url-test
+    use:
+      - Main-Sub
+    filter: "^(?!.*(Russia|Belarus|Ukraine)).*Vless.*$"
+    url: "https://abs.twimg.com/favicon.ico"
+    interval: 780
+    tolerance: 200
+
+  - name: AUTO-WL
+    type: url-test
+    use:
+      - Main-Sub
+    filter: "(?i)^(?!.*(Russia|Belarus|Ukraine)).*WL.*$"
+    url: "https://abs.twimg.com/favicon.ico"
+    interval: 780
+    tolerance: 200
+
+  - name: GOOGLE
+    type: select
+    use:
+      - Main-Sub
+    filter: "(?i)(?:.*WL.*|.*Netherlands.*Vless.*|.*Vless.*Netherlands.*|.*UAE.*Vless.*|.*Vless.*UAE.*)"
+
+  - name: WL
+    type: select
+    use:
+      - Main-Sub
+    filter: "(?i).*WL.*"
+
+  - name: MANUAL-PROXY
+    type: select
+    use:
+      - Main-Sub
+    filter: "(?i).*Vless.*$"
+
   - name: PROXY
     type: select
     proxies:
       - AUTO-WL
       - AUTO-MAIN
-      - MANUAL-PROXY
       - WL
+      - MANUAL-PROXY
       - DIRECT
 
-  # Спец-группа для Google (NL VLESS + UAE VLESS + WL, ручной выбор)
-  - name: GOOGLE
-    type: select
-    use:
-      - Main-Sub
-    filter: '(?i)(.*WL.*|(Netherlands.*Vless|Vless.*Netherlands)|(UAE.*Vless|Vless.*UAE))'
-
-  # Автовыбор только для WL-узлов
-  - name: AUTO-WL
-    type: url-test
-    use:
-      - Main-Sub
-    filter: '^(?!.*(Russia|Belarus|Ukraine)).*(?i:WL).*$'
-    url: 'https://abs.twimg.com/favicon.ico'
-    interval: 780
-    tolerance: 200
-
-  # Группа WL (ручной выбор по имени узла)
-  - name: WL
-    type: select
-    use:
-      - Main-Sub
-    filter: '(?i).*WL.*'
-
-  # Автовыбор (только VLESS, исключаем RU/BY/UA)
-  - name: AUTO-MAIN
-    type: url-test
-    use:
-      - Main-Sub
-    filter: '^(?!.*(Russia|Belarus|Ukraine)).*Vless.*$'
-    url: 'https://abs.twimg.com/favicon.ico'
-    interval: 780
-    tolerance: 200
-
-  # Мануал-прокси (ручной выбор, все VLESS включая RU/BY/UA)
-  - name: MANUAL-PROXY
-    type: select
-    use:
-      - Main-Sub
-    filter: '(?i).*Vless.*'
-
-# 5. ПРАВИЛА
+# 6. RULES
 rules:
-  - RULE-SET,google_all,GOOGLE
   - RULE-SET,whitelist_direct,DIRECT
   - RULE-SET,greylist_proxy,PROXY
+  - RULE-SET,google_all,GOOGLE
   - RULE-SET,microsoft,PROXY
   - RULE-SET,domains_community,PROXY
-  - RULE-SET,voice_ports,PROXY
-  - RULE-SET,telegram,PROXY
   - DOMAIN-SUFFIX,ru,DIRECT
   - DOMAIN-SUFFIX,xn--p1ai,DIRECT
   - DOMAIN-SUFFIX,su,DIRECT
