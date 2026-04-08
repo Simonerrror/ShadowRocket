@@ -146,7 +146,7 @@ proxy-groups:
     type: url-test
     use:
       - Main-Sub
-    filter: '(?i).*WL.*'
+    filter: '^(?!.*(Russia|Belarus|Ukraine)).*(?i:WL).*$'
     url: 'https://abs.twimg.com/favicon.ico'
     interval: 780
     tolerance: 200
@@ -168,12 +168,12 @@ proxy-groups:
     interval: 780
     tolerance: 200
 
-  # Мануал-прокси (ручной выбор, те же серверы что и в AUTO-MAIN)
+  # Мануал-прокси (ручной выбор, все VLESS включая RU/BY/UA)
   - name: MANUAL-PROXY
     type: select
     use:
       - Main-Sub
-    filter: '^(?!.*(Russia|Belarus|Ukraine)).*Vless.*$'
+    filter: '(?i).*Vless.*'
 
 # 5. ПРАВИЛА
 rules:
