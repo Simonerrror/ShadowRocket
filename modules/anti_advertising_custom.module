@@ -23,4 +23,4 @@ IP-CIDR,17.253.150.10/32,DIRECT,no-resolve
 
 # Adobe telemetry blocklist (custom only)
 RULE-SET, https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/adobe_telemetry_custom.list,REJECT
-RULE-SET, https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.list,REJECT
+RULE-SET, https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.01.list,REJECT

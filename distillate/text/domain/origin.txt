@@ -1,7 +1,0 @@
-full:cloudsync-prod.s3.amazonaws.com
-full:eaasserts-a.akamaihd.net
-full:origin-a.akamaihd.net
-full:originasserts.akamaized.net
-full:rtm.tnt-ea.com
-domain:ea.com
-domain:origin.com

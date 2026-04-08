@@ -1,9 +1,0 @@
-domain:ext-twitch.tv
-domain:jtvnw.net
-domain:live-video.net
-domain:ttvnw.net
-domain:twitch-ext.rootonline.de
-domain:twitch.tv
-domain:twitchcdn.net
-domain:twitchsvc.net
-keyword:ttvnw
