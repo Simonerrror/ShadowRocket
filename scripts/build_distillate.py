@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import ipaddress
 import json
+import math
 import shlex
 import shutil
 import subprocess
@@ -41,6 +42,9 @@ GEOIP_REPO = "https://github.com/v2fly/geoip.git"
 GEOSITE_REPO = "https://github.com/v2fly/domain-list-community.git"
 RULE_HEADER = "# Generated from distillate/manifest.json"
 FETCH_USER_AGENT = "ShadowRocketDistillate/1.0"
+ANTI_ADVERTISING_MAX_CHUNK_BYTES = 7 * 1024 * 1024
+ANTI_AD_RULE_GLOB = "anti_advertising.[0-9][0-9].list"
+ANTI_AD_RULE_PREFIX = "RULE-SET, https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/"
 
 
 @dataclass
@@ -589,6 +593,74 @@ def render_legacy_rules(path: Path, result: CategoryResult) -> None:
     lines.extend(cidr_to_legacy(rule) for rule in result.ip_cidrs)
     lines.extend(asn_to_legacy(rule) for rule in result.ip_asns)
     write_text_file(path, lines)
+    render_chunked_legacy_rules(path, lines)
+
+
+def render_chunked_legacy_rules(path: Path, lines: list[str]) -> None:
+    if path.name != "anti_advertising.list":
+        return
+
+    for stale_path in sorted(path.parent.glob("anti_advertising.[0-9][0-9].list")):
+        stale_path.unlink(missing_ok=True)
+
+    payload = lines[1:]
+    if not payload:
+        return
+
+    weights = [len((line + "\n").encode("utf-8")) for line in payload]
+    total_bytes = sum(weights)
+    chunk_count = max(1, math.ceil(total_bytes / ANTI_ADVERTISING_MAX_CHUNK_BYTES))
+
+    offset = 0
+    remaining_bytes = total_bytes
+    for chunk_index in range(1, chunk_count + 1):
+        remaining_chunks = chunk_count - chunk_index + 1
+        target_bytes = math.ceil(remaining_bytes / remaining_chunks)
+        chunk_payload: list[str] = []
+        chunk_bytes = 0
+
+        while offset < len(payload):
+            line = payload[offset]
+            line_weight = weights[offset]
+            if chunk_payload and chunk_bytes + line_weight > target_bytes:
+                break
+            chunk_payload.append(line)
+            chunk_bytes += line_weight
+            offset += 1
+            if chunk_bytes >= target_bytes:
+                break
+
+        chunk_path = path.with_name(f"anti_advertising.{chunk_index:02d}.list")
+        write_text_file(chunk_path, [RULE_HEADER, *chunk_payload])
+        remaining_bytes -= chunk_bytes
+
+
+def anti_ad_chunk_rule_lines(repo_root: Path) -> list[str]:
+    chunk_paths = sorted((repo_root / "rules").glob(ANTI_AD_RULE_GLOB))
+    return [f"{ANTI_AD_RULE_PREFIX}{path.name},REJECT" for path in chunk_paths]
+
+
+def rewrite_module_chunks(module_path: Path, chunk_lines: list[str]) -> None:
+    if not module_path.exists():
+        return
+
+    lines = module_path.read_text(encoding="utf-8").splitlines()
+    kept_lines = [
+        line
+        for line in lines
+        if "anti_advertising.list,REJECT" not in line and "anti_advertising." not in line
+    ]
+    if chunk_lines:
+        if kept_lines and kept_lines[-1] != "":
+            kept_lines.append("")
+        kept_lines.extend(chunk_lines)
+    module_path.write_text("\n".join(kept_lines) + "\n", encoding="utf-8")
+
+
+def rewrite_anti_ad_modules(repo_root: Path) -> None:
+    chunk_lines = anti_ad_chunk_rule_lines(repo_root)
+    rewrite_module_chunks(repo_root / "modules" / "anti_advertising.module", chunk_lines)
+    rewrite_module_chunks(repo_root / "modules" / "anti_advertising_custom.module", chunk_lines)
 
 
 def prepare_output_dirs(repo_root: Path, skip_compiled: bool) -> None:
@@ -784,6 +856,7 @@ def main() -> int:
     published = write_text_outputs(repo_root, spec_by_name, results)
     aggregates = build_bucket_aggregates(repo_root, spec_by_name, results)
     write_summary(repo_root, spec_by_name, published, aggregates)
+    rewrite_anti_ad_modules(repo_root)
 
     if args.skip_compiled:
         return 0

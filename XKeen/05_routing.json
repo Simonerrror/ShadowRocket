@@ -2087,8 +2087,20 @@
       "type": "field",
       "outboundTag": "direct",
       "domain": [
-        "domain:ru",
-        "domain:xn--p1ai",
+        "domain:ru"
+      ]
+    },
+    {
+      "type": "field",
+      "outboundTag": "direct",
+      "domain": [
+        "domain:xn--p1ai"
+      ]
+    },
+    {
+      "type": "field",
+      "outboundTag": "direct",
+      "domain": [
         "domain:su"
       ]
     },
