@@ -107,22 +107,20 @@ rule-providers:
 # 5. PROXY GROUPS
 proxy-groups:
   - name: AUTO-MAIN
-    type: url-test
+    type: fallback
     use:
       - Main-Sub
     filter: "^(?!.*(Russia|Belarus|Ukraine)).*Vless.*$"
     url: "https://abs.twimg.com/favicon.ico"
     interval: 780
-    tolerance: 200
 
   - name: AUTO-WL
-    type: url-test
+    type: fallback
     use:
       - Main-Sub
     filter: "(?i)^(?!.*(Russia|Belarus|Ukraine))(?:.*WL.*Vless.*|.*Vless.*WL.*)$"
     url: "https://abs.twimg.com/favicon.ico"
-    interval: 780
-    tolerance: 200
+    interval: 180
 
   - name: GOOGLE
     type: select

@@ -210,12 +210,12 @@ def render_proxy_groups(groups: list[GroupSpec]) -> tuple[list[str], list[str]]:
             for member in group.members:
                 rendered.append(f"      - {member}")
 
-        if group.group_type == "url-test":
+        if group.group_type in {"url-test", "fallback"}:
             url = group.attrs.get("url", DEFAULT_HEALTHCHECK_URL)
             rendered.append(f"    url: {yaml_quote(url)}")
             if "interval" in group.attrs:
                 rendered.append(f"    interval: {group.attrs['interval']}")
-            if "tolerance" in group.attrs:
+            if group.group_type == "url-test" and "tolerance" in group.attrs:
                 rendered.append(f"    tolerance: {group.attrs['tolerance']}")
             if "timeout" in group.attrs:
                 warnings.append(f"{group.name}: Clash builder ignores Shadowrocket timeout={group.attrs['timeout']}")
