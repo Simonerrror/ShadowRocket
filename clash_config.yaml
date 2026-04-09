@@ -119,7 +119,7 @@ proxy-groups:
     type: url-test
     use:
       - Main-Sub
-    filter: "(?i)^(?!.*(Russia|Belarus|Ukraine)).*WL.*$"
+    filter: "(?i)^(?!.*(Russia|Belarus|Ukraine))(?:.*WL.*Vless.*|.*Vless.*WL.*)$"
     url: "https://abs.twimg.com/favicon.ico"
     interval: 780
     tolerance: 200
@@ -128,13 +128,13 @@ proxy-groups:
     type: select
     use:
       - Main-Sub
-    filter: "(?i)(?:.*WL.*|.*Netherlands.*Vless.*|.*Vless.*Netherlands.*|.*UAE.*Vless.*|.*Vless.*UAE.*)"
+    filter: "(?i)(?:.*WL.*Vless.*|.*Vless.*WL.*|.*Netherlands.*Vless.*|.*Vless.*Netherlands.*|.*UAE.*Vless.*|.*Vless.*UAE.*)"
 
   - name: WL
     type: select
     use:
       - Main-Sub
-    filter: "(?i).*WL.*"
+    filter: "(?i)(?:.*WL.*Vless.*|.*Vless.*WL.*)"
 
   - name: MANUAL-PROXY
     type: select
