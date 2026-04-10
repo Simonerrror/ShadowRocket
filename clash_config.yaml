@@ -123,10 +123,12 @@ proxy-groups:
     interval: 180
 
   - name: GOOGLE
-    type: select
+    type: fallback
     use:
       - Main-Sub
     filter: "(?i)(?:.*WL.*Vless.*|.*Vless.*WL.*|.*Netherlands.*Vless.*|.*Vless.*Netherlands.*|.*UAE.*Vless.*|.*Vless.*UAE.*)"
+    url: "https://docs.google.com/spreadsheets/"
+    interval: 300
 
   - name: WL
     type: select
