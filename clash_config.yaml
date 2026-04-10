@@ -126,7 +126,7 @@ proxy-groups:
     type: fallback
     use:
       - Main-Sub
-    filter: "(?i)(?:.*WL.*Vless.*|.*Vless.*WL.*|.*Netherlands.*Vless.*|.*Vless.*Netherlands.*|.*UAE.*Vless.*|.*Vless.*UAE.*)"
+    filter: "(?i)^(?!.*(Russia|Belarus|Ukraine))(?:.*WL.*Vless.*|.*Vless.*WL.*|.*Netherlands.*Vless.*|.*Vless.*Netherlands.*|.*UAE.*Vless.*|.*Vless.*UAE.*)"
     url: "https://docs.google.com/spreadsheets/"
     interval: 300
 
