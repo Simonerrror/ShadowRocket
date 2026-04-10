@@ -50,10 +50,9 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_cus
 
 > `clash_config.yaml` больше не поддерживается вручную отдельно: он генерируется из
 > `shadowrocket.conf` через `scripts/build_clash_config.py`.
-> Для автопроверки серверов `proxy-providers.Main-Sub.health-check` и `proxy-groups.AUTO-MAIN`
-> используется `https://abs.twimg.com/favicon.ico` (интервал 780; для `AUTO-MAIN` tolerance 200).
-> Для `proxy-groups.GOOGLE` используется отдельный health-check `https://docs.google.com/spreadsheets/`.
-> В него нужно вручную вставить ссылку на вашу подписку.
+> Для автопроверки серверов `proxy-providers.Main-Sub.health-check`, `proxy-groups.AUTO-MAIN`
+> и `proxy-groups.GOOGLE` используется `https://abs.twimg.com/favicon.ico`
+> (`AUTO-MAIN`: интервал 780, tolerance 200; `GOOGLE`: интервал 300).
 
 1. **Скачайте Clash Verge Rev**:  
    https://github.com/clash-verge-rev/clash-verge-rev/releases  
@@ -114,7 +113,7 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_cus
 - **WL** — ручной выбор узлов по regex `(?i)(?:.*WL.*Vless.*|.*Vless.*WL.*)`.
 - **MANUAL-PROXY** — ручной выбор всех VLESS-узлов, включая RU/BY/UA.
 - **GOOGLE** — fallback-группа для Google/Gemini/YouTube (NL VLESS + UAE VLESS + узлы, где одновременно есть `WL` и `VLESS`):
-  `url=https://docs.google.com/spreadsheets/`, `interval=300`, `timeout=7`.
+  `url=https://abs.twimg.com/favicon.ico`, `interval=300`, `timeout=7`.
 - **PROXY** — Select-группа; по умолчанию выбран AUTO-WL, вручную можно переключаться между AUTO-WL/AUTO-MAIN/WL/MANUAL-PROXY/DIRECT.
   В fallback-группах первичным считается первый живой узел в порядке подписки после применения regex-фильтра.
 

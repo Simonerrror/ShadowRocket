@@ -127,7 +127,7 @@ proxy-groups:
     use:
       - Main-Sub
     filter: "(?i)^(?!.*(Russia|Belarus|Ukraine))(?:.*WL.*Vless.*|.*Vless.*WL.*|.*Netherlands.*Vless.*|.*Vless.*Netherlands.*|.*UAE.*Vless.*|.*Vless.*UAE.*)"
-    url: "https://docs.google.com/spreadsheets/"
+    url: "https://abs.twimg.com/favicon.ico"
     interval: 300
 
   - name: WL
