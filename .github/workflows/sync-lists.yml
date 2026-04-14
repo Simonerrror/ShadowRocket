@@ -34,9 +34,6 @@ jobs:
       - name: Build Clash config
         run: python scripts/build_clash_config.py --conf shadowrocket.conf
 
-      - name: Build XKeen routing
-        run: python scripts/build_xkeen_routing.py --conf shadowrocket.conf
-
       - name: Build HAPP artifacts
         run: |
           BUILD_STAMP="$(git log -1 --format=%ct)"
@@ -48,7 +45,7 @@ jobs:
           if [[ -n "$(git status --porcelain)" ]]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add -A distillate rules HAPP XKeen modules clash_config.yaml
+            git add -A distillate rules HAPP modules clash_config.yaml
             git commit -m "chore: refresh vendored distillate sources"
             git push
           else

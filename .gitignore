@@ -1,2 +1,6 @@
 .DS_Store
 __pycache__/
+XKeen/sub/*.txt
+XKeen/local/*.json
+XKeen/singles/*/*.json
+XKeen/diagnostics/*/*.json
