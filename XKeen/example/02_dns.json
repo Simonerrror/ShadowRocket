@@ -1,0 +1,9 @@
+{
+  "dns": {
+    "tag": "dns-in",
+    "servers": [
+      "8.8.8.8"
+    ],
+    "queryStrategy": "UseIP"
+  }
+}

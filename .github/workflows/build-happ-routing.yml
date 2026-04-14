@@ -17,7 +17,6 @@ on:
       - "scripts/build_distillate.py"
       - "scripts/build_clash_config.py"
       - "scripts/build_happ_routing.py"
-      - "scripts/build_xkeen_routing.py"
       - ".github/workflows/sync-lists.yml"
       - ".github/workflows/build-happ-routing.yml"
 
@@ -46,7 +45,6 @@ jobs:
         run: |
           python scripts/build_distillate.py
           python scripts/build_clash_config.py --conf shadowrocket.conf
-          python scripts/build_xkeen_routing.py --conf shadowrocket.conf
           BUILD_STAMP="$(git log -1 --format=%ct)"
           python scripts/build_happ_routing.py --build-stamp "$BUILD_STAMP"
 
@@ -56,7 +54,7 @@ jobs:
           if [[ -n "$(git status --porcelain)" ]]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add -A distillate rules HAPP XKeen modules clash_config.yaml
+            git add -A distillate rules HAPP modules clash_config.yaml
             git commit -m "chore: rebuild release artifacts"
             git push
           else
