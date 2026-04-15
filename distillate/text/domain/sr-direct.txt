@@ -20,6 +20,7 @@ domain:mycdn.me
 domain:pathofexile.com
 domain:poecdn.com
 keyword:pathofexile
+keyword:pasthofexile
 domain:ru
 domain:xn--p1ai
 domain:su

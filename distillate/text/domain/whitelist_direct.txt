@@ -20,3 +20,4 @@ domain:mycdn.me
 domain:pathofexile.com
 domain:poecdn.com
 keyword:pathofexile
+keyword:pasthofexile
