@@ -160,7 +160,7 @@
       "name": "greylist_proxy",
       "bucket": "proxy",
       "legacy_rule_path": "rules/greylist_proxy.list",
-      "domains": 0,
+      "domains": 4,
       "ip_cidrs": 0,
       "ip_asns": 0,
       "dropped": {}
@@ -340,7 +340,7 @@
     },
     {
       "name": "sr-proxy",
-      "domains": 2005,
+      "domains": 2009,
       "ip_cidrs": 55
     }
   ]
