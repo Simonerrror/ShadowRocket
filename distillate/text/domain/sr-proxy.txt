@@ -2003,3 +2003,7 @@ domain:pinterest.ph
 domain:pinterest.pt
 domain:pinterest.ru
 domain:pinterest.se
+domain:t.co
+domain:twimg.com
+domain:twitter.com
+domain:x.com

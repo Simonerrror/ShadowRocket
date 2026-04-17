@@ -1,0 +1,4 @@
+domain:t.co
+domain:twimg.com
+domain:twitter.com
+domain:x.com
