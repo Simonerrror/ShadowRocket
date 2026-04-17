@@ -223,8 +223,8 @@
     },
     {
       "name": "openai",
-      "bucket": null,
-      "legacy_rule_path": null,
+      "bucket": "proxy",
+      "legacy_rule_path": "rules/openai.list",
       "domains": 32,
       "ip_cidrs": 2,
       "ip_asns": 0,
@@ -340,8 +340,8 @@
     },
     {
       "name": "sr-proxy",
-      "domains": 1973,
-      "ip_cidrs": 53
+      "domains": 2005,
+      "ip_cidrs": 55
     }
   ]
 }
