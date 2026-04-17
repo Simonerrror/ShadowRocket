@@ -21,7 +21,7 @@
     {"name": "epic", "publish": true, "sources": [{"type": "bm7", "pack": "Epic"}]},
     {"name": "twitch", "publish": true, "sources": [{"type": "bm7", "pack": "Twitch"}]},
     {"name": "pinterest", "publish": true, "sources": [{"type": "bm7", "pack": "Pinterest"}]},
-    {"name": "openai", "publish": true, "sources": [{"type": "bm7", "pack": "OpenAI"}]},
+    {"name": "openai", "publish": true, "bucket": "proxy", "legacy_rule_path": "rules/openai.list", "sources": [{"type": "bm7", "pack": "OpenAI"}]},
     {"name": "claude", "publish": true, "sources": [{"type": "bm7", "pack": "Claude"}]},
     {"name": "copilot", "publish": true, "sources": [{"type": "bm7", "pack": "Copilot"}]},
     {
