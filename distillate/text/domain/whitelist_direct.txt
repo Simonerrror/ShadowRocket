@@ -17,6 +17,7 @@ domain:vk.me
 domain:vk.cc
 domain:userapi.com
 domain:mycdn.me
+domain:2gis.com
 domain:pathofexile.com
 domain:poecdn.com
 keyword:pathofexile
