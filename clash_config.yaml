@@ -40,14 +40,14 @@ dns:
     - "time.android.com"
     - "*.ntp.org"
   default-nameserver:
-    - 77.88.8.8
-    - 8.8.8.8
+    - 194.242.2.2
+    - 76.76.2.0
   nameserver:
-    - 77.88.8.8
-    - 8.8.8.8
+    - 194.242.2.2
+    - 76.76.2.0
   fallback:
-    - tls://77.88.8.8
-    - tls://8.8.8.8
+    - tls://dns.mullvad.net
+    - tls://freedns.controld.com
   fallback-filter:
     geoip: false
     ipcidr:
