@@ -15,11 +15,11 @@
 - `shadowrocket.conf` — source of truth для порядка `[Rule]`, inline-правил, `[General]` и `[Proxy Group]` базового профиля.
 - `distillate/manifest.json` — source of truth для состава категорий, bucket'ов, publish-политики и generation большинства `rules/*.list`.
 - `distillate/overlays/*.list` и `distillate/filters/*.list` — ручные входы distillate-сборки; содержимое generated-файлов меняется через них, а не через прямое редактирование итоговых артефактов.
-- `shadowrocket_custom.conf` не генерируется из `shadowrocket.conf`; это отдельный `custom-only` профиль, который поддерживается вручную.
+- `shadowrocket_custom.conf` и `shadowrocket_custom_private_dns.conf` не генерируются из `shadowrocket.conf`; это отдельные `custom-only` профили, которые поддерживаются вручную.
 
 ## Форматирование и стиль
 - Используйте LF и UTF-8.
-- В конфигурациях (`shadowrocket.conf`, `shadowrocket_custom.conf`, `clash_config.yaml`) не меняйте секции местами и не переставляйте блоки.
+- В конфигурациях (`shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_custom_private_dns.conf`, `clash_config.yaml`) не меняйте секции местами и не переставляйте блоки.
 - `clash_config.yaml` должен пересобираться из `shadowrocket.conf` через `scripts/build_clash_config.py`, а не поддерживаться вручную параллельно.
 - В списках правил (`rules/*.list`) одна запись в строке, без лишних пробелов и комментариев, если не требуется.
 
@@ -31,7 +31,7 @@
 - `clash_config.yaml`: generated-артефакт от `shadowrocket.conf` и Clash/Mihomo template-настроек; при изменении логики сборки обновляйте его вместе с кодом.
 
 ## Ownership файлов
-- Редактируются вручную: `shadowrocket.conf`, `shadowrocket_custom.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `rules/adobe_telemetry_custom.list`, `rules/russia_extended.list`, `rules/voice_ports.list`, `modules/GFN-AM.module`.
+- Редактируются вручную: `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_custom_private_dns.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `rules/adobe_telemetry_custom.list`, `rules/russia_extended.list`, `rules/voice_ports.list`, `modules/GFN-AM.module`.
 - Generated, не редактировать вручную: `clash_config.yaml`, `HAPP/DEFAULT.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/summary.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/telegram.list`, `rules/whitelist_direct.list`, `rules/greylist_proxy.list`, `rules/anti_advertising*.list`.
 - `XKeen/local/*`, `XKeen/singles/*`, `XKeen/diagnostics/*` и `XKeen/sub/*` — `custom-only`; это локальные файлы, не часть публичного release-контура.
 - Semi-generated: `modules/anti_advertising.module` и `modules/anti_advertising_custom.module` хранят ручные заголовки и локальные исключения, но `RULE-SET` на anti-ad chunks переписываются сборкой.
@@ -42,7 +42,7 @@
 ## Правила изменений
 - Если нужно поменять содержимое generated `rules/*.list`, меняйте `distillate/manifest.json`, `distillate/overlays/*` или `distillate/filters/*`, а не итоговые списки.
 - Если меняется routing-логика, полезная всем, синхронизируйте её в `shadowrocket.conf` и `shadowrocket_custom.conf`, но не перетирайте custom-only поля из `[General]` и custom `policy-select-name`.
-- `shadowrocket_custom.conf`, `modules/anti_advertising_custom.module`, `rules/adobe_telemetry_custom.list` и GFN/NVIDIA-исключения по умолчанию считаются `custom-only`.
+- `shadowrocket_custom.conf`, `shadowrocket_custom_private_dns.conf`, `modules/anti_advertising_custom.module`, `rules/adobe_telemetry_custom.list` и GFN/NVIDIA-исключения по умолчанию считаются `custom-only`.
 - Не запускайте `scripts/sync_lists.py` без явного запроса на refresh vendored upstream. Для локальной детерминированной пересборки используйте закешированные `distillate/upstream/*` и `python3 scripts/build_distillate.py`.
 - Если всё же нужен локальный sync, используйте `python3 scripts/sync_lists.py --no-pull`, чтобы не делать `git pull --rebase` автоматически.
 
