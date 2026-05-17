@@ -15,7 +15,7 @@
       "name": "anti_advertising",
       "bucket": null,
       "legacy_rule_path": "rules/anti_advertising.list",
-      "domains": 619212,
+      "domains": 626386,
       "ip_cidrs": 0,
       "ip_asns": 0,
       "dropped": {}
@@ -91,7 +91,7 @@
       "name": "google",
       "bucket": null,
       "legacy_rule_path": null,
-      "domains": 697,
+      "domains": 690,
       "ip_cidrs": 5,
       "ip_asns": 0,
       "dropped": {
@@ -102,7 +102,7 @@
       "name": "google_all",
       "bucket": "proxy",
       "legacy_rule_path": "rules/google-all.list",
-      "domains": 926,
+      "domains": 919,
       "ip_cidrs": 31,
       "ip_asns": 0,
       "dropped": {
@@ -340,7 +340,7 @@
     },
     {
       "name": "sr-proxy",
-      "domains": 2009,
+      "domains": 2002,
       "ip_cidrs": 55
     }
   ]
