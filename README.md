@@ -106,7 +106,7 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_cus
 | `scripts/` | Вспомогательные скрипты |
 
 Практическое правило сопровождения:
-- вручную редактируются `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_custom_private_dns.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `rules/adobe_telemetry_custom.list`, `rules/russia_extended.list`, `rules/voice_ports.list`, `modules/GFN-AM.module`;
+- вручную редактируются `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_custom_private_dns.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `rules/adobe_telemetry_custom.list`, `rules/russia_extended.list`, `rules/voice_ports.list`, `modules/GFN-AM.module`, `modules/instagram-meta-full-fix.sgmodule`;
 - generated-артефакты (`clash_config.yaml`, `HAPP/DEFAULT.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/summary.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/telegram.list`, `rules/whitelist_direct.list`, `rules/greylist_proxy.list`, `rules/anti_advertising*.list`) не поддерживаются вручную;
 - `modules/anti_advertising.module` и `modules/anti_advertising_custom.module` semi-generated: их ручные заголовки и локальные исключения сохраняются, но `RULE-SET` на anti-ad чанки переписываются сборкой.
 
@@ -226,7 +226,11 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_adv
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_advertising_custom.module
 ```
 В кастомный модуль также отдельно добавлен Adobe telemetry blocklist из `a-dove-is-dumb`; он применяется только там и не затрагивает основной anti-ad модуль.
-Модуль подключает все доступные anti-ad чанки репозитория; список `RULE-SET` подставляется автоматически по фактически собранным файлам:
+Для emergency-fix Instagram/Meta, когда endpoints попадают в `GEOIP,RU,DIRECT`, используйте shared-модуль:
+```
+https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/instagram-meta-full-fix.sgmodule
+```
+Anti-ad модуль подключает все доступные anti-ad чанки репозитория; список `RULE-SET` подставляется автоматически по фактически собранным файлам:
 ``` 
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.01.list
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.02.list

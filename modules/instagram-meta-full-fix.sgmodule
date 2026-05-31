@@ -1,0 +1,59 @@
+#!name=Instagram Meta Full Fix
+#!desc=Routes Instagram, CDN, Graph, MQTT and Meta dependencies through proxy before GEOIP,RU,DIRECT.
+#!source=blackmatrix7 Instagram/Facebook rules + Loyalsoldier proxy-list + v2fly domain-list-community
+
+[Rule]
+# Instagram core from blackmatrix7 Instagram
+DOMAIN-SUFFIX,cdninstagram.com,PROXY,force-remote-dns
+DOMAIN-SUFFIX,instagr.am,PROXY,force-remote-dns
+DOMAIN-SUFFIX,instagram.com,PROXY,force-remote-dns
+DOMAIN-KEYWORD,instagram,PROXY,force-remote-dns
+
+# Instagram app / media / shortlinks from upstream domain lists
+DOMAIN-SUFFIX,ig.me,PROXY,force-remote-dns
+DOMAIN-SUFFIX,igcdn.com,PROXY,force-remote-dns
+DOMAIN-SUFFIX,igtv.com,PROXY,force-remote-dns
+DOMAIN-SUFFIX,threads.net,PROXY,force-remote-dns
+
+# Meta/Facebook dependencies seen in the log: graph, mqtt, fbcdn
+DOMAIN-SUFFIX,facebook.com,PROXY,force-remote-dns
+DOMAIN-SUFFIX,facebook.net,PROXY,force-remote-dns
+DOMAIN-SUFFIX,fbcdn.net,PROXY,force-remote-dns
+DOMAIN-SUFFIX,fbcdn.com,PROXY,force-remote-dns
+DOMAIN-SUFFIX,fb.com,PROXY,force-remote-dns
+DOMAIN-SUFFIX,meta.com,PROXY,force-remote-dns
+DOMAIN-SUFFIX,accountkit.com,PROXY,force-remote-dns
+DOMAIN-SUFFIX,f8.com,PROXY,force-remote-dns
+
+# Explicit app endpoints, for clients that behave oddly with suffix matching/log display
+DOMAIN,graph.instagram.com,PROXY,force-remote-dns
+DOMAIN,graph-fallback.instagram.com,PROXY,force-remote-dns
+DOMAIN,i.instagram.com,PROXY,force-remote-dns
+DOMAIN,i-fallback.instagram.com,PROXY,force-remote-dns
+DOMAIN,gateway.instagram.com,PROXY,force-remote-dns
+DOMAIN,test-gateway.instagram.com,PROXY,force-remote-dns
+DOMAIN,graph.facebook.com,PROXY,force-remote-dns
+DOMAIN,graph-fallback.facebook.com,PROXY,force-remote-dns
+DOMAIN,api.facebook.com,PROXY,force-remote-dns
+DOMAIN,edge-mqtt.facebook.com,PROXY,force-remote-dns
+DOMAIN,edge-mqtt-fallback.facebook.com,PROXY,force-remote-dns
+DOMAIN-KEYWORD,fbcdn,PROXY,force-remote-dns
+
+# Meta IP ranges from blackmatrix7 Facebook. Keeps IP-only connections off DIRECT.
+IP-CIDR,31.13.24.0/21,PROXY,no-resolve
+IP-CIDR,31.13.64.0/18,PROXY,no-resolve
+IP-CIDR,45.64.40.0/22,PROXY,no-resolve
+IP-CIDR,66.220.144.0/20,PROXY,no-resolve
+IP-CIDR,69.63.176.0/20,PROXY,no-resolve
+IP-CIDR,69.171.224.0/19,PROXY,no-resolve
+IP-CIDR,74.119.76.0/22,PROXY,no-resolve
+IP-CIDR,102.132.96.0/20,PROXY,no-resolve
+IP-CIDR,103.4.96.0/22,PROXY,no-resolve
+IP-CIDR,129.134.0.0/17,PROXY,no-resolve
+IP-CIDR,157.240.0.0/17,PROXY,no-resolve
+IP-CIDR,173.252.64.0/18,PROXY,no-resolve
+IP-CIDR,179.60.192.0/22,PROXY,no-resolve
+IP-CIDR,185.60.216.0/22,PROXY,no-resolve
+IP-CIDR,204.15.20.0/22,PROXY,no-resolve
+IP-CIDR6,2a03:2880::/32,PROXY,no-resolve
+IP-CIDR6,2a03:2880:f000::/36,PROXY,no-resolve
