@@ -4,21 +4,68 @@
       "name": "ai_bundle",
       "bucket": null,
       "legacy_rule_path": null,
-      "domains": 67,
+      "domains": 66,
       "ip_cidrs": 2,
       "ip_asns": 0,
       "dropped": {
-        "ignored_ip_asn": 3
+        "ignored_ip_asn": 3,
+        "subsumed_domain_rule": 1
       }
     },
     {
       "name": "anti_advertising",
       "bucket": null,
       "legacy_rule_path": "rules/anti_advertising.list",
-      "domains": 619212,
+      "domains": 608264,
       "ip_cidrs": 0,
       "ip_asns": 0,
-      "dropped": {}
+      "dropped": {
+        "subsumed_domain_rule": 10948
+      }
+    },
+    {
+      "name": "anti_advertising_light",
+      "bucket": null,
+      "legacy_rule_path": "rules/anti_advertising_light.list",
+      "domains": 104068,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {
+        "subsumed_domain_rule": 2310
+      }
+    },
+    {
+      "name": "anti_advertising_medium",
+      "bucket": null,
+      "legacy_rule_path": "rules/anti_advertising_medium.list",
+      "domains": 166171,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {
+        "subsumed_domain_rule": 2197
+      }
+    },
+    {
+      "name": "anti_advertising_pro",
+      "bucket": null,
+      "legacy_rule_path": "rules/anti_advertising_pro.list",
+      "domains": 218921,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {
+        "subsumed_domain_rule": 2281
+      }
+    },
+    {
+      "name": "anti_advertising_pro_plus",
+      "bucket": null,
+      "legacy_rule_path": "rules/anti_advertising_pro_plus.list",
+      "domains": 252298,
+      "ip_cidrs": 0,
+      "ip_asns": 0,
+      "dropped": {
+        "subsumed_domain_rule": 2666
+      }
     },
     {
       "name": "claude",
@@ -44,11 +91,12 @@
       "name": "domains_community",
       "bucket": "proxy",
       "legacy_rule_path": "rules/domains_community.list",
-      "domains": 380,
+      "domains": 377,
       "ip_cidrs": 22,
       "ip_asns": 5,
       "dropped": {
-        "ignored_process_name": 7
+        "ignored_process_name": 7,
+        "subsumed_domain_rule": 3
       }
     },
     {
@@ -102,11 +150,12 @@
       "name": "google_all",
       "bucket": "proxy",
       "legacy_rule_path": "rules/google-all.list",
-      "domains": 926,
+      "domains": 869,
       "ip_cidrs": 31,
       "ip_asns": 0,
       "dropped": {
-        "ignored_process_name": 7
+        "ignored_process_name": 7,
+        "subsumed_domain_rule": 57
       }
     },
     {
@@ -166,6 +215,18 @@
       "dropped": {}
     },
     {
+      "name": "instagram_meta",
+      "bucket": null,
+      "legacy_rule_path": "rules/instagram_meta.list",
+      "domains": 16,
+      "ip_cidrs": 23,
+      "ip_asns": 1,
+      "dropped": {
+        "filtered_rule_type": 546,
+        "subsumed_domain_rule": 11
+      }
+    },
+    {
       "name": "microsoft",
       "bucket": "proxy",
       "legacy_rule_path": "rules/microsoft.list",
@@ -189,10 +250,12 @@
       "name": "motivato_block",
       "bucket": "block",
       "legacy_rule_path": null,
-      "domains": 462,
+      "domains": 449,
       "ip_cidrs": 0,
       "ip_asns": 0,
-      "dropped": {}
+      "dropped": {
+        "subsumed_domain_rule": 13
+      }
     },
     {
       "name": "motivato_telemetry_ms",
@@ -216,10 +279,12 @@
       "name": "motivato_torrent",
       "bucket": null,
       "legacy_rule_path": null,
-      "domains": 431,
+      "domains": 418,
       "ip_cidrs": 0,
       "ip_asns": 0,
-      "dropped": {}
+      "dropped": {
+        "subsumed_domain_rule": 13
+      }
     },
     {
       "name": "openai",
@@ -330,7 +395,7 @@
   "aggregates": [
     {
       "name": "sr-block",
-      "domains": 462,
+      "domains": 449,
       "ip_cidrs": 0
     },
     {
@@ -340,7 +405,7 @@
     },
     {
       "name": "sr-proxy",
-      "domains": 2009,
+      "domains": 1949,
       "ip_cidrs": 55
     }
   ]

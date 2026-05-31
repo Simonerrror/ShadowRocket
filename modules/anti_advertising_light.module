@@ -1,0 +1,6 @@
+#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_advertising_light.module
+#!name=Anti-Advertising Light (REJECT)
+#!desc=Лёгкий anti-ad tier: OISD small + HaGeZi Light.
+[Rule]
+
+RULE-SET, https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising_light.list,REJECT

@@ -23,6 +23,7 @@ from urllib.request import Request, urlopen
 
 SUPPORTED_DOMAIN_RULES = {"DOMAIN", "DOMAIN-SUFFIX", "DOMAIN-KEYWORD"}
 SUPPORTED_IP_RULES = {"IP-CIDR", "IP-CIDR6"}
+SUPPORTED_RULE_TYPE_FILTERS = SUPPORTED_DOMAIN_RULES | SUPPORTED_IP_RULES | {"IP-ASN"}
 IGNORED_RULE_TYPES = {
     "PROCESS-NAME",
     "USER-AGENT",
@@ -45,8 +46,45 @@ GEOSITE_REPO = "https://github.com/v2fly/domain-list-community.git"
 RULE_HEADER = "# Generated from distillate/manifest.json"
 FETCH_USER_AGENT = "ShadowRocketDistillate/1.0"
 ANTI_ADVERTISING_MAX_CHUNK_BYTES = 7 * 1024 * 1024
-ANTI_AD_RULE_GLOB = "anti_advertising.[0-9][0-9].list"
 ANTI_AD_RULE_PREFIX = "RULE-SET, https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/"
+ANTI_AD_CUSTOM_HEADER_PATH = Path("modules/anti_advertising_custom.header")
+ANTI_AD_MODULE_TIERS = (
+    {
+        "category": "anti_advertising",
+        "module": "anti_advertising.module",
+        "custom_module": "anti_advertising_custom.module",
+        "name": "Anti-Advertising",
+        "desc": "Блокировщик рекламы и трекеров через generated chunk rule-set списки репозитория.",
+    },
+    {
+        "category": "anti_advertising_light",
+        "module": "anti_advertising_light.module",
+        "custom_module": "anti_advertising_light_custom.module",
+        "name": "Anti-Advertising Light",
+        "desc": "Лёгкий anti-ad tier: OISD small + HaGeZi Light.",
+    },
+    {
+        "category": "anti_advertising_medium",
+        "module": "anti_advertising_medium.module",
+        "custom_module": "anti_advertising_medium_custom.module",
+        "name": "Anti-Advertising Medium",
+        "desc": "Средний anti-ad tier: OISD small + HaGeZi Multi.",
+    },
+    {
+        "category": "anti_advertising_pro",
+        "module": "anti_advertising_pro.module",
+        "custom_module": "anti_advertising_pro_custom.module",
+        "name": "Anti-Advertising Pro",
+        "desc": "Расширенный anti-ad tier: OISD small + HaGeZi Pro.",
+    },
+    {
+        "category": "anti_advertising_pro_plus",
+        "module": "anti_advertising_pro_plus.module",
+        "custom_module": "anti_advertising_pro_plus_custom.module",
+        "name": "Anti-Advertising Pro Plus",
+        "desc": "Максимальный одиночный anti-ad tier: OISD small + HaGeZi Pro Plus.",
+    },
+)
 
 
 @dataclass
@@ -69,6 +107,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--skip-compiled",
         action="store_true",
         help="Skip .dat compilation and only refresh canonical text + legacy rules.",
+    )
+    parser.add_argument(
+        "--allow-stale-compiled",
+        action="store_true",
+        help="Restore existing distillate/dat and continue if .dat compilation fails.",
     )
     return parser.parse_args(argv)
 
@@ -439,6 +482,79 @@ def apply_domain_suffix_excludes(domain_rules: list[str], suffixes: list[str]) -
     return filtered
 
 
+def domain_rule_type(rule: str) -> str:
+    if rule.startswith("full:"):
+        return "DOMAIN"
+    if rule.startswith("domain:"):
+        return "DOMAIN-SUFFIX"
+    if rule.startswith("keyword:"):
+        return "DOMAIN-KEYWORD"
+    raise DistillateError(f"Unsupported canonical domain rule: {rule}")
+
+
+def ip_cidr_rule_type(cidr: str) -> str:
+    network = ipaddress.ip_network(cidr, strict=False)
+    return "IP-CIDR6" if network.version == 6 else "IP-CIDR"
+
+
+def apply_rule_type_filter(
+    domain_rules: list[str],
+    ip_cidrs: list[str],
+    ip_asns: list[str],
+    include_rule_types: list[str],
+) -> tuple[list[str], list[str], list[str], int]:
+    allowed = {item.strip().upper() for item in include_rule_types if item.strip()}
+    unsupported = allowed - SUPPORTED_RULE_TYPE_FILTERS
+    if unsupported:
+        raise DistillateError(f"Unsupported include_rule_types values: {', '.join(sorted(unsupported))}")
+
+    filtered_domains = [rule for rule in domain_rules if domain_rule_type(rule) in allowed]
+    filtered_cidrs = [cidr for cidr in ip_cidrs if ip_cidr_rule_type(cidr) in allowed]
+    filtered_asns = ip_asns if "IP-ASN" in allowed else []
+    dropped_count = (
+        len(domain_rules)
+        + len(ip_cidrs)
+        + len(ip_asns)
+        - len(filtered_domains)
+        - len(filtered_cidrs)
+        - len(filtered_asns)
+    )
+    return filtered_domains, filtered_cidrs, filtered_asns, dropped_count
+
+
+def parent_suffixes(domain: str) -> list[str]:
+    labels = domain.lower().strip(".").split(".")
+    return [".".join(labels[index:]) for index in range(1, len(labels))]
+
+
+def prune_subsumed_domain_rules(domain_rules: list[str]) -> tuple[list[str], int]:
+    suffixes = {domain_rule_value(rule).lower().strip(".") for rule in domain_rules if rule.startswith("domain:")}
+    if not suffixes:
+        return domain_rules, 0
+
+    filtered: list[str] = []
+    dropped_count = 0
+    for rule in domain_rules:
+        if rule.startswith("keyword:"):
+            filtered.append(rule)
+            continue
+
+        value = domain_rule_value(rule).lower().strip(".")
+        if rule.startswith("full:"):
+            covered = value in suffixes or any(parent in suffixes for parent in parent_suffixes(value))
+        elif rule.startswith("domain:"):
+            covered = any(parent in suffixes for parent in parent_suffixes(value))
+        else:
+            raise DistillateError(f"Unsupported canonical domain rule: {rule}")
+
+        if covered:
+            dropped_count += 1
+            continue
+        filtered.append(rule)
+
+    return filtered, dropped_count
+
+
 def build_categories(manifest: dict[str, Any], repo_root: Path) -> tuple[dict[str, dict[str, Any]], dict[str, CategoryResult]]:
     specs = manifest["categories"]
     spec_by_name: dict[str, dict[str, Any]] = {}
@@ -506,6 +622,21 @@ def build_categories(manifest: dict[str, Any], repo_root: Path) -> tuple[dict[st
                     repo_root / include_exact,
                     f"{name}:{source_type}:include_exact",
                 )
+            include_rule_types = source.get("include_rule_types")
+            if include_rule_types is not None:
+                if (
+                    not isinstance(include_rule_types, list)
+                    or not all(isinstance(item, str) for item in include_rule_types)
+                ):
+                    raise DistillateError(f"include_rule_types must be an array of strings in {name}")
+                domain_rules, ip_cidrs, ip_asns, filtered_count = apply_rule_type_filter(
+                    domain_rules,
+                    ip_cidrs,
+                    ip_asns,
+                    include_rule_types,
+                )
+                if filtered_count:
+                    dropped["filtered_rule_type"] = dropped.get("filtered_rule_type", 0) + filtered_count
             result.domain_rules.extend(domain_rules)
             result.ip_cidrs.extend(ip_cidrs)
             result.ip_asns.extend(ip_asns)
@@ -551,6 +682,9 @@ def build_categories(manifest: dict[str, Any], repo_root: Path) -> tuple[dict[st
             result.domain_rules = apply_domain_suffix_excludes(result.domain_rules, exclude_domain_suffixes)
 
         result.domain_rules = dedupe_preserve(result.domain_rules)
+        result.domain_rules, pruned_count = prune_subsumed_domain_rules(result.domain_rules)
+        if pruned_count:
+            result.dropped["subsumed_domain_rule"] = result.dropped.get("subsumed_domain_rule", 0) + pruned_count
         result.ip_cidrs = dedupe_preserve(result.ip_cidrs)
         result.ip_asns = dedupe_preserve(result.ip_asns)
         cache[name] = result
@@ -587,20 +721,29 @@ def asn_to_legacy(line: str) -> str:
     return f"IP-ASN,{line.removeprefix('AS')}"
 
 
-def render_legacy_rules(path: Path, result: CategoryResult) -> None:
+def render_legacy_rules(
+    path: Path,
+    result: CategoryResult,
+    legacy_rule_mode: str = "generated",
+    legacy_rule_chunks: bool = False,
+) -> None:
     lines = [RULE_HEADER]
     lines.extend(canonical_domain_to_legacy(rule) for rule in result.domain_rules)
     lines.extend(cidr_to_legacy(rule) for rule in result.ip_cidrs)
     lines.extend(asn_to_legacy(rule) for rule in result.ip_asns)
-    write_text_file(path, lines)
-    render_chunked_legacy_rules(path, lines)
+    if legacy_rule_mode == "generated":
+        write_text_file(path, lines)
+    elif legacy_rule_mode != "frozen":
+        raise DistillateError(f"Unsupported legacy_rule_mode {legacy_rule_mode!r} for {path}")
+    render_chunked_legacy_rules(path, lines, force=legacy_rule_chunks)
 
 
-def render_chunked_legacy_rules(path: Path, lines: list[str]) -> None:
-    if path.name != "anti_advertising.list":
+def render_chunked_legacy_rules(path: Path, lines: list[str], force: bool = False) -> None:
+    if not force and path.name != "anti_advertising.list":
         return
 
-    for stale_path in sorted(path.parent.glob("anti_advertising.[0-9][0-9].list")):
+    chunk_glob = f"{path.stem}.[0-9][0-9].list"
+    for stale_path in sorted(path.parent.glob(chunk_glob)):
         stale_path.unlink(missing_ok=True)
 
     payload = lines[1:]
@@ -630,37 +773,71 @@ def render_chunked_legacy_rules(path: Path, lines: list[str]) -> None:
             if chunk_bytes >= target_bytes:
                 break
 
-        chunk_path = path.with_name(f"anti_advertising.{chunk_index:02d}.list")
+        chunk_path = path.with_name(f"{path.stem}.{chunk_index:02d}.list")
         write_text_file(chunk_path, [RULE_HEADER, *chunk_payload])
         remaining_bytes -= chunk_bytes
 
 
-def anti_ad_chunk_rule_lines(repo_root: Path) -> list[str]:
-    chunk_paths = sorted((repo_root / "rules").glob(ANTI_AD_RULE_GLOB))
+def anti_ad_chunk_rule_lines(repo_root: Path, category: str) -> list[str]:
+    chunk_paths = sorted((repo_root / "rules").glob(f"{category}.[0-9][0-9].list"))
     return [f"{ANTI_AD_RULE_PREFIX}{path.name},REJECT" for path in chunk_paths]
 
 
-def rewrite_module_chunks(module_path: Path, chunk_lines: list[str]) -> None:
-    if not module_path.exists():
-        return
-
-    lines = module_path.read_text(encoding="utf-8").splitlines()
-    kept_lines = [
-        line
-        for line in lines
-        if "anti_advertising.list,REJECT" not in line and "anti_advertising." not in line
-    ]
+def anti_ad_tier_rule_lines(repo_root: Path, category: str) -> list[str]:
+    chunk_lines = anti_ad_chunk_rule_lines(repo_root, category)
     if chunk_lines:
-        if kept_lines and kept_lines[-1] != "":
-            kept_lines.append("")
-        kept_lines.extend(chunk_lines)
-    module_path.write_text("\n".join(kept_lines) + "\n", encoding="utf-8")
+        return chunk_lines
+    return [f"{ANTI_AD_RULE_PREFIX}{category}.list,REJECT"]
+
+
+def read_anti_ad_custom_header(repo_root: Path) -> list[str]:
+    path = repo_root / ANTI_AD_CUSTOM_HEADER_PATH
+    if not path.exists():
+        return []
+    return path.read_text(encoding="utf-8").splitlines()
+
+
+def write_anti_ad_module(
+    path: Path,
+    name: str,
+    desc: str,
+    rule_lines: list[str],
+    custom_header_lines: list[str] | None = None,
+) -> None:
+    lines = [
+        f"#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/{path.name}",
+        f"#!name={name} (REJECT)",
+        f"#!desc={desc}",
+        "[Rule]",
+        "",
+    ]
+    if custom_header_lines:
+        lines.extend(custom_header_lines)
+        if lines[-1] != "":
+            lines.append("")
+    lines.extend(rule_lines)
+    write_text_file(path, lines)
 
 
 def rewrite_anti_ad_modules(repo_root: Path) -> None:
-    chunk_lines = anti_ad_chunk_rule_lines(repo_root)
-    rewrite_module_chunks(repo_root / "modules" / "anti_advertising.module", chunk_lines)
-    rewrite_module_chunks(repo_root / "modules" / "anti_advertising_custom.module", chunk_lines)
+    modules_dir = repo_root / "modules"
+    custom_header_lines = read_anti_ad_custom_header(repo_root)
+    for tier in ANTI_AD_MODULE_TIERS:
+        category = tier["category"]
+        rule_lines = anti_ad_tier_rule_lines(repo_root, category)
+        write_anti_ad_module(
+            modules_dir / tier["module"],
+            tier["name"],
+            tier["desc"],
+            rule_lines,
+        )
+        write_anti_ad_module(
+            modules_dir / tier["custom_module"],
+            f"{tier['name']} Custom",
+            f"{tier['desc']} Включает локальный DIRECT-prefix для GFN/NVIDIA и прочие custom-исключения.",
+            rule_lines,
+            custom_header_lines,
+        )
 
 
 def prepare_output_dirs(repo_root: Path, skip_compiled: bool) -> None:
@@ -681,6 +858,13 @@ def prepare_output_dirs(repo_root: Path, skip_compiled: bool) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
 
+def restore_directory(target: Path, backup: Path | None) -> None:
+    if target.exists():
+        shutil.rmtree(target)
+    if backup is not None and backup.exists():
+        shutil.copytree(backup, target)
+
+
 def write_text_outputs(
     repo_root: Path,
     spec_by_name: dict[str, dict[str, Any]],
@@ -696,7 +880,13 @@ def write_text_outputs(
         write_text_file(repo_root / TEXT_DIR / "ip" / f"{name}.txt", result.ip_cidrs)
         legacy_rule_path = spec.get("legacy_rule_path")
         if isinstance(legacy_rule_path, str):
-            render_legacy_rules(repo_root / legacy_rule_path, result)
+            legacy_rule_mode = spec.get("legacy_rule_mode", "generated")
+            if not isinstance(legacy_rule_mode, str):
+                raise DistillateError(f"legacy_rule_mode must be a string in {name}")
+            legacy_rule_chunks = spec.get("legacy_rule_chunks", False)
+            if not isinstance(legacy_rule_chunks, bool):
+                raise DistillateError(f"legacy_rule_chunks must be a boolean in {name}")
+            render_legacy_rules(repo_root / legacy_rule_path, result, legacy_rule_mode, legacy_rule_chunks)
     return published
 
 
@@ -843,24 +1033,47 @@ def dat_category_name(name: str) -> str:
     return name.replace("_", "-")
 
 
-def build_distillate(repo_root: Path, manifest_path: Path, skip_compiled: bool) -> int:
+def build_distillate(
+    repo_root: Path,
+    manifest_path: Path,
+    skip_compiled: bool,
+    allow_stale_compiled: bool = False,
+) -> int:
     if not manifest_path.exists():
         raise FileNotFoundError(f"Manifest not found: {manifest_path}")
 
-    manifest = load_manifest(manifest_path)
-    prepare_output_dirs(repo_root, skip_compiled=skip_compiled)
-    spec_by_name, results = build_categories(manifest, repo_root)
-    published = write_text_outputs(repo_root, spec_by_name, results)
-    aggregates = build_bucket_aggregates(repo_root, spec_by_name, results)
-    write_summary(repo_root, spec_by_name, published, aggregates)
-    rewrite_anti_ad_modules(repo_root)
+    dat_backup_dir: tempfile.TemporaryDirectory[str] | None = None
+    dat_backup_path: Path | None = None
+    if not skip_compiled and (repo_root / DAT_DIR).exists():
+        dat_backup_dir = tempfile.TemporaryDirectory(prefix="sr-distillate-dat-backup-")
+        dat_backup_path = Path(dat_backup_dir.name) / "dat"
+        shutil.copytree(repo_root / DAT_DIR, dat_backup_path)
 
-    if skip_compiled:
-        return 0
+    try:
+        manifest = load_manifest(manifest_path)
+        prepare_output_dirs(repo_root, skip_compiled=skip_compiled)
+        spec_by_name, results = build_categories(manifest, repo_root)
+        published = write_text_outputs(repo_root, spec_by_name, results)
+        aggregates = build_bucket_aggregates(repo_root, spec_by_name, results)
+        write_summary(repo_root, spec_by_name, published, aggregates)
+        rewrite_anti_ad_modules(repo_root)
 
-    artifacts = compiled_categories(spec_by_name, published, aggregates)
-    compile_geosite_dat(repo_root, artifacts)
-    compile_geoip_dat(repo_root, artifacts)
+        if skip_compiled:
+            return 0
+
+        artifacts = compiled_categories(spec_by_name, published, aggregates)
+        try:
+            compile_geosite_dat(repo_root, artifacts)
+            compile_geoip_dat(repo_root, artifacts)
+        except Exception as exc:
+            restore_directory(repo_root / DAT_DIR, dat_backup_path)
+            if allow_stale_compiled and dat_backup_path is not None:
+                print(f"Warning: keeping previous compiled distillate/dat artifacts: {exc}")
+                return 0
+            raise
+    finally:
+        if dat_backup_dir is not None:
+            dat_backup_dir.cleanup()
     return 0
 
 
@@ -868,7 +1081,12 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     repo_root = Path.cwd()
     manifest_path = (repo_root / args.manifest).resolve()
-    return build_distillate(repo_root, manifest_path, skip_compiled=args.skip_compiled)
+    return build_distillate(
+        repo_root,
+        manifest_path,
+        skip_compiled=args.skip_compiled,
+        allow_stale_compiled=args.allow_stale_compiled,
+    )
 
 
 if __name__ == "__main__":

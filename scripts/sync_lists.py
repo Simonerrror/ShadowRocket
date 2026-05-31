@@ -7,14 +7,38 @@ import argparse
 import subprocess
 from pathlib import Path
 
-from build_distillate import (
-    DistillateError,
-    MANIFEST_PATH,
-    build_distillate,
-    fetch_text,
-    iter_external_sources,
-    load_manifest,
-)
+try:
+    from build_distillate import (
+        DistillateError,
+        MANIFEST_PATH,
+        build_distillate,
+        fetch_text,
+        iter_external_sources,
+        load_manifest,
+    )
+except ModuleNotFoundError:
+    from scripts.build_distillate import (
+        DistillateError,
+        MANIFEST_PATH,
+        build_distillate,
+        fetch_text,
+        iter_external_sources,
+        load_manifest,
+    )
+
+
+def validate_fetched_payload(payload: str, label: str) -> None:
+    stripped = payload.lstrip()
+    if not stripped:
+        raise DistillateError(f"Fetched source {label} is empty")
+    if stripped[:32].lower().startswith(("<!doctype html", "<html")):
+        raise DistillateError(f"Fetched source {label} looks like HTML, not a rule list")
+
+    for raw_line in payload.splitlines():
+        line = raw_line.strip().lstrip("\ufeff")
+        if line and not line.startswith(("#", "!", ";", "[", "//")):
+            return
+    raise DistillateError(f"Fetched source {label} has no rule payload lines")
 
 
 def pull_latest(repo_root: Path) -> None:
@@ -33,6 +57,7 @@ def refresh_vendored_sources(repo_root: Path) -> None:
         label = target["label"]
         try:
             payload = fetch_text(url)
+            validate_fetched_payload(payload, label)
         except DistillateError as exc:
             if cache_path.exists():
                 print(f"Warning: keeping cached copy for {label}: {cache_path} ({exc})")

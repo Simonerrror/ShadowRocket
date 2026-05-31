@@ -1,6 +1,6 @@
 #!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_advertising_custom.module
 #!name=Anti-Advertising Custom (REJECT)
-#!desc=Блокировщик рекламы и трекеров через единый rule-set список репозитория (REJECT) с локальными исключениями.
+#!desc=Блокировщик рекламы и трекеров через generated chunk rule-set списки репозитория. Включает локальный DIRECT-prefix для GFN/NVIDIA и прочие custom-исключения.
 [Rule]
 
 DOMAIN-SUFFIX,fscdn.eppo.cloud,DIRECT

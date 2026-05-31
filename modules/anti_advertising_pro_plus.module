@@ -1,0 +1,7 @@
+#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_advertising_pro_plus.module
+#!name=Anti-Advertising Pro Plus (REJECT)
+#!desc=Максимальный одиночный anti-ad tier: OISD small + HaGeZi Pro Plus.
+[Rule]
+
+RULE-SET, https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising_pro_plus.01.list,REJECT
+RULE-SET, https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising_pro_plus.02.list,REJECT

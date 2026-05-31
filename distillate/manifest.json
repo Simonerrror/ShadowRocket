@@ -25,6 +25,20 @@
     {"name": "claude", "publish": true, "sources": [{"type": "bm7", "pack": "Claude"}]},
     {"name": "copilot", "publish": true, "sources": [{"type": "bm7", "pack": "Copilot"}]},
     {
+      "name": "instagram_meta",
+      "publish": true,
+      "compiled": false,
+      "retain_ip_asn": true,
+      "legacy_rule_path": "rules/instagram_meta.list",
+      "sources": [
+        {"type": "bm7", "pack": "Instagram"},
+        {"type": "bm7", "pack": "Facebook", "include_rule_types": ["IP-CIDR", "IP-CIDR6", "IP-ASN"]}
+      ],
+      "overlays": {
+        "add": "distillate/overlays/instagram_meta.add.list"
+      }
+    },
+    {
       "name": "google_all",
       "publish": true,
       "bucket": "proxy",
@@ -143,11 +157,62 @@
       "publish": true,
       "compiled": false,
       "legacy_rule_path": "rules/anti_advertising.list",
+      "legacy_rule_mode": "frozen",
       "exclude_domain_substrings": ["nvidia", "geforce", "geforcenow", "nvidiagrid"],
       "exclude_domain_suffixes": ["discord.com", "discord.gg", "discordapp.com", "discordapp.net", "discordapp.gg", "discord.media", "discordcdn.com", "discordstatus.com", "discordsays.com"],
       "sources": [
         {"type": "url", "url": "https://dl.oisd.nl/oisd_big_surge.list", "format": "shadowrocket", "cache_path": "distillate/upstream/external/oisd_big_surge.list"},
         {"type": "url", "url": "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/ultimate-onlydomains.txt", "format": "domain-lines", "cache_path": "distillate/upstream/external/hagezi_ultimate_onlydomains.txt"}
+      ]
+    },
+    {
+      "name": "anti_advertising_light",
+      "publish": true,
+      "compiled": false,
+      "legacy_rule_path": "rules/anti_advertising_light.list",
+      "exclude_domain_substrings": ["nvidia", "geforce", "geforcenow", "nvidiagrid"],
+      "exclude_domain_suffixes": ["discord.com", "discord.gg", "discordapp.com", "discordapp.net", "discordapp.gg", "discord.media", "discordcdn.com", "discordstatus.com", "discordsays.com"],
+      "sources": [
+        {"type": "url", "url": "https://dl.oisd.nl/oisd_small_surge.list", "format": "shadowrocket", "cache_path": "distillate/upstream/external/oisd_small_surge.list"},
+        {"type": "url", "url": "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/light-onlydomains.txt", "format": "domain-lines", "cache_path": "distillate/upstream/external/hagezi_light_onlydomains.txt"}
+      ]
+    },
+    {
+      "name": "anti_advertising_medium",
+      "publish": true,
+      "compiled": false,
+      "legacy_rule_path": "rules/anti_advertising_medium.list",
+      "exclude_domain_substrings": ["nvidia", "geforce", "geforcenow", "nvidiagrid"],
+      "exclude_domain_suffixes": ["discord.com", "discord.gg", "discordapp.com", "discordapp.net", "discordapp.gg", "discord.media", "discordcdn.com", "discordstatus.com", "discordsays.com"],
+      "sources": [
+        {"type": "url", "url": "https://dl.oisd.nl/oisd_small_surge.list", "format": "shadowrocket", "cache_path": "distillate/upstream/external/oisd_small_surge.list"},
+        {"type": "url", "url": "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/multi-onlydomains.txt", "format": "domain-lines", "cache_path": "distillate/upstream/external/hagezi_multi_onlydomains.txt"}
+      ]
+    },
+    {
+      "name": "anti_advertising_pro",
+      "publish": true,
+      "compiled": false,
+      "legacy_rule_path": "rules/anti_advertising_pro.list",
+      "legacy_rule_chunks": true,
+      "exclude_domain_substrings": ["nvidia", "geforce", "geforcenow", "nvidiagrid"],
+      "exclude_domain_suffixes": ["discord.com", "discord.gg", "discordapp.com", "discordapp.net", "discordapp.gg", "discord.media", "discordcdn.com", "discordstatus.com", "discordsays.com"],
+      "sources": [
+        {"type": "url", "url": "https://dl.oisd.nl/oisd_small_surge.list", "format": "shadowrocket", "cache_path": "distillate/upstream/external/oisd_small_surge.list"},
+        {"type": "url", "url": "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/pro-onlydomains.txt", "format": "domain-lines", "cache_path": "distillate/upstream/external/hagezi_pro_onlydomains.txt"}
+      ]
+    },
+    {
+      "name": "anti_advertising_pro_plus",
+      "publish": true,
+      "compiled": false,
+      "legacy_rule_path": "rules/anti_advertising_pro_plus.list",
+      "legacy_rule_chunks": true,
+      "exclude_domain_substrings": ["nvidia", "geforce", "geforcenow", "nvidiagrid"],
+      "exclude_domain_suffixes": ["discord.com", "discord.gg", "discordapp.com", "discordapp.net", "discordapp.gg", "discord.media", "discordcdn.com", "discordstatus.com", "discordsays.com"],
+      "sources": [
+        {"type": "url", "url": "https://dl.oisd.nl/oisd_small_surge.list", "format": "shadowrocket", "cache_path": "distillate/upstream/external/oisd_small_surge.list"},
+        {"type": "url", "url": "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/pro.plus-onlydomains.txt", "format": "domain-lines", "cache_path": "distillate/upstream/external/hagezi_pro_plus_onlydomains.txt"}
       ]
     }
   ]

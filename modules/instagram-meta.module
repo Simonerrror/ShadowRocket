@@ -1,0 +1,5 @@
+#!name=Instagram Meta (PROXY)
+#!desc=Compact generated Instagram/Meta rules through PROXY before GEOIP,RU,DIRECT.
+
+[Rule]
+RULE-SET, https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/instagram_meta.list,PROXY,force-remote-dns
