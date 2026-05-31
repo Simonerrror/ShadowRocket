@@ -53,5 +53,5 @@ PY
 
 ## CI
 
-- `/.github/workflows/sync-lists.yml` обновляет vendored upstream, distillate, XKeen и HAPP.
+- `/.github/workflows/sync-lists.yml` обновляет vendored upstream, distillate и HAPP.
 - `/.github/workflows/build-happ-routing.yml` пересобирает `DEFAULT` при изменениях в конфиге или сборочных входах.

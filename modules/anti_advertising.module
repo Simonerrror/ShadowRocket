@@ -1,6 +1,6 @@
+#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_advertising.module
 #!name=Anti-Advertising (REJECT)
-#!desc=Блокировщик рекламы и трекеров через единый rule-set список репозитория (REJECT).
-
+#!desc=Блокировщик рекламы и трекеров через generated chunk rule-set списки репозитория.
 [Rule]
 
 RULE-SET, https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.01.list,REJECT

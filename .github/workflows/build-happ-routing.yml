@@ -43,7 +43,7 @@ jobs:
 
       - name: Rebuild release artifacts
         run: |
-          python scripts/build_distillate.py
+          python scripts/build_distillate.py --allow-stale-compiled
           python scripts/build_clash_config.py --conf shadowrocket.conf
           BUILD_STAMP="$(git log -1 --format=%ct)"
           python scripts/build_happ_routing.py --build-stamp "$BUILD_STAMP"

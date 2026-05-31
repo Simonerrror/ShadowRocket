@@ -34,7 +34,6 @@ full:cdn.usefathom.com
 domain:anthropic.com
 domain:claude.ai
 full:api.msn.com
-full:api.statsig.com
 full:assets.msn.com
 full:copilot.microsoft.com
 full:gateway.bingviz.microsoft.net

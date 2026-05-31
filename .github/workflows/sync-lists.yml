@@ -29,7 +29,7 @@ jobs:
         run: python scripts/sync_lists.py --no-pull
 
       - name: Build compiled distillate artifacts
-        run: python scripts/build_distillate.py
+        run: python scripts/build_distillate.py --allow-stale-compiled
 
       - name: Build Clash config
         run: python scripts/build_clash_config.py --conf shadowrocket.conf

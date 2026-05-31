@@ -1,0 +1,16 @@
+domain:cdninstagram.com
+domain:instagr.am
+domain:instagram.com
+keyword:instagram
+domain:ig.me
+domain:igcdn.com
+domain:igtv.com
+domain:threads.net
+domain:facebook.com
+domain:facebook.net
+domain:fbcdn.net
+domain:fbcdn.com
+domain:fb.com
+domain:meta.com
+domain:accountkit.com
+domain:f8.com
