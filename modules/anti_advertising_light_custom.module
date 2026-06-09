@@ -14,12 +14,27 @@ DOMAIN-KEYWORD,geforcenow,DIRECT
 DOMAIN-SUFFIX,nvidia.com,DIRECT
 DOMAIN-SUFFIX,nvidiagrid.net,DIRECT
 DOMAIN-SUFFIX,geforcenow.com,DIRECT
+DOMAIN-SUFFIX,gfn.am,DIRECT
+DOMAIN,am-west.gcs.geforcenow.nvidiagrid.net,DIRECT
 DOMAIN,static.nvidiagrid.net,DIRECT
 DOMAIN,assets.nvidiagrid.net,DIRECT
 DOMAIN,img.nvidiagrid.net,DIRECT
 
 IP-CIDR,37.186.111.0/24,DIRECT,no-resolve
 IP-CIDR,17.253.150.10/32,DIRECT,no-resolve
+
+# GFN observed helper endpoints
+DOMAIN-SUFFIX,mtalk.google.com,DIRECT
+DOMAIN-SUFFIX,mobile-gtalk.l.google.com,DIRECT
+DOMAIN-SUFFIX,mobile-gtalk4.l.google.com,DIRECT
+IP-CIDR,3.71.226.131/32,DIRECT,no-resolve
+IP-CIDR,74.125.131.188/32,DIRECT,no-resolve
+IP-CIDR,216.239.32.223/32,DIRECT,no-resolve
+IP-CIDR,216.239.34.223/32,DIRECT,no-resolve
+IP-CIDR,216.239.36.223/32,DIRECT,no-resolve
+IP-CIDR,216.239.38.223/32,DIRECT,no-resolve
+IP-CIDR,8.6.112.0/32,DIRECT,no-resolve
+IP-CIDR,62.115.252.34/32,DIRECT,no-resolve
 
 # Adobe telemetry blocklist (custom only)
 RULE-SET, https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/adobe_telemetry_custom.list,REJECT
