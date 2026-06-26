@@ -14,7 +14,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = REPO_ROOT / "clash_config.yaml"
 DEFAULT_CONF = REPO_ROOT / "shadowrocket.conf"
 DEFAULT_SUBSCRIPTION_URL = "<INSERT_SUBSCRIPTION_URL_HERE>"
-DEFAULT_PROVIDER_FILTER = r"(?i)(Vless|Netherlands\s+WL\s+Mobile)"
+DEFAULT_PROVIDER_FILTER = ""
 DEFAULT_PROVIDER_EXCLUDE_FILTER = r"(?i)(Russia|Belarus|Ukraine)"
 DEFAULT_HEALTHCHECK_URL = "https://abs.twimg.com/favicon.ico"
 DEFAULT_HEALTHCHECK_INTERVAL = 780
@@ -204,6 +204,8 @@ def render_proxy_groups(groups: list[GroupSpec]) -> tuple[list[str], list[str]]:
         regex_filter = group.attrs.get("policy-regex-filter")
         if regex_filter:
             rendered.extend(["    use:", "      - Main-Sub", f"    filter: {yaml_quote(regex_filter)}"])
+        elif not group.members:
+            rendered.extend(["    use:", "      - Main-Sub"])
 
         if group.members:
             rendered.append("    proxies:")
@@ -366,7 +368,6 @@ def build_config(conf_path: Path, subscription_url: str) -> tuple[str, list[str]
             f"    url: {yaml_quote(subscription_url)}",
             "    interval: 3600",
             "    path: ./proxies/main.yaml",
-            f"    filter: {yaml_quote(DEFAULT_PROVIDER_FILTER)}",
             f"    exclude-filter: {yaml_quote(DEFAULT_PROVIDER_EXCLUDE_FILTER)}",
             "    health-check:",
             "      enable: true",
@@ -377,6 +378,8 @@ def build_config(conf_path: Path, subscription_url: str) -> tuple[str, list[str]
             "rule-providers:",
         ]
     )
+    if DEFAULT_PROVIDER_FILTER:
+        lines.insert(lines.index(f"    exclude-filter: {yaml_quote(DEFAULT_PROVIDER_EXCLUDE_FILTER)}"), f"    filter: {yaml_quote(DEFAULT_PROVIDER_FILTER)}")
     lines.extend(rule_providers_block)
     lines.extend(["", "# 5. PROXY GROUPS"])
     lines.extend(proxy_groups_block)

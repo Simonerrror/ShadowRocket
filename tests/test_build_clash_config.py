@@ -15,12 +15,26 @@ class BuildClashConfigTests(unittest.TestCase):
         self.assertIn("  - name: OPENAI", content)
         self.assertNotIn("OPENAI: unsupported", "\n".join(warnings))
 
-    def test_openai_group_includes_uae_vless_nodes(self) -> None:
+    def test_openai_group_includes_uae_nodes_without_protocol_filter(self) -> None:
         content, _warnings = build_config(DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL)
         openai_group = content.split("  - name: OPENAI", 1)[1].split("  - name:", 1)[0]
 
-        self.assertIn("UAE.*Vless", openai_group)
-        self.assertIn("Vless.*UAE", openai_group)
+        self.assertIn("USA|United States|Finland|Poland|Germany|UAE", openai_group)
+        self.assertNotIn("Vless", openai_group)
+
+    def test_subscription_provider_has_no_protocol_filter(self) -> None:
+        content, _warnings = build_config(DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL)
+        provider = content.split("  Main-Sub:", 1)[1].split("# 4. RULE PROVIDERS", 1)[0]
+
+        self.assertNotIn("    filter:", provider)
+        self.assertIn('exclude-filter: "(?i)(Russia|Belarus|Ukraine)"', provider)
+
+    def test_manual_proxy_uses_subscription_without_filter(self) -> None:
+        content, _warnings = build_config(DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL)
+        manual_group = content.split("  - name: MANUAL-PROXY", 1)[1].split("  - name:", 1)[0]
+
+        self.assertIn("    use:\n      - Main-Sub", manual_group)
+        self.assertNotIn("    filter:", manual_group)
 
 
 if __name__ == "__main__":
