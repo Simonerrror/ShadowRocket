@@ -60,7 +60,6 @@ proxy-providers:
     url: "<INSERT_SUBSCRIPTION_URL_HERE>"
     interval: 3600
     path: ./proxies/main.yaml
-    exclude-filter: "(?i)(Russia|Belarus|Ukraine)"
     health-check:
       enable: true
       interval: 780
@@ -89,13 +88,6 @@ rule-providers:
     path: ./rules/google_all.yaml
     interval: 86400
 
-  openai:
-    type: http
-    behavior: classical
-    url: "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/openai.list"
-    path: ./rules/openai.yaml
-    interval: 86400
-
   microsoft:
     type: http
     behavior: classical
@@ -112,21 +104,25 @@ rule-providers:
 
 # 5. PROXY GROUPS
 proxy-groups:
-  - name: AUTO-MAIN
+  - name: MANUAL-PROXY
+    type: select
+    use:
+      - Main-Sub
+
+  - name: AUTO-SPEED
+    type: url-test
+    use:
+      - Main-Sub
+    url: "https://abs.twimg.com/favicon.ico"
+    interval: 300
+    tolerance: 200
+
+  - name: AUTO-STABILITY
     type: fallback
     use:
       - Main-Sub
-    filter: "^(?!.*(Russia|Belarus|Ukraine)).*$"
     url: "https://abs.twimg.com/favicon.ico"
     interval: 780
-
-  - name: AUTO-WL
-    type: fallback
-    use:
-      - Main-Sub
-    filter: "(?i)^(?!.*(Russia|Belarus|Ukraine)).*WL.*$"
-    url: "https://abs.twimg.com/favicon.ico"
-    interval: 180
 
   - name: GOOGLE
     type: fallback
@@ -136,32 +132,12 @@ proxy-groups:
     url: "https://abs.twimg.com/favicon.ico"
     interval: 300
 
-  - name: OPENAI
-    type: fallback
-    use:
-      - Main-Sub
-    filter: "(?i)^(?!.*(Russia|Belarus|Ukraine)).*(?:USA|United States|Finland|Poland|Germany|UAE).*"
-    url: "https://abs.twimg.com/favicon.ico"
-    interval: 300
-
-  - name: WL
-    type: select
-    use:
-      - Main-Sub
-    filter: "(?i).*WL.*"
-
-  - name: MANUAL-PROXY
-    type: select
-    use:
-      - Main-Sub
-
   - name: PROXY
     type: select
     proxies:
-      - AUTO-WL
-      - AUTO-MAIN
-      - WL
       - MANUAL-PROXY
+      - AUTO-SPEED
+      - AUTO-STABILITY
       - DIRECT
 
 # 6. RULES
@@ -169,7 +145,6 @@ rules:
   - RULE-SET,whitelist_direct,DIRECT
   - RULE-SET,greylist_proxy,PROXY
   - RULE-SET,google_all,GOOGLE
-  - RULE-SET,openai,OPENAI
   - RULE-SET,microsoft,PROXY
   - RULE-SET,domains_community,PROXY
   - DOMAIN-SUFFIX,ru,DIRECT

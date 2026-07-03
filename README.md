@@ -34,14 +34,13 @@ consumer-списков в `rules/`. Проект поддерживает ав�
    ```
    > В конфиге указан `update-url`, поэтому он будет обновляться автоматически.
 2. **Добавьте подписку** на сервера в Shadowrocket (URL от вашего провайдера).
+   Подписка ожидается уже отфильтрованной на стороне провайдера: без RU/BY-узлов и без лишних протоколов. Локальные группы не режут её по стране или VLESS.
 3. **Проверьте группы прокси**:
-   - `AUTO-MAIN` — автофоллбэк по health-check: берёт первый живой узел вне RU/BY/UA.
-   - `AUTO-WL` — автофоллбэк только среди `WL`-узлов вне RU/BY/UA; берёт первый живой узел по порядку списка.
-   - `WL` — ручной выбор только среди узлов, где есть `WL`.
-   - `MANUAL-PROXY` — ручной выбор всех узлов, включая RU/BY/UA.
+   - `MANUAL-PROXY` — ручной выбор всех узлов из подписки без дополнительной фильтрации.
+   - `AUTO-SPEED` — `url-test`: выбирает самый быстрый живой узел из подписки.
+   - `AUTO-STABILITY` — `fallback`: берёт первый живой узел в порядке подписки.
    - `GOOGLE` — автофоллбэк для Google/Gemini/YouTube по Gemini OK allowlist.
-   - `OPENAI` — автофоллбэк для OpenAI/ChatGPT по USA, Finland, Poland, Germany и UAE-узлам.
-   - `PROXY` — главный переключатель (Select): по умолчанию выбран `AUTO-WL`; вручную можно переключаться между `AUTO-WL`, `AUTO-MAIN`, `WL`, `MANUAL-PROXY` и `DIRECT`.
+   - `PROXY` — главный переключатель (Select): по умолчанию выбран `AUTO-STABILITY`; вручную можно переключаться между `MANUAL-PROXY`, `AUTO-SPEED`, `AUTO-STABILITY` и `DIRECT`.
 
 Кастомный профиль для GFN/NVIDIA (с `always-real-ip`, приватным DoH/DoT Mullvad + Quad9 и `dns-direct-system = false`):
 ```
@@ -53,19 +52,20 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_cus
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_custom_private_dns.conf
 ```
 
-Аварийный whitelist-only профиль, когда не нужны отдельные Google/OpenAI/Microsoft группы:
+Аварийный whitelist-only профиль, когда не нужны отдельные Google/Microsoft группы:
 ```
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_whitelist.conf
 ```
-В нём остаются только локальные исключения, `whitelist_direct.list`, `.ru/.рф/.su` и `GEOIP,RU,DIRECT`; весь Google, OpenAI и любой другой не-direct трафик уходит в один выбранный `PROXY`.
+В нём остаются только локальные исключения, `whitelist_direct.list`, `.ru/.рф/.su` и `GEOIP,RU,DIRECT`; весь Google и любой другой не-direct трафик уходит в один выбранный `PROXY`.
 
 ## Clash Verge Rev (Windows)
 
 > `clash_config.yaml` больше не поддерживается вручную отдельно: он генерируется из
 > `shadowrocket.conf` через `scripts/build_clash_config.py`.
-> Для автопроверки серверов `proxy-providers.Main-Sub.health-check`, `proxy-groups.AUTO-MAIN`
+> Для автопроверки серверов `proxy-providers.Main-Sub.health-check`, `proxy-groups.AUTO-SPEED`,
+> `proxy-groups.AUTO-STABILITY`
 > и `proxy-groups.GOOGLE` используется `https://abs.twimg.com/favicon.ico`
-> (`AUTO-MAIN`: интервал 780, tolerance 200; `GOOGLE`: интервал 300).
+> (`AUTO-SPEED`: интервал 300, tolerance 200; `AUTO-STABILITY`: интервал 780; `GOOGLE`: интервал 300).
 
 1. **Скачайте Clash Verge Rev**:  
    https://github.com/clash-verge-rev/clash-verge-rev/releases  
@@ -122,18 +122,15 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_whi
 - `update-url` указывает на конфиг в репозитории.
 
 ### [Proxy Group]
-- **AUTO-MAIN** — fallback-группа с health-check по имени (исключаем RU/BY/UA):
+- **MANUAL-PROXY** — ручной выбор всех узлов из подписки без локального country/protocol-фильтра.
+- **AUTO-SPEED** — `url-test`-группа для выбора самого быстрого живого узла из подписки:
+  `url=https://abs.twimg.com/favicon.ico`, `interval=300`, `tolerance=200`, `timeout=7`.
+- **AUTO-STABILITY** — `fallback`-группа для выбора первого живого узла в порядке подписки:
   `url=https://abs.twimg.com/favicon.ico`, `interval=780`, `timeout=7`.
-- **AUTO-WL** — fallback-группа только по `WL`-узлам вне RU/BY/UA:
-  `url=https://abs.twimg.com/favicon.ico`, `interval=180`, `timeout=7`.
-- **WL** — ручной выбор узлов по regex `(?i).*WL.*`.
-- **MANUAL-PROXY** — ручной выбор всех узлов, включая RU/BY/UA.
 - **GOOGLE** — fallback-группа для Google/Gemini/YouTube по Gemini OK allowlist:
   `url=https://abs.twimg.com/favicon.ico`, `interval=300`, `timeout=7`.
-- **OPENAI** — fallback-группа для OpenAI/ChatGPT по USA, Finland, Poland, Germany и UAE-узлам:
-  `url=https://abs.twimg.com/favicon.ico`, `interval=300`, `timeout=7`.
-- **PROXY** — Select-группа; по умолчанию выбран AUTO-WL, вручную можно переключаться между AUTO-WL/AUTO-MAIN/WL/MANUAL-PROXY/DIRECT.
-  В fallback-группах первичным считается первый живой узел в порядке подписки после применения regex-фильтра.
+- **PROXY** — Select-группа; по умолчанию выбран `AUTO-STABILITY`, вручную можно переключаться между `MANUAL-PROXY`/`AUTO-SPEED`/`AUTO-STABILITY`/`DIRECT`.
+  В `AUTO-STABILITY` первичным считается первый живой узел в порядке уже фильтрованной подписки.
 
 ### [Rule]
 Порядок важен: правила обрабатываются сверху вниз.
