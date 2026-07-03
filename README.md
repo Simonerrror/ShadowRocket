@@ -44,12 +44,12 @@ consumer-списков в `rules/`. Проект поддерживает ав�
    - Все четыре группы используют `policy-regex-filter=WL`, потому что в фильтрованной подписке `WL` есть у всех рабочих узлов; это заставляет Shadowrocket наполнять группы без привязки к имени подписки.
    - `PROXY` — главный переключатель (Select): по умолчанию выбран `AUTO-STABILITY`; вручную можно переключаться между `MANUAL-PROXY`, `AUTO-SPEED`, `AUTO-STABILITY` и `DIRECT`.
 
-Кастомный профиль для GFN/NVIDIA (с `always-real-ip`, приватным DoH/DoT Mullvad + Quad9 и `dns-direct-system = false`):
+Кастомный профиль для GFN/NVIDIA (с `always-real-ip`, тем же DNS-набором, что и основной профиль, и `dns-direct-system = false`):
 ```
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_custom.conf
 ```
 
-Кастомный SR-профиль для GFN/NVIDIA с приватными DoH/DoT без Google/Yandex/Cloudflare DNS (Mullvad + Quad9, `dns-direct-system = false`):
+Кастомный SR-профиль для GFN/NVIDIA с приватными DoH/DoT без plain DNS (Mullvad + Quad9, `dns-direct-system = false`):
 ```
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_custom_private_dns.conf
 ```
@@ -120,7 +120,9 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_whi
 ## Логика `shadowrocket.conf`
 
 ### [General]
-- Базовые сетевые настройки: DNS — `https://dns.mullvad.net/dns-query` и `https://dns.quad9.net/dns-query`, fallback — `tls://dns.mullvad.net` и `tls://dns.quad9.net`, IPv6 выключен.
+- Базовые сетевые настройки: DNS — `9.9.9.9`, `149.112.112.112`, `77.88.8.8`; fallback использует тот же набор, IPv6 выключен.
+- Основной и custom-профиль используют общий DNS/skip/bypass каркас; `shadowrocket_custom_private_dns.conf` остаётся отдельной DoH/DoT альтернативой.
+- GFN/NVIDIA `always-real-ip` остаётся custom-only и не переносится в основной профиль.
 - `update-url` указывает на конфиг в репозитории.
 
 ### [Proxy Group]

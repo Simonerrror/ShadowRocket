@@ -40,14 +40,17 @@ dns:
     - "time.android.com"
     - "*.ntp.org"
   default-nameserver:
-    - https://dns.mullvad.net/dns-query
-    - https://dns.quad9.net/dns-query
+    - 9.9.9.9
+    - 149.112.112.112
+    - 77.88.8.8
   nameserver:
-    - https://dns.mullvad.net/dns-query
-    - https://dns.quad9.net/dns-query
+    - 9.9.9.9
+    - 149.112.112.112
+    - 77.88.8.8
   fallback:
-    - tls://dns.mullvad.net
-    - tls://dns.quad9.net
+    - 9.9.9.9
+    - 149.112.112.112
+    - 77.88.8.8
   fallback-filter:
     geoip: false
     ipcidr:
