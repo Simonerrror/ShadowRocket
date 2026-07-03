@@ -24,6 +24,7 @@ consumer-списков в `rules/`. Проект поддерживает ав�
 - `sr_wl_tests.conf` — custom-only тестовый профиль для пользовательских routing-гипотез.
 - `distillate/` — канонический manifest, локальные overlays и собранные text/`dat`.
 - `rules/` — вручную поддерживаемые rule-list'ы и generated consumer-списки.
+- `modules/tailscale_direct.module` — отдельный модуль DIRECT для Tailscale tailnet (`100.64.0.0/10`, `100.100.100.100`, `ts.net`, `tailscale.com`).
 - Источники истины разделены: `shadowrocket.conf` отвечает за порядок routing-правил и proxy-groups базового профиля, а `distillate/manifest.json` вместе с `distillate/overlays/*` и `distillate/filters/*` отвечает за состав и сборку большинства consumer-списков.
 
 ## Быстрый старт (Shadowrocket)
@@ -114,6 +115,7 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_whi
 - generated-артефакты (`clash_config.yaml`, `HAPP/DEFAULT.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/summary.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/telegram.list`, `rules/instagram_meta.list`, `rules/whitelist_direct.list`, `rules/greylist_proxy.list`, `rules/anti_advertising_light.list`, `rules/anti_advertising_medium.list`, `rules/anti_advertising_pro.list`, `rules/anti_advertising_pro_plus.list`, `rules/anti_advertising*.[0-9][0-9].list`, `modules/anti_advertising*.module`) не поддерживаются вручную;
 - `rules/anti_advertising.list` — frozen legacy snapshot для старых ссылок; supported anti-ad API — chunk-файлы и модули.
 - custom anti-ad модули собираются из `modules/anti_advertising_custom.header`: GFN/NVIDIA DIRECT-prefix и Adobe telemetry blocklist добавляются перед выбранным anti-ad tier автоматически.
+- Tailscale DIRECT вынесен из custom-профиля в отдельный модуль `modules/tailscale_direct.module`.
 
 ## Логика `shadowrocket.conf`
 
