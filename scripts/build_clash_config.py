@@ -222,7 +222,7 @@ def render_proxy_groups(groups: list[GroupSpec]) -> tuple[list[str], list[str]]:
             if "timeout" in group.attrs:
                 warnings.append(f"{group.name}: Clash builder ignores Shadowrocket timeout={group.attrs['timeout']}")
 
-        unsupported_keys = set(group.attrs) - {"policy-regex-filter", "url", "interval", "tolerance", "timeout"}
+        unsupported_keys = set(group.attrs) - {"policy-regex-filter", "use", "url", "interval", "tolerance", "timeout"}
         if "policy-select-name" in unsupported_keys:
             warnings.append(f"{group.name}: Clash builder ignores policy-select-name={group.attrs['policy-select-name']}")
             unsupported_keys.remove("policy-select-name")

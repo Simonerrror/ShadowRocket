@@ -40,6 +40,7 @@ consumer-списков в `rules/`. Проект поддерживает ав�
    - `AUTO-SPEED` — `url-test`: выбирает самый быстрый живой узел из подписки.
    - `AUTO-STABILITY` — `fallback`: берёт первый живой узел в порядке подписки.
    - `GOOGLE` — отдельный ручной выбор узла для Google/Gemini/YouTube.
+   - Все четыре группы используют `use=true`, чтобы Shadowrocket подтягивал узлы из любой пользовательской подписки, без привязки к имени подписки.
    - `PROXY` — главный переключатель (Select): по умолчанию выбран `AUTO-STABILITY`; вручную можно переключаться между `MANUAL-PROXY`, `AUTO-SPEED`, `AUTO-STABILITY` и `DIRECT`.
 
 Кастомный профиль для GFN/NVIDIA (с `always-real-ip`, приватным DoH/DoT Mullvad + Quad9 и `dns-direct-system = false`):
@@ -121,12 +122,12 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_whi
 - `update-url` указывает на конфиг в репозитории.
 
 ### [Proxy Group]
-- **MANUAL-PROXY** — ручной выбор всех узлов из подписки без локального country/protocol-фильтра.
+- **MANUAL-PROXY** — ручной выбор всех узлов из подписки без локального country/protocol-фильтра; `use=true` подтягивает пользовательскую подписку.
 - **AUTO-SPEED** — `url-test`-группа для выбора самого быстрого живого узла из подписки:
   `url=https://abs.twimg.com/favicon.ico`, `interval=300`, `tolerance=200`, `timeout=7`.
 - **AUTO-STABILITY** — `fallback`-группа для выбора первого живого узла в порядке подписки:
   `url=https://abs.twimg.com/favicon.ico`, `interval=780`, `timeout=7`.
-- **GOOGLE** — отдельная `select`-группа для ручного выбора узла под Google/Gemini/YouTube.
+- **GOOGLE** — отдельная `select`-группа для ручного выбора узла под Google/Gemini/YouTube; `use=true` подтягивает пользовательскую подписку.
 - **PROXY** — Select-группа; по умолчанию выбран `AUTO-STABILITY`, вручную можно переключаться между `MANUAL-PROXY`/`AUTO-SPEED`/`AUTO-STABILITY`/`DIRECT`.
   В `AUTO-STABILITY` первичным считается первый живой узел в порядке уже фильтрованной подписки.
 
