@@ -108,11 +108,13 @@ proxy-groups:
     type: select
     use:
       - Main-Sub
+    filter: "WL"
 
   - name: AUTO-SPEED
     type: url-test
     use:
       - Main-Sub
+    filter: "WL"
     url: "https://abs.twimg.com/favicon.ico"
     interval: 300
     tolerance: 200
@@ -121,6 +123,7 @@ proxy-groups:
     type: fallback
     use:
       - Main-Sub
+    filter: "WL"
     url: "https://abs.twimg.com/favicon.ico"
     interval: 780
 
@@ -128,6 +131,7 @@ proxy-groups:
     type: select
     use:
       - Main-Sub
+    filter: "WL"
 
   - name: PROXY
     type: select
