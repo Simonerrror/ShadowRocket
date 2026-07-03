@@ -39,7 +39,7 @@ consumer-списков в `rules/`. Проект поддерживает ав�
    - `MANUAL-PROXY` — ручной выбор всех узлов из подписки без дополнительной фильтрации.
    - `AUTO-SPEED` — `url-test`: выбирает самый быстрый живой узел из подписки.
    - `AUTO-STABILITY` — `fallback`: берёт первый живой узел в порядке подписки.
-   - `GOOGLE` — автофоллбэк для Google/Gemini/YouTube по Gemini OK allowlist.
+   - `GOOGLE` — отдельный ручной выбор узла для Google/Gemini/YouTube.
    - `PROXY` — главный переключатель (Select): по умолчанию выбран `AUTO-STABILITY`; вручную можно переключаться между `MANUAL-PROXY`, `AUTO-SPEED`, `AUTO-STABILITY` и `DIRECT`.
 
 Кастомный профиль для GFN/NVIDIA (с `always-real-ip`, приватным DoH/DoT Mullvad + Quad9 и `dns-direct-system = false`):
@@ -63,9 +63,8 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_whi
 > `clash_config.yaml` больше не поддерживается вручную отдельно: он генерируется из
 > `shadowrocket.conf` через `scripts/build_clash_config.py`.
 > Для автопроверки серверов `proxy-providers.Main-Sub.health-check`, `proxy-groups.AUTO-SPEED`,
-> `proxy-groups.AUTO-STABILITY`
-> и `proxy-groups.GOOGLE` используется `https://abs.twimg.com/favicon.ico`
-> (`AUTO-SPEED`: интервал 300, tolerance 200; `AUTO-STABILITY`: интервал 780; `GOOGLE`: интервал 300).
+> `proxy-groups.AUTO-STABILITY` используется `https://abs.twimg.com/favicon.ico`
+> (`AUTO-SPEED`: интервал 300, tolerance 200; `AUTO-STABILITY`: интервал 780).
 
 1. **Скачайте Clash Verge Rev**:  
    https://github.com/clash-verge-rev/clash-verge-rev/releases  
@@ -127,8 +126,7 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_whi
   `url=https://abs.twimg.com/favicon.ico`, `interval=300`, `tolerance=200`, `timeout=7`.
 - **AUTO-STABILITY** — `fallback`-группа для выбора первого живого узла в порядке подписки:
   `url=https://abs.twimg.com/favicon.ico`, `interval=780`, `timeout=7`.
-- **GOOGLE** — fallback-группа для Google/Gemini/YouTube по Gemini OK allowlist:
-  `url=https://abs.twimg.com/favicon.ico`, `interval=300`, `timeout=7`.
+- **GOOGLE** — отдельная `select`-группа для ручного выбора узла под Google/Gemini/YouTube.
 - **PROXY** — Select-группа; по умолчанию выбран `AUTO-STABILITY`, вручную можно переключаться между `MANUAL-PROXY`/`AUTO-SPEED`/`AUTO-STABILITY`/`DIRECT`.
   В `AUTO-STABILITY` первичным считается первый живой узел в порядке уже фильтрованной подписки.
 
