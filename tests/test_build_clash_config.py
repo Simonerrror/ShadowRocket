@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from scripts.build_clash_config import DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL, build_config
+from scripts.build_clash_config import DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL, build_config, parse_proxy_groups
 
 
 class BuildClashConfigTests(unittest.TestCase):
@@ -34,12 +34,22 @@ class BuildClashConfigTests(unittest.TestCase):
         self.assertNotIn("    filter:", provider)
         self.assertNotIn("    exclude-filter:", provider)
 
+    def test_shadowrocket_subscription_groups_use_all_subscription_nodes(self) -> None:
+        groups = {group.name: group for group in parse_proxy_groups(DEFAULT_CONF)}
+
+        for name in ("MANUAL-PROXY", "AUTO-SPEED", "AUTO-STABILITY", "GOOGLE"):
+            with self.subTest(name=name):
+                self.assertEqual(groups[name].attrs.get("use"), "true")
+                self.assertNotIn("policy-regex-filter", groups[name].attrs)
+                self.assertFalse(groups[name].members)
+
     def test_manual_proxy_uses_subscription_without_filter(self) -> None:
-        content, _warnings = build_config(DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL)
+        content, warnings = build_config(DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL)
         manual_group = content.split("  - name: MANUAL-PROXY", 1)[1].split("  - name:", 1)[0]
 
         self.assertIn("    use:\n      - Main-Sub", manual_group)
         self.assertNotIn("    filter:", manual_group)
+        self.assertNotIn("unsupported proxy-group option use=true", "\n".join(warnings))
 
     def test_auto_speed_uses_url_test_and_auto_stability_uses_fallback(self) -> None:
         content, _warnings = build_config(DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL)
