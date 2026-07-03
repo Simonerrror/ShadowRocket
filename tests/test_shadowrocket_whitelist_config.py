@@ -7,6 +7,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CUSTOM_CONF = REPO_ROOT / "shadowrocket_custom.conf"
 WHITELIST_CONF = REPO_ROOT / "shadowrocket_whitelist.conf"
+TAILSCALE_MODULE = REPO_ROOT / "modules" / "tailscale_direct.module"
 
 
 def section_lines(content: str, section: str) -> list[str]:
@@ -87,6 +88,28 @@ class ShadowrocketWhitelistConfigTests(unittest.TestCase):
         self.assertNotIn("100.100.100.100", content)
         self.assertNotIn("ts.net", content)
         self.assertNotIn("tailscale.com", content)
+
+    def test_tailscale_overlay_is_a_separate_module(self) -> None:
+        custom_content = CUSTOM_CONF.read_text(encoding="utf-8")
+        module_content = TAILSCALE_MODULE.read_text(encoding="utf-8")
+        custom_rules = section_lines(custom_content, "Rule")
+        module_general = key_values(section_lines(module_content, "General"))
+        module_rules = section_lines(module_content, "Rule")
+        tailscale_rules = [
+            "IP-CIDR,100.64.0.0/10,DIRECT,no-resolve",
+            "IP-CIDR,100.100.100.100/32,DIRECT,no-resolve",
+            "DOMAIN-SUFFIX,ts.net,DIRECT",
+            "DOMAIN-SUFFIX,tailscale.com,DIRECT",
+        ]
+
+        self.assertEqual("100.100.100.100, *.ts.net, *.tailscale.com", module_general["skip-proxy"])
+        self.assertNotIn("100.100.100.100", custom_content)
+        self.assertNotIn("ts.net", custom_content)
+        self.assertNotIn("tailscale.com", custom_content)
+        for rule in tailscale_rules:
+            with self.subTest(rule=rule):
+                self.assertNotIn(rule, custom_rules)
+                self.assertIn(rule, module_rules)
 
 
 if __name__ == "__main__":
