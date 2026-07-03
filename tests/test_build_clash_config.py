@@ -22,6 +22,10 @@ class BuildClashConfigTests(unittest.TestCase):
         self.assertIn("rules/google-all.list", content)
         self.assertIn("  - RULE-SET,google_all,GOOGLE", content)
         self.assertIn("  - name: GOOGLE", content)
+        google_group = content.split("  - name: GOOGLE", 1)[1].split("  - name:", 1)[0]
+        self.assertIn("    type: select", google_group)
+        self.assertIn("    use:\n      - Main-Sub", google_group)
+        self.assertNotIn("    filter:", google_group)
 
     def test_subscription_provider_is_unfiltered_for_manual_selection(self) -> None:
         content, _warnings = build_config(DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL)

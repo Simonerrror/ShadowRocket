@@ -125,12 +125,9 @@ proxy-groups:
     interval: 780
 
   - name: GOOGLE
-    type: fallback
+    type: select
     use:
       - Main-Sub
-    filter: "(?i)(?:.*Belarus\\(DS\\).*|.*Belarus XH.*|.*France XH WL Mobile.*|.*Finland WL Mobile.*|.*Finland XH WL Mobile.*|.*Finland\\(X\\) WL Mobile.*|.*Finland\\(X\\) XH WL Mobile.*|.*Germany WL Mobile.*|.*Germany\\(Y\\) WL Mobile.*|.*Germany\\(Y\\) XH WL Mobile.*|.*Germany\\(CU\\) WL Mobile.*|.*Germany\\(CU\\) XH WL Mobile.*|.*Netherlands\\(RD\\).*|.*Netherlands\\(RD\\) XH.*|.*Netherlands\\(O\\).*|.*Netherlands\\(O\\) XH.*|.*Netherlands\\(R\\) XH.*|.*Poland WL Mobile.*|.*Poland XH WL Mobile.*|.*Poland\\(T\\) WL Mobile.*|.*Poland\\(T\\) XH WL Mobile.*|.*Sweden\\(O\\).*|.*Sweden\\(O\\) XH.*)"
-    url: "https://abs.twimg.com/favicon.ico"
-    interval: 300
 
   - name: PROXY
     type: select
