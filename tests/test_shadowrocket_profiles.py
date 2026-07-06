@@ -36,11 +36,23 @@ def key_values(path: Path, section: str) -> dict[str, str]:
 
 
 class ShadowrocketProfilesTests(unittest.TestCase):
-    def test_proxy_groups_match_across_main_profiles(self) -> None:
+    def test_custom_proxy_groups_match_each_other(self) -> None:
+        self.assertEqual(section_lines(CUSTOM_CONF, "Proxy Group"), section_lines(PRIVATE_DNS_CONF, "Proxy Group"))
+
+    def test_custom_proxy_groups_filter_russia_from_subscription_keys(self) -> None:
+        custom_groups = key_values(CUSTOM_CONF, "Proxy Group")
+        private_dns_groups = key_values(PRIVATE_DNS_CONF, "Proxy Group")
+        expected_filter = "policy-regex-filter=(?i)^(?!.*Russia).*WL.*$"
+
+        for groups in (custom_groups, private_dns_groups):
+            for key in ("MANUAL-PROXY", "AUTO-SPEED", "AUTO-STABILITY", "GOOGLE"):
+                with self.subTest(key=key):
+                    self.assertIn(expected_filter, groups[key])
+
+    def test_base_proxy_groups_keep_plain_wl_filter(self) -> None:
         base_groups = section_lines(BASE_CONF, "Proxy Group")
 
-        self.assertEqual(base_groups, section_lines(CUSTOM_CONF, "Proxy Group"))
-        self.assertEqual(base_groups, section_lines(PRIVATE_DNS_CONF, "Proxy Group"))
+        self.assertIn("MANUAL-PROXY = select,policy-regex-filter=WL", base_groups)
 
     def test_base_and_custom_use_same_dns(self) -> None:
         base_general = key_values(BASE_CONF, "General")
