@@ -1,6 +1,6 @@
 # ShadowRocket: конфиг и правила маршрутизации
 
-Готовые конфиги для Shadowrocket, Clash Verge Rev (Mihomo) и XKeen (Xray),
+Готовые конфиги для Shadowrocket и Clash Verge Rev (Mihomo),
 построенные на manifest-driven distillate-пайплайне в `distillate/` с публикацией
 consumer-списков в `rules/`. Проект поддерживает автообновление по URL и разделённую
 маршрутизацию (Google/Gemini/YouTube, Microsoft и curated community/AI bundles).
@@ -21,7 +21,6 @@ consumer-списков в `rules/`. Проект поддерживает ав�
 - `shadowrocket_custom.conf` — кастомный конфиг для GFN/NVIDIA (отдельный `update-url`, без изменения основного).
 - `clash_config.yaml` — generated YAML для Clash Verge Rev (Mihomo), собранный из `shadowrocket.conf`.
 - `shadowrocket_whitelist.conf` — custom-only аварийный whitelist-профиль: direct allowlist/RU напрямую, всё остальное в один выбранный `PROXY`.
-- `sr_wl_tests.conf` — custom-only тестовый профиль для пользовательских routing-гипотез.
 - `distillate/` — канонический manifest, локальные overlays и собранные text/`dat`.
 - `rules/` — вручную поддерживаемые rule-list'ы и generated consumer-списки.
 - `modules/tailscale_direct.module` — отдельный модуль DIRECT для Tailscale tailnet (`100.64.0.0/10`, `100.100.100.100`, `ts.net`, `tailscale.com`).
@@ -37,11 +36,11 @@ consumer-списков в `rules/`. Проект поддерживает ав�
 2. **Добавьте подписку** на сервера в Shadowrocket (URL от вашего провайдера).
    В `_custom` профилях локальные группы берут только `WL`-узлы и дополнительно исключают `Russia`, чтобы авто-выбор не цеплял РФ-узлы из подписки.
 3. **Проверьте группы прокси**:
-   - `MANUAL-PROXY` — ручной выбор `WL`-узлов подписки вне РФ.
-   - `AUTO-SPEED` — `url-test`: выбирает самый быстрый живой `WL`-узел вне РФ.
-   - `AUTO-STABILITY` — `fallback`: берёт первый живой `WL`-узел вне РФ в порядке подписки.
+   - `MANUAL-PROXY` — ручной выбор `WL`-узлов подписки.
+   - `AUTO-SPEED` — `url-test`: выбирает самый быстрый живой `WL`-узел.
+   - `AUTO-STABILITY` — `fallback`: берёт первый живой `WL`-узел в порядке подписки.
    - `GOOGLE` — отдельный ручной выбор узла для Google/Gemini/YouTube.
-   - Все четыре группы используют `policy-regex-filter=(?i)^(?!.*Russia).*WL.*$`, потому что `WL` есть у рабочих узлов, а отрицательный фильтр защищает от РФ-нод.
+   - В основном профиле четыре группы используют простой `policy-regex-filter=WL`. В `_custom` профилях применяется `(?i)^(?!.*Russia).*WL.*$`, чтобы дополнительно исключить РФ-ноды.
    - `PROXY` — главный переключатель (Select): по умолчанию выбран `AUTO-STABILITY`; вручную можно переключаться между `MANUAL-PROXY`, `AUTO-SPEED`, `AUTO-STABILITY` и `DIRECT`.
 
 Кастомный профиль для GFN/NVIDIA (с `always-real-ip`, тем же DNS-набором, что и основной профиль, и `dns-direct-system = false`):
@@ -58,7 +57,7 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_cus
 ```
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_whitelist.conf
 ```
-В нём остаются только локальные исключения, `whitelist_direct.list`, `.ru/.рф/.su` и `GEOIP,RU,DIRECT`; весь Google и любой другой не-direct трафик уходит в один выбранный `PROXY`.
+В нём остаются только локальные исключения, `whitelist_direct.list`, `.ru/.рф/.su` и `GEOIP,RU,DIRECT`; весь Google и любой другой non-direct трафик уходит в `PROXY`. После импорта выберите в группе `PROXY` любой доступный узел с маркером `WL`: публичный профиль не закрепляет имя конкретного часто меняющегося узла.
 
 ## Clash Verge Rev (Windows)
 
@@ -104,17 +103,15 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_whi
 | `shadowrocket_custom_private_dns.conf` | Кастомный конфиг Shadowrocket для GFN/NVIDIA с приватными DoH/DoT |
 | `clash_config.yaml` | Generated-конфиг для Clash Verge Rev |
 | `shadowrocket_whitelist.conf` | Custom-only аварийный whitelist-профиль: direct allowlist/RU напрямую, всё остальное через один `PROXY` |
-| `sr_wl_tests.conf` | Custom-only тестовый профиль для пользовательских сценариев |
 | `distillate/` | Канонический manifest, overlays и generated артефакты |
 | `rules/` | Вручную поддерживаемые и generated consumer-списки |
 | `modules/` | Готовые модули для Shadowrocket |
 | `scripts/` | Вспомогательные скрипты |
 
 Практическое правило сопровождения:
-- вручную редактируются `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_custom_private_dns.conf`, `shadowrocket_whitelist.conf`, `sr_wl_tests.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `rules/adobe_telemetry_custom.list`, `rules/russia_extended.list`, `rules/voice_ports.list`, `modules/GFN-AM.module`, `modules/anti_advertising_custom.header`, `modules/instagram-meta.module`, `modules/instagram-meta-full-fix.sgmodule`;
-- generated-артефакты (`clash_config.yaml`, `HAPP/DEFAULT.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/summary.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/telegram.list`, `rules/instagram_meta.list`, `rules/whitelist_direct.list`, `rules/greylist_proxy.list`, `rules/anti_advertising_light.list`, `rules/anti_advertising_medium.list`, `rules/anti_advertising_pro.list`, `rules/anti_advertising_pro_plus.list`, `rules/anti_advertising*.[0-9][0-9].list`, `modules/anti_advertising*.module`) не поддерживаются вручную;
-- `rules/anti_advertising.list` — frozen legacy snapshot для старых ссылок; supported anti-ad API — chunk-файлы и модули.
-- custom anti-ad модули собираются из `modules/anti_advertising_custom.header`: GFN/NVIDIA DIRECT-prefix и Adobe telemetry blocklist добавляются перед выбранным anti-ad tier автоматически.
+- вручную редактируются `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_custom_private_dns.conf`, `shadowrocket_whitelist.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `rules/adobe_telemetry_custom.list`, `rules/russia_extended.list`, `rules/voice_ports.list`, `modules/GFN-AM.module`, `modules/tailscale_direct.module`;
+- generated-артефакты (`clash_config.yaml`, `HAPP/DEFAULT.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/summary.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/openai.list`, `rules/telegram.list`, `rules/whitelist_direct.list`, `rules/greylist_proxy.list`, `rules/anti_advertising.list`, `rules/anti_advertising*.[0-9][0-9].list`) не поддерживаются вручную;
+- `modules/anti_advertising.module` и `modules/anti_advertising_custom.module` semi-generated: ручной заголовок сохраняется, а ссылки на anti-ad chunks переписываются сборкой.
 - Tailscale DIRECT вынесен из custom-профиля в отдельный модуль `modules/tailscale_direct.module`.
 
 ## Логика `shadowrocket.conf`
@@ -174,7 +171,7 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_whi
 
 Fallback policy:
 - если очередной upstream-лист недоступен, последний закоммиченный snapshot в `distillate/upstream/*` сохраняется;
-- сборка `distillate`, XKeen и HAPP продолжается на этой локальной копии;
+- сборка `distillate` и HAPP продолжается на этой локальной копии;
 - удаление cache-файла из-за временной недоступности upstream не допускается.
 
 Правило безопасного локального запуска:
@@ -191,11 +188,13 @@ python3 scripts/build_happ_routing.py
 ```
 
 GitHub Actions:
-- `.github/workflows/sync-lists.yml` запускается вручную или по weekly cron и обновляет vendored upstream, `distillate/*`, `rules/*.list`, anti-ad module refs, `clash_config.yaml` и `HAPP/*`.
-- `.github/workflows/build-happ-routing.yml` запускается по push/вручную и пересобирает `clash_config.yaml` и `HAPP/*` из уже закоммиченного `distillate/` и `shadowrocket.conf`.
+- `.github/workflows/sync-lists.yml` запускается по weekly cron или вручную через **Run workflow**. Read-only job получает плавающие публичные данные BM7/OISD/HaGeZi, собирает их закреплёнными версиями компиляторов, проверяет тесты и допустимый размер diff; отдельная write-job публикует только generated allowlist.
+- Для проверенного резкого изменения количества правил ручной запуск поддерживает `allow_large_diff`; пустые обязательные категории, неверный формат и запрещённые пути этот флаг не разрешает.
+- При ошибке или аномалии workflow создаёт GitHub issue со ссылкой на run, поэтому уведомление приходит через стандартные GitHub notifications/email.
+- `.github/workflows/build-happ-routing.yml` — read-only проверка cached rebuild и тестов; она ничего не коммитит.
 
 Политика изменений:
-- `shadowrocket_custom.conf`, `shadowrocket_custom_private_dns.conf`, `shadowrocket_whitelist.conf`, `sr_wl_tests.conf` и `modules/anti_advertising_custom.module` считаются `custom-only` и содержат single-user/GFN/test-profile логику.
+- `shadowrocket_custom.conf`, `shadowrocket_custom_private_dns.conf`, `shadowrocket_whitelist.conf` и `modules/anti_advertising_custom.module` считаются `custom-only` и содержат single-user/GFN логику.
 - Если улучшение полезно всем, его нужно переносить и в основной конфиг, и в кастомные файлы.
 - При изменении generated `rules/*.list` меняйте `distillate/manifest.json`, `distillate/overlays/*` или `distillate/filters/*`, а не итоговые generated-файлы.
 - При изменении `shadowrocket.conf` пересобирайте `clash_config.yaml` и `HAPP/DEFAULT.*`.
