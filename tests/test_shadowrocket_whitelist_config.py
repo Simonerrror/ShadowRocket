@@ -55,8 +55,14 @@ class ShadowrocketWhitelistConfigTests(unittest.TestCase):
 
         self.assertEqual(1, len(groups))
         self.assertTrue(groups[0].startswith("PROXY = select,"))
-        self.assertNotIn("policy-regex-filter", groups[0])
         self.assertNotIn("DIRECT", groups[0])
+
+    def test_proxy_group_uses_portable_wl_filter_without_personal_default(self) -> None:
+        content = WHITELIST_CONF.read_text(encoding="utf-8")
+        groups = section_lines(content, "Proxy Group")
+
+        self.assertEqual(groups, ["PROXY = select,policy-regex-filter=WL"])
+        self.assertNotIn("policy-select-name=", content)
 
     def test_service_specific_proxy_lists_are_not_used(self) -> None:
         content = WHITELIST_CONF.read_text(encoding="utf-8")
