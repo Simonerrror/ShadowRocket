@@ -233,9 +233,27 @@ def repo_slug(repo_root: Path) -> str:
     raise RuntimeError(f"Unsupported origin URL format: {remote}")
 
 
-def resolve_build_stamp(repo_root: Path, explicit_value: str) -> str:
+def existing_build_stamp(out_dir: Path) -> str | None:
+    path = out_dir / "DEFAULT.JSON"
+    if not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    value = payload.get("LastUpdated") if isinstance(payload, dict) else None
+    if isinstance(value, (str, int)) and str(value):
+        return str(value)
+    return None
+
+
+def resolve_build_stamp(repo_root: Path, explicit_value: str, out_dir: Path | None = None) -> str:
     if explicit_value:
         return explicit_value
+    if out_dir is not None:
+        preserved = existing_build_stamp(out_dir)
+        if preserved is not None:
+            return preserved
     try:
         return run(["git", "-C", str(repo_root), "log", "-1", "--format=%ct"])
     except RuntimeError:
@@ -330,7 +348,7 @@ def main() -> int:
     slug = repo_slug(repo_root)
     geodata_base = f"https://raw.githubusercontent.com/{slug}/main/{args.distillate_dir.strip('/')}/dat"
     block_site_tag = "motivato-block" if read_text_lines(distillate_dir / "text" / "domain" / "motivato_block.txt") else None
-    build_stamp = resolve_build_stamp(repo_root, args.build_stamp)
+    build_stamp = resolve_build_stamp(repo_root, args.build_stamp, out_dir)
     default_profile = build_profile(
         data=data,
         geodata_base=geodata_base,
