@@ -1,4 +1,4 @@
-name: Build release artifacts
+name: Verify release artifacts
 
 on:
   workflow_dispatch:
@@ -6,57 +6,41 @@ on:
     branches:
       - main
     paths:
-      - "clash_config.yaml"
-      - "shadowrocket.conf"
-      - "shadowrocket_custom.conf"
+      - "shadowrocket*.conf"
       - "modules/**"
       - "rules/*.list"
-      - "distillate/manifest.json"
-      - "distillate/filters/**"
-      - "distillate/overlays/**"
-      - "scripts/build_distillate.py"
-      - "scripts/build_clash_config.py"
-      - "scripts/build_happ_routing.py"
-      - ".github/workflows/sync-lists.yml"
-      - ".github/workflows/build-happ-routing.yml"
+      - "distillate/**"
+      - "scripts/**"
+      - "tests/**"
+      - ".github/workflows/*.yml"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  build:
-    if: github.actor != 'github-actions[bot]'
+  verify:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout repository without persisted credentials
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.11"
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.22"
-
-      - name: Rebuild release artifacts
+      - name: Rebuild cached artifacts
         run: |
-          python scripts/build_distillate.py
-          python scripts/build_clash_config.py --conf shadowrocket.conf
-          BUILD_STAMP="$(git log -1 --format=%ct)"
-          python scripts/build_happ_routing.py --build-stamp "$BUILD_STAMP"
+          python3 scripts/build_distillate.py --skip-compiled
+          python3 scripts/build_clash_config.py --conf shadowrocket.conf
+          python3 scripts/build_happ_routing.py
 
-      - name: Commit and push changes
+      - name: Run tests
         run: |
-          set -euo pipefail
-          if [[ -n "$(git status --porcelain)" ]]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add -A distillate rules HAPP modules clash_config.yaml
-            git commit -m "chore: rebuild release artifacts"
-            git push
-          else
-            echo "No changes to commit."
-          fi
+          python3 -m unittest discover -s tests -v
+          python3 -m compileall -q scripts tests
+
+      - name: Verify generated files are current
+        run: git diff --exit-code
