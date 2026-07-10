@@ -2,52 +2,166 @@ name: Sync rule lists
 
 on:
   workflow_dispatch:
+    inputs:
+      allow_large_diff:
+        description: Publish a reviewed large non-empty rule-count change
+        required: false
+        default: false
+        type: boolean
   schedule:
     - cron: "15 4 * * 0"
 
-permissions:
-  contents: write
+concurrency:
+  group: shadowrocket-release
+  cancel-in-progress: false
 
 jobs:
-  sync:
+  build:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout repository without persisted credentials
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.11"
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
-          go-version: "1.22"
+          go-version: "1.25.11"
 
-      - name: Sync lists
-        run: python scripts/sync_lists.py --no-pull
+      - name: Preserve previous summary
+        run: cp distillate/summary.json "$RUNNER_TEMP/previous-summary.json"
 
-      - name: Build compiled distillate artifacts
-        run: python scripts/build_distillate.py
+      - name: Refresh public upstream lists
+        run: python3 scripts/sync_lists.py --no-pull
+
+      - name: Build pinned compiled artifacts
+        run: python3 scripts/build_distillate.py
+
+      - name: Validate rule-count delta
+        env:
+          ALLOW_LARGE_DIFF: ${{ inputs.allow_large_diff || 'false' }}
+        run: |
+          args=()
+          if [[ "$ALLOW_LARGE_DIFF" == "true" ]]; then
+            args+=(--allow-large-diff)
+          fi
+          python3 scripts/validate_distillate.py \
+            --previous "$RUNNER_TEMP/previous-summary.json" \
+            --current distillate/summary.json \
+            "${args[@]}"
 
       - name: Build Clash config
-        run: python scripts/build_clash_config.py --conf shadowrocket.conf
+        run: python3 scripts/build_clash_config.py --conf shadowrocket.conf
 
       - name: Build HAPP artifacts
         run: |
-          BUILD_STAMP="$(git log -1 --format=%ct)"
-          python scripts/build_happ_routing.py --build-stamp "$BUILD_STAMP"
+          if git diff --quiet -- distillate rules modules clash_config.yaml; then
+            python3 scripts/build_happ_routing.py
+          else
+            python3 scripts/build_happ_routing.py --build-stamp "$(date -u +%s)"
+          fi
 
-      - name: Commit and push changes
+      - name: Run release tests
+        run: |
+          python3 -m unittest discover -s tests -v
+          python3 -m compileall -q scripts tests
+
+      - name: Upload generated release candidate
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: shadowrocket-release-candidate
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            distillate/upstream
+            distillate/text
+            distillate/dat
+            distillate/summary.json
+            rules
+            modules
+            clash_config.yaml
+            HAPP/DEFAULT.JSON
+            HAPP/DEFAULT.DEEPLINK
+
+  publish:
+    needs: build
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout clean publication workspace
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.11"
+
+      - name: Download release candidate outside the checkout
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: shadowrocket-release-candidate
+          path: .release-artifact
+
+      - name: Apply generated artifact files
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import shutil
+
+          root = Path.cwd()
+          artifact = root / ".release-artifact"
+          for relative in ("distillate/upstream", "distillate/text", "distillate/dat", "rules", "modules"):
+              shutil.copytree(artifact / relative, root / relative, dirs_exist_ok=True)
+          for relative in ("distillate/summary.json", "clash_config.yaml", "HAPP/DEFAULT.JSON", "HAPP/DEFAULT.DEEPLINK"):
+              target = root / relative
+              target.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copy2(artifact / relative, target)
+          shutil.rmtree(artifact)
+          PY
+
+      - name: Validate and normalize publish candidate
+        run: |
+          python3 scripts/validate_publish_paths.py
+          python3 scripts/build_distillate.py --skip-compiled
+          python3 scripts/build_clash_config.py --conf shadowrocket.conf
+          python3 scripts/build_happ_routing.py
+          python3 scripts/validate_publish_paths.py
+
+      - name: Commit and push generated changes
         run: |
           set -euo pipefail
           if [[ -n "$(git status --porcelain)" ]]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add -A distillate rules HAPP modules clash_config.yaml
+            python3 scripts/validate_publish_paths.py
             git commit -m "chore: refresh vendored distillate sources"
             git push
           else
-            echo "No changes to commit."
+            echo "No changes to publish."
           fi
+
+  notify:
+    needs: [build, publish]
+    if: ${{ always() && (needs.build.result == 'failure' || needs.publish.result == 'failure') }}
+    permissions:
+      issues: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create release failure issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh api --method POST "repos/${{ github.repository }}/issues" \
+            -f title="ShadowRocket release pipeline requires review" \
+            -f body="Weekly/manual release validation failed. Review: ${RUN_URL}"
