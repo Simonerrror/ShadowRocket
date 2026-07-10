@@ -18,6 +18,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 
@@ -42,8 +43,11 @@ UPSTREAM_DIR = Path("distillate/upstream")
 OBSOLETE_COMPILED_DIRS = (Path("distillate/mihomo"), Path("distillate/sing-box"))
 GEOIP_REPO = "https://github.com/v2fly/geoip.git"
 GEOSITE_REPO = "https://github.com/v2fly/domain-list-community.git"
+GEOIP_COMMIT = "fbeec6d51a544ba4c19d75cf04260f74c965fbd7"
+GEOSITE_COMMIT = "bb622a2b75b3dfbec83719c1eb6e748720ea698e"
 RULE_HEADER = "# Generated from distillate/manifest.json"
 FETCH_USER_AGENT = "ShadowRocketDistillate/1.0"
+MAX_FETCH_BYTES = 64 * 1024 * 1024
 ANTI_ADVERTISING_MAX_CHUNK_BYTES = 7 * 1024 * 1024
 ANTI_AD_RULE_GLOB = "anti_advertising.[0-9][0-9].list"
 ANTI_AD_RULE_PREFIX = "RULE-SET, https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/"
@@ -106,6 +110,14 @@ def run_with_retry(
     raise last_error
 
 
+def checkout_pinned_repo(repo_url: str, commit: str, destination: Path) -> None:
+    run_with_retry(
+        ["git", "clone", "--no-checkout", "--filter=blob:none", repo_url, str(destination)]
+    )
+    run_with_retry(["git", "-C", str(destination), "fetch", "--depth", "1", "origin", commit])
+    run(["git", "-C", str(destination), "checkout", "--detach", "FETCH_HEAD"])
+
+
 def is_retryable_http_status(status_code: int) -> bool:
     return status_code in {429, 500, 502, 503, 504}
 
@@ -119,13 +131,29 @@ def is_retryable_transport_error(exc: Exception) -> bool:
     return isinstance(exc, OSError)
 
 
-def fetch_text(url: str, attempts: int = 3, timeout_seconds: int = 30, backoff_factor: float = 2.0) -> str:
+def fetch_text(
+    url: str,
+    attempts: int = 3,
+    timeout_seconds: int = 30,
+    backoff_factor: float = 2.0,
+    max_bytes: int = MAX_FETCH_BYTES,
+) -> str:
+    if urlparse(url).scheme.lower() != "https":
+        raise DistillateError(f"Upstream URL must use HTTPS: {url}")
     last_error: Exception | None = None
     request = Request(url, headers={"User-Agent": FETCH_USER_AGENT})
     for attempt in range(1, attempts + 1):
         try:
             with urlopen(request, timeout=timeout_seconds) as response:
-                return response.read().decode("utf-8")
+                payload = response.read(max_bytes + 1)
+                if len(payload) > max_bytes:
+                    raise DistillateError(f"Upstream payload exceeds {max_bytes} bytes: {url}")
+                if not payload:
+                    raise DistillateError(f"Upstream payload is empty: {url}")
+                try:
+                    return payload.decode("utf-8")
+                except UnicodeDecodeError as exc:
+                    raise DistillateError(f"Upstream payload is not valid UTF-8: {url}") from exc
         except HTTPError as exc:
             last_error = exc
             if not is_retryable_http_status(exc.code) or attempt == attempts:
@@ -749,7 +777,7 @@ def compile_geosite_dat(repo_root: Path, categories: dict[str, CategoryResult]) 
             if not result.domain_rules:
                 continue
             write_text_file(data_dir / dat_category_name(name), result.domain_rules)
-        run_with_retry(["git", "clone", "--depth", "1", GEOSITE_REPO, str(repo)])
+        checkout_pinned_repo(GEOSITE_REPO, GEOSITE_COMMIT, repo)
         run_with_retry(["go", "mod", "download"], cwd=repo)
         run(["go", "run", "./", f"--datapath={data_dir}", f"--outputdir={out_dir}"], cwd=repo)
         source = out_dir / "dlc.dat"
@@ -762,7 +790,7 @@ def compile_geoip_dat(repo_root: Path, categories: dict[str, CategoryResult]) ->
     with tempfile.TemporaryDirectory(prefix="sr-distillate-geoip-") as tmp_dir:
         tmp = Path(tmp_dir)
         repo = tmp / "geoip"
-        run_with_retry(["git", "clone", "--depth", "1", GEOIP_REPO, str(repo)])
+        checkout_pinned_repo(GEOIP_REPO, GEOIP_COMMIT, repo)
         run_with_retry(["go", "mod", "download"], cwd=repo)
         run(["go", "build", "-o", "geoip"], cwd=repo)
 
@@ -843,7 +871,7 @@ def dat_category_name(name: str) -> str:
     return name.replace("_", "-")
 
 
-def build_distillate(repo_root: Path, manifest_path: Path, skip_compiled: bool) -> int:
+def _build_distillate_in_place(repo_root: Path, manifest_path: Path, skip_compiled: bool) -> int:
     if not manifest_path.exists():
         raise FileNotFoundError(f"Manifest not found: {manifest_path}")
 
@@ -861,6 +889,100 @@ def build_distillate(repo_root: Path, manifest_path: Path, skip_compiled: bool) 
     artifacts = compiled_categories(spec_by_name, published, aggregates)
     compile_geosite_dat(repo_root, artifacts)
     compile_geoip_dat(repo_root, artifacts)
+    return 0
+
+
+def remove_path(path: Path) -> None:
+    if path.is_dir() and not path.is_symlink():
+        shutil.rmtree(path)
+    else:
+        path.unlink(missing_ok=True)
+
+
+def copy_build_inputs(repo_root: Path, staging_root: Path) -> None:
+    staging_root.mkdir(parents=True, exist_ok=True)
+    for relative in (Path("distillate"), Path("rules"), Path("modules")):
+        source = repo_root / relative
+        if source.exists():
+            shutil.copytree(source, staging_root / relative)
+
+
+def generated_output_paths(
+    repo_root: Path,
+    staging_root: Path,
+    manifest: dict[str, Any],
+    *,
+    skip_compiled: bool,
+) -> list[Path]:
+    paths = {TEXT_DIR, SUMMARY_PATH, *OBSOLETE_COMPILED_DIRS}
+    if not skip_compiled:
+        paths.add(DAT_DIR)
+    for spec in manifest.get("categories", []):
+        if isinstance(spec, dict) and isinstance(spec.get("legacy_rule_path"), str):
+            paths.add(Path(spec["legacy_rule_path"]))
+    paths.update(
+        {
+            Path("modules/anti_advertising.module"),
+            Path("modules/anti_advertising_custom.module"),
+        }
+    )
+    for root in (repo_root, staging_root):
+        for path in (root / "rules").glob(ANTI_AD_RULE_GLOB):
+            paths.add(path.relative_to(root))
+    return sorted(paths, key=lambda path: path.as_posix())
+
+
+def publish_staged_outputs(
+    repo_root: Path,
+    staging_root: Path,
+    manifest: dict[str, Any],
+    *,
+    skip_compiled: bool,
+) -> None:
+    paths = generated_output_paths(repo_root, staging_root, manifest, skip_compiled=skip_compiled)
+    with tempfile.TemporaryDirectory(prefix="sr-distillate-backup-", dir=repo_root.parent) as backup_dir:
+        backup_root = Path(backup_dir)
+        processed: list[Path] = []
+        try:
+            for relative in paths:
+                destination = repo_root / relative
+                staged = staging_root / relative
+                backup = backup_root / relative
+                if destination.exists() or destination.is_symlink():
+                    backup.parent.mkdir(parents=True, exist_ok=True)
+                    destination.replace(backup)
+                processed.append(relative)
+                if staged.exists() or staged.is_symlink():
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    staged.replace(destination)
+        except Exception:
+            for relative in reversed(processed):
+                destination = repo_root / relative
+                backup = backup_root / relative
+                if destination.exists() or destination.is_symlink():
+                    remove_path(destination)
+                if backup.exists() or backup.is_symlink():
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    backup.replace(destination)
+            raise
+
+
+def build_distillate(repo_root: Path, manifest_path: Path, skip_compiled: bool) -> int:
+    if not manifest_path.exists():
+        raise FileNotFoundError(f"Manifest not found: {manifest_path}")
+    manifest = load_manifest(manifest_path)
+    manifest_relative = manifest_path.resolve().relative_to(repo_root.resolve())
+
+    with tempfile.TemporaryDirectory(prefix="sr-distillate-stage-", dir=repo_root.parent) as staging_dir:
+        staging_root = Path(staging_dir) / "repo"
+        copy_build_inputs(repo_root, staging_root)
+        _build_distillate_in_place(staging_root, staging_root / manifest_relative, skip_compiled)
+        publish_staged_outputs(
+            repo_root,
+            staging_root,
+            manifest,
+            skip_compiled=skip_compiled,
+        )
     return 0
 
 
