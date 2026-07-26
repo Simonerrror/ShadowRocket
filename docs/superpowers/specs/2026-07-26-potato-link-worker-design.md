@@ -81,8 +81,9 @@ The workflow:
 6. deploys `potato-link` through Wrangler.
 
 Third-party GitHub Actions are pinned to immutable commit SHAs. Wrangler is
-pinned to exact version `4.114.0`; floating selectors such as `latest` are not
-used.
+pinned to exact version `4.112.0`, the newest supported release old enough to
+pass the repository's package-age gate; floating selectors such as `latest`
+are not used.
 
 Deployment needs two GitHub repository secrets:
 
