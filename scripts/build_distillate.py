@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import ipaddress
 import json
 import math
@@ -45,6 +46,9 @@ GEOIP_REPO = "https://github.com/v2fly/geoip.git"
 GEOSITE_REPO = "https://github.com/v2fly/domain-list-community.git"
 GEOIP_COMMIT = "fbeec6d51a544ba4c19d75cf04260f74c965fbd7"
 GEOSITE_COMMIT = "bb622a2b75b3dfbec83719c1eb6e748720ea698e"
+GEOIP_DATA_COMMIT = "402b99afef60cf55058350b5d8c29322835636cd"
+GEOIP_DATA_SHA256 = "b71d1999439dde2de2d2b6844a2befa50c50211ff739785c005ca7c230a17d6a"
+GEOIP_DATA_PATH = Path("distillate/upstream/v2fly/geoip.dat")
 RULE_HEADER = "# Generated from distillate/manifest.json"
 FETCH_USER_AGENT = "ShadowRocketDistillate/1.0"
 MAX_FETCH_BYTES = 64 * 1024 * 1024
@@ -116,6 +120,17 @@ def checkout_pinned_repo(repo_url: str, commit: str, destination: Path) -> None:
     )
     run_with_retry(["git", "-C", str(destination), "fetch", "--depth", "1", "origin", commit])
     run(["git", "-C", str(destination), "checkout", "--detach", "FETCH_HEAD"])
+
+
+def verify_ru_geoip_source(path: Path) -> None:
+    if not path.exists():
+        raise DistillateError(f"Pinned V2Fly GeoIP source is missing: {path}")
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    if digest != GEOIP_DATA_SHA256:
+        raise DistillateError(
+            f"Pinned V2Fly GeoIP checksum mismatch for {path}: "
+            f"expected {GEOIP_DATA_SHA256}, got {digest}"
+        )
 
 
 def is_retryable_http_status(status_code: int) -> bool:
@@ -765,25 +780,86 @@ def compiled_categories(
     return compiled
 
 
+def compiled_geosite_tags(categories: dict[str, CategoryResult]) -> list[str]:
+    return sorted({"category-ru", *(dat_category_name(name) for name in categories)})
+
+
 def compile_geosite_dat(repo_root: Path, categories: dict[str, CategoryResult]) -> None:
     with tempfile.TemporaryDirectory(prefix="sr-distillate-geosite-") as tmp_dir:
         tmp = Path(tmp_dir)
         repo = tmp / "domain-list-community"
-        data_dir = tmp / "data"
         out_dir = tmp / "out"
-        data_dir.mkdir(parents=True, exist_ok=True)
         out_dir.mkdir(parents=True, exist_ok=True)
+        checkout_pinned_repo(GEOSITE_REPO, GEOSITE_COMMIT, repo)
+        data_dir = repo / "data"
         for name, result in categories.items():
             if not result.domain_rules:
                 continue
             write_text_file(data_dir / dat_category_name(name), result.domain_rules)
-        checkout_pinned_repo(GEOSITE_REPO, GEOSITE_COMMIT, repo)
+        profile_path = repo / "datprofile.distillate.json"
+        profile_path.write_text(
+            json.dumps(
+                [
+                    {
+                        "name": "dlc.dat",
+                        "mode": "allowlist",
+                        "lists": compiled_geosite_tags(categories),
+                    }
+                ],
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
         run_with_retry(["go", "mod", "download"], cwd=repo)
-        run(["go", "run", "./", f"--datapath={data_dir}", f"--outputdir={out_dir}"], cwd=repo)
+        run(
+            [
+                "go",
+                "run",
+                "./",
+                f"--datapath={data_dir}",
+                f"--outputdir={out_dir}",
+                f"--datprofile={profile_path}",
+            ],
+            cwd=repo,
+        )
         source = out_dir / "dlc.dat"
         if not source.exists():
             raise DistillateError("Failed to build geosite.dat: output dlc.dat not found")
         shutil.copy2(source, repo_root / DAT_DIR / "geosite.dat")
+
+
+def geoip_compiler_inputs(
+    repo_root: Path,
+    categories: dict[str, CategoryResult],
+) -> tuple[list[dict[str, Any]], list[str]]:
+    inputs: list[dict[str, Any]] = [
+        {
+            "type": "v2rayGeoIPDat",
+            "action": "add",
+            "args": {
+                "uri": str(repo_root / GEOIP_DATA_PATH),
+                "wantedList": ["ru"],
+            },
+        }
+    ]
+    wanted_lists = ["ru"]
+    for name, result in categories.items():
+        if not result.ip_cidrs:
+            continue
+        source = repo_root / TEXT_DIR / "ip" / f"{name}.txt"
+        dat_name = dat_category_name(name)
+        inputs.append(
+            {
+                "type": "text",
+                "action": "add",
+                "args": {
+                    "name": dat_name,
+                    "uri": str(source),
+                },
+            }
+        )
+        wanted_lists.append(dat_name)
+    return inputs, wanted_lists
 
 
 def compile_geoip_dat(repo_root: Path, categories: dict[str, CategoryResult]) -> None:
@@ -794,24 +870,9 @@ def compile_geoip_dat(repo_root: Path, categories: dict[str, CategoryResult]) ->
         run_with_retry(["go", "mod", "download"], cwd=repo)
         run(["go", "build", "-o", "geoip"], cwd=repo)
 
-        inputs: list[dict[str, Any]] = []
-        wanted_lists: list[str] = []
-        for name, result in categories.items():
-            if not result.ip_cidrs:
-                continue
-            source = repo_root / TEXT_DIR / "ip" / f"{name}.txt"
-            dat_name = dat_category_name(name)
-            inputs.append(
-                {
-                    "type": "text",
-                    "action": "add",
-                    "args": {
-                        "name": dat_name,
-                        "uri": str(source),
-                    },
-                }
-            )
-            wanted_lists.append(dat_name)
+        geoip_source = repo_root / GEOIP_DATA_PATH
+        verify_ru_geoip_source(geoip_source)
+        inputs, wanted_lists = geoip_compiler_inputs(repo_root, categories)
 
         config = {
             "input": inputs,
