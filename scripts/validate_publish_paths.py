@@ -24,6 +24,7 @@ GENERATED_MODULES = {
 }
 GENERATED_FILES = {
     "clash_config.yaml",
+    "cloudflare/potato-link/dist/destinations.js",
     "distillate/summary.json",
     "HAPP/DEFAULT.JSON",
     "HAPP/DEFAULT.DEEPLINK",
