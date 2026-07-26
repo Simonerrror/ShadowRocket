@@ -1,11 +1,20 @@
 from __future__ import annotations
 
+import base64
 import json
 import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.build_happ_routing import existing_build_stamp, resolve_build_stamp
+from scripts.build_happ_routing import (
+    RU_PROFILE_NAME,
+    BuildData,
+    Bucket,
+    build_profile,
+    existing_build_stamp,
+    profile_to_deeplink,
+    resolve_build_stamp,
+)
 
 
 class HappBuildStampTests(unittest.TestCase):
@@ -39,6 +48,56 @@ class HappBuildStampTests(unittest.TestCase):
             (out_dir / "DEFAULT.JSON").write_text("not json", encoding="utf-8")
 
             self.assertIsNone(existing_build_stamp(out_dir))
+
+
+class HappRuVpnProfileTests(unittest.TestCase):
+    def test_ru_vpn_proxies_only_ru_tags_and_defaults_to_direct(self) -> None:
+        data = BuildData(
+            direct=Bucket(site_rules=["domain:ru"], cidrs=["192.0.2.0/24"]),
+            proxy=Bucket(site_rules=["domain:openai.com"], cidrs=["198.51.100.0/24"]),
+            block=Bucket(site_rules=["domain:ads.example"], cidrs=["203.0.113.0/24"]),
+        )
+
+        profile = build_profile(
+            data=data,
+            geodata_base="https://example.test/dat",
+            last_updated="123",
+            route_order="block-proxy-direct",
+            remote_dns_ip="8.8.8.8",
+            remote_dns_domain="https://8.8.8.8/dns-query",
+            domestic_dns_ip="77.88.8.8",
+            remote_dns_type="DoH",
+            domestic_dns_type="DoH",
+            general_direct_ips=["127.0.0.1"],
+            profile_name=RU_PROFILE_NAME,
+            block_geosite_tag="motivato-block",
+            global_proxy="false",
+            direct_geosite_tag=None,
+            direct_geoip_tag=None,
+            proxy_geosite_tag="category-ru",
+            proxy_geoip_tag="ru",
+        )
+
+        self.assertEqual(profile["Name"], "RU-VPN")
+        self.assertEqual(profile["GlobalProxy"], "false")
+        self.assertEqual(profile["DirectSites"], [])
+        self.assertEqual(profile["DirectIp"], ["127.0.0.1"])
+        self.assertEqual(profile["ProxySites"], ["geosite:category-ru"])
+        self.assertEqual(profile["ProxyIp"], ["geoip:ru"])
+        self.assertNotIn("geosite:sr-proxy", profile["ProxySites"])
+        self.assertNotIn("geoip:sr-proxy", profile["ProxyIp"])
+        self.assertEqual(profile["BlockSites"], ["geosite:motivato-block"])
+        self.assertEqual(profile["BlockIp"], ["geoip:sr-block"])
+
+    def test_deeplink_decodes_to_exact_ru_vpn_json(self) -> None:
+        profile = {"Name": "RU-VPN", "GlobalProxy": "false"}
+
+        pretty, compact, deeplink = profile_to_deeplink(profile, "onadd")
+        decoded = base64.b64decode(deeplink.rsplit("/", 1)[1]).decode("utf-8")
+
+        self.assertEqual(json.loads(pretty), profile)
+        self.assertEqual(decoded, compact)
+        self.assertEqual(json.loads(decoded), profile)
 
 
 if __name__ == "__main__":
