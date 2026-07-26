@@ -7,12 +7,18 @@ from pathlib import Path
 from unittest.mock import patch
 
 from scripts.build_distillate import (
+    GEOIP_DATA_COMMIT,
+    GEOIP_DATA_SHA256,
     GEOIP_COMMIT,
     GEOSITE_COMMIT,
+    CategoryResult,
     DistillateError,
     build_distillate,
     checkout_pinned_repo,
+    compiled_geosite_tags,
+    geoip_compiler_inputs,
     publish_staged_outputs,
+    verify_ru_geoip_source,
 )
 
 
@@ -50,6 +56,34 @@ class BuildDistillateSafetyTests(unittest.TestCase):
     def test_compiler_commits_are_reviewed_immutable_shas(self) -> None:
         self.assertEqual(GEOSITE_COMMIT, "bb622a2b75b3dfbec83719c1eb6e748720ea698e")
         self.assertEqual(GEOIP_COMMIT, "fbeec6d51a544ba4c19d75cf04260f74c965fbd7")
+
+    def test_ru_geoip_source_is_pinned_and_checksum_verified(self) -> None:
+        self.assertEqual(GEOIP_DATA_COMMIT, "402b99afef60cf55058350b5d8c29322835636cd")
+        self.assertEqual(
+            GEOIP_DATA_SHA256,
+            "b71d1999439dde2de2d2b6844a2befa50c50211ff739785c005ca7c230a17d6a",
+        )
+
+    def test_verify_ru_geoip_source_rejects_wrong_payload(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "geoip.dat"
+            path.write_bytes(b"wrong")
+
+            with self.assertRaisesRegex(DistillateError, "checksum mismatch"):
+                verify_ru_geoip_source(path)
+
+    def test_compiled_geosite_tags_include_category_ru(self) -> None:
+        tags = compiled_geosite_tags({"sr-direct": CategoryResult("sr-direct")})
+
+        self.assertEqual(tags, ["category-ru", "sr-direct"])
+
+    def test_geoip_inputs_import_ru_from_cached_v2fly_dat(self) -> None:
+        inputs, wanted = geoip_compiler_inputs(Path("/repo"), {})
+
+        self.assertEqual(inputs[0]["type"], "v2rayGeoIPDat")
+        self.assertEqual(inputs[0]["args"]["wantedList"], ["ru"])
+        self.assertEqual(inputs[0]["args"]["uri"], "/repo/distillate/upstream/v2fly/geoip.dat")
+        self.assertIn("ru", wanted)
 
     def test_publish_failure_restores_every_replaced_output(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

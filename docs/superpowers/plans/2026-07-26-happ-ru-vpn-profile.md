@@ -115,7 +115,6 @@ Refactor compiler setup into testable helpers. For geosite, use the pinned check
     "type": "v2rayGeoIPDat",
     "action": "add",
     "args": {
-        "name": ["ru"],
         "uri": str(repo_root / GEOIP_DATA_PATH),
         "wantedList": ["ru"],
     },
