@@ -56,6 +56,15 @@ class WorkflowHardeningTests(unittest.TestCase):
         self.assertNotIn("git push", content)
         self.assertNotIn("contents: write", content)
 
+    def test_workflows_cover_ru_vpn_artifacts(self) -> None:
+        sync_content = SYNC_WORKFLOW.read_text(encoding="utf-8")
+        verify_content = VERIFY_WORKFLOW.read_text(encoding="utf-8")
+
+        self.assertIn('- "HAPP/**"', verify_content)
+        for path in ("HAPP/RU-VPN.JSON", "HAPP/RU-VPN.DEEPLINK"):
+            with self.subTest(path=path):
+                self.assertIn(path, sync_content)
+
     def test_publish_path_allowlist_accepts_only_generated_outputs(self) -> None:
         allowed = (
             "distillate/upstream/bm7/Google.list",
@@ -67,6 +76,8 @@ class WorkflowHardeningTests(unittest.TestCase):
             "modules/anti_advertising.module",
             "clash_config.yaml",
             "HAPP/DEFAULT.JSON",
+            "HAPP/RU-VPN.JSON",
+            "HAPP/RU-VPN.DEEPLINK",
         )
         denied = (
             "scripts/build_distillate.py",
