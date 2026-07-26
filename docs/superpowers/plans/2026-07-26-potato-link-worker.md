@@ -6,7 +6,7 @@
 
 **Architecture:** A Python build script validates both generated deeplinks and writes a small committed JavaScript data module. A dependency-free Cloudflare Worker maps `/` and `/ru` to those embedded destinations; a hardened GitHub Actions workflow verifies generated output and deploys it with repository secrets.
 
-**Tech Stack:** Python 3.11 standard library, JavaScript Web APIs, Node.js 22.17.1 built-in test runner, Cloudflare Wrangler 4.114.0, GitHub Actions.
+**Tech Stack:** Python 3.11 standard library, JavaScript Web APIs, Node.js 22.17.1 built-in test runner, Cloudflare Wrangler 4.112.0, GitHub Actions.
 
 ---
 
@@ -336,7 +336,7 @@ git commit -m "feat: redirect both HAPP profile links"
 
 - [ ] **Step 1: Quarantine Wrangler without executing it**
 
-Confirm `wrangler@4.114.0` resolves to the official
+Confirm `wrangler@4.112.0` resolves to the official
 `cloudflare/workers-sdk` repository, record its npm integrity/signature
 metadata, download the tarball into a temporary directory, inspect its
 `package.json` lifecycle scripts and file list, and do not execute package
@@ -357,7 +357,7 @@ Create a private ESM package with scripts:
     "deploy:dry": "wrangler deploy --dry-run"
   },
   "devDependencies": {
-    "wrangler": "4.114.0"
+    "wrangler": "4.112.0"
   }
 }
 ```
