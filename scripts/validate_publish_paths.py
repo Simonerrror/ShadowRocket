@@ -27,6 +27,8 @@ GENERATED_FILES = {
     "distillate/summary.json",
     "HAPP/DEFAULT.JSON",
     "HAPP/DEFAULT.DEEPLINK",
+    "HAPP/RU-VPN.JSON",
+    "HAPP/RU-VPN.DEEPLINK",
     *GENERATED_RULES,
     *GENERATED_MODULES,
 }

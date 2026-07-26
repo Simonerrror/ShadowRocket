@@ -12,6 +12,7 @@ on:
       - "distillate/**"
       - "scripts/**"
       - "tests/**"
+      - "HAPP/**"
       - ".github/workflows/*.yml"
 
 permissions:

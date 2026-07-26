@@ -90,6 +90,8 @@ jobs:
             clash_config.yaml
             HAPP/DEFAULT.JSON
             HAPP/DEFAULT.DEEPLINK
+            HAPP/RU-VPN.JSON
+            HAPP/RU-VPN.DEEPLINK
 
   publish:
     needs: build
@@ -121,7 +123,14 @@ jobs:
           artifact = root / ".release-artifact"
           for relative in ("distillate/upstream", "distillate/text", "distillate/dat", "rules", "modules"):
               shutil.copytree(artifact / relative, root / relative, dirs_exist_ok=True)
-          for relative in ("distillate/summary.json", "clash_config.yaml", "HAPP/DEFAULT.JSON", "HAPP/DEFAULT.DEEPLINK"):
+          for relative in (
+              "distillate/summary.json",
+              "clash_config.yaml",
+              "HAPP/DEFAULT.JSON",
+              "HAPP/DEFAULT.DEEPLINK",
+              "HAPP/RU-VPN.JSON",
+              "HAPP/RU-VPN.DEEPLINK",
+          ):
               target = root / relative
               target.parent.mkdir(parents=True, exist_ok=True)
               shutil.copy2(artifact / relative, target)
