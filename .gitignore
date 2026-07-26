@@ -2,7 +2,7 @@
 .worktrees/
 __pycache__/
 cloudflare/potato-link/node_modules/
-cloudflare/potato-link/.wrangler/
+.wrangler/
 XKeen/sub/*.txt
 XKeen/local/*.json
 XKeen/singles/*/*.json
