@@ -17,6 +17,7 @@ from urllib.parse import urlparse
 
 
 DEFAULT_PROFILE_NAME = "роут-MotivatoPotato"
+RU_PROFILE_NAME = "RU-VPN"
 OBSOLETE_HAPP_FILES = (
     "geoip.dat",
     "geosite.dat",
@@ -273,17 +274,29 @@ def build_profile(
     general_direct_ips: list[str],
     profile_name: str,
     block_geosite_tag: str | None,
+    global_proxy: str = "true",
+    direct_geosite_tag: str | None = "sr-direct",
+    direct_geoip_tag: str | None = "sr-direct",
+    proxy_geosite_tag: str | None = "sr-proxy",
+    proxy_geoip_tag: str | None = "sr-proxy",
 ) -> dict[str, object]:
-    direct_ip = dedupe_preserve(general_direct_ips + (["geoip:sr-direct"] if data.direct.cidrs else []))
-    proxy_ip = ["geoip:sr-proxy"] if data.proxy.cidrs else []
+    def route_tag(prefix: str, tag: str | None, source_available: bool) -> list[str]:
+        if tag is None or (tag.startswith("sr-") and not source_available):
+            return []
+        return [f"{prefix}:{tag}"]
+
+    direct_ip = dedupe_preserve(
+        general_direct_ips + route_tag("geoip", direct_geoip_tag, bool(data.direct.cidrs))
+    )
+    proxy_ip = route_tag("geoip", proxy_geoip_tag, bool(data.proxy.cidrs))
     block_ip = ["geoip:sr-block"] if data.block.cidrs else []
-    direct_sites = ["geosite:sr-direct"] if data.direct.site_rules else []
-    proxy_sites = ["geosite:sr-proxy"] if data.proxy.site_rules else []
+    direct_sites = route_tag("geosite", direct_geosite_tag, bool(data.direct.site_rules))
+    proxy_sites = route_tag("geosite", proxy_geosite_tag, bool(data.proxy.site_rules))
     block_sites = [f"geosite:{block_geosite_tag}"] if data.block.site_rules and block_geosite_tag else []
 
     return {
         "Name": profile_name,
-        "GlobalProxy": "true",
+        "GlobalProxy": global_proxy,
         "UseChunkFiles": "false",
         "RemoteDns": remote_dns_ip,
         "DomesticDns": domestic_dns_ip,
@@ -366,6 +379,29 @@ def main() -> int:
     default_pretty, _, default_deeplink = profile_to_deeplink(default_profile, args.deeplink_mode)
     write_text_if_changed(out_dir / "DEFAULT.JSON", default_pretty + "\n")
     write_text_if_changed(out_dir / "DEFAULT.DEEPLINK", default_deeplink + "\n")
+
+    ru_profile = build_profile(
+        data=data,
+        geodata_base=geodata_base,
+        last_updated=build_stamp,
+        route_order=args.route_order,
+        remote_dns_ip=remote_dns_ip,
+        remote_dns_domain=args.remote_dns_domain,
+        domestic_dns_ip=args.domestic_dns_ip,
+        remote_dns_type=args.remote_dns_type,
+        domestic_dns_type=args.domestic_dns_type,
+        general_direct_ips=general_direct_ips,
+        profile_name=RU_PROFILE_NAME,
+        block_geosite_tag=block_site_tag,
+        global_proxy="false",
+        direct_geosite_tag=None,
+        direct_geoip_tag=None,
+        proxy_geosite_tag="category-ru",
+        proxy_geoip_tag="ru",
+    )
+    ru_pretty, _, ru_deeplink = profile_to_deeplink(ru_profile, args.deeplink_mode)
+    write_text_if_changed(out_dir / "RU-VPN.JSON", ru_pretty + "\n")
+    write_text_if_changed(out_dir / "RU-VPN.DEEPLINK", ru_deeplink + "\n")
     return 0
 
 
