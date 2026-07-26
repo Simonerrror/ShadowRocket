@@ -69,6 +69,9 @@ jobs:
             python3 scripts/build_happ_routing.py --build-stamp "$(date -u +%s)"
           fi
 
+      - name: Build embedded Worker destinations
+        run: python3 scripts/build_potato_link_worker.py
+
       - name: Run release tests
         run: |
           python3 -m unittest discover -s tests -v
@@ -92,6 +95,7 @@ jobs:
             HAPP/DEFAULT.DEEPLINK
             HAPP/RU-VPN.JSON
             HAPP/RU-VPN.DEEPLINK
+            cloudflare/potato-link/dist/destinations.js
 
   publish:
     needs: build
@@ -130,6 +134,7 @@ jobs:
               "HAPP/DEFAULT.DEEPLINK",
               "HAPP/RU-VPN.JSON",
               "HAPP/RU-VPN.DEEPLINK",
+              "cloudflare/potato-link/dist/destinations.js",
           ):
               target = root / relative
               target.parent.mkdir(parents=True, exist_ok=True)
@@ -143,6 +148,7 @@ jobs:
           python3 scripts/build_distillate.py --skip-compiled
           python3 scripts/build_clash_config.py --conf shadowrocket.conf
           python3 scripts/build_happ_routing.py
+          python3 scripts/build_potato_link_worker.py
           python3 scripts/validate_publish_paths.py
 
       - name: Commit and push generated changes
@@ -151,7 +157,7 @@ jobs:
           if [[ -n "$(git status --porcelain)" ]]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add -A distillate rules HAPP modules clash_config.yaml
+            git add -A distillate rules HAPP modules clash_config.yaml cloudflare/potato-link/dist/destinations.js
             python3 scripts/validate_publish_paths.py
             git commit -m "chore: refresh vendored distillate sources"
             git push
