@@ -6,6 +6,10 @@
   [DEFAULT.DEEPLINK](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/DEFAULT.DEEPLINK)
 - DEFAULT (`роут-MotivatoPotato`), JSON:  
   [DEFAULT.JSON](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/DEFAULT.JSON)
+- RU-VPN, deeplink:
+  [RU-VPN.DEEPLINK](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/RU-VPN.DEEPLINK)
+- RU-VPN, JSON:
+  [RU-VPN.JSON](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/RU-VPN.JSON)
 - Local geodata:
   [distillate/dat/geoip.dat](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/distillate/dat/geoip.dat)  
   [distillate/dat/geosite.dat](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/distillate/dat/geosite.dat)
@@ -16,6 +20,24 @@
 - Имя профиля: `роут-MotivatoPotato`.
 - `BlockSites` указывает на `geosite:motivato-block`.
 - `Geoipurl` и `Geositeurl` указывают напрямую на `distillate/dat/*`.
+- Дополнительный профиль `RU-VPN` отправляет `geosite:category-ru` и
+  `geoip:ru` через выбранный proxy, а весь несовпавший трафик — напрямую.
+- `category-ru` включает `.ru`, `.рф`, `.su` и известные российские сервисы
+  в международных доменных зонах.
+
+## RU-VPN
+
+Перед активацией `RU-VPN` выберите в HAPP сервер с проверенным российским
+выходным IP. Профиль выбирает российский трафик, но не меняет страну
+выбранного сервера.
+
+Ручная проверка после импорта:
+
+1. Российский IP-check или geo-restricted российский сервис должен видеть
+   российский VPN-адрес.
+2. Зарубежный IP-check должен видеть обычный прямой адрес устройства.
+3. Переключение обратно на `роут-MotivatoPotato` должно возвращать прежнюю
+   маршрутизацию.
 
 ## Source Of Truth
 
@@ -51,7 +73,24 @@ print("OK")
 PY
 ```
 
+```bash
+python3 - <<'PY'
+import base64
+import json
+from pathlib import Path
+
+profile = json.loads(Path("HAPP/RU-VPN.JSON").read_text(encoding="utf-8"))
+deeplink = Path("HAPP/RU-VPN.DEEPLINK").read_text(encoding="utf-8").strip()
+decoded = json.loads(base64.b64decode(deeplink.rsplit("/", 1)[1]))
+assert decoded == profile
+assert profile["GlobalProxy"] == "false"
+assert profile["ProxySites"] == ["geosite:category-ru"]
+assert profile["ProxyIp"] == ["geoip:ru"]
+print("OK")
+PY
+```
+
 ## CI
 
 - `/.github/workflows/sync-lists.yml` обновляет vendored upstream, distillate, XKeen и HAPP.
-- `/.github/workflows/build-happ-routing.yml` пересобирает `DEFAULT` при изменениях в конфиге или сборочных входах.
+- `/.github/workflows/build-happ-routing.yml` пересобирает оба профиля при изменениях в конфиге или сборочных входах.
