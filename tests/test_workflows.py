@@ -9,6 +9,7 @@ from scripts.validate_publish_paths import is_allowed_publish_path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SYNC_WORKFLOW = REPO_ROOT / ".github/workflows/sync-lists.yml"
 VERIFY_WORKFLOW = REPO_ROOT / ".github/workflows/build-happ-routing.yml"
+DEPLOY_WORKFLOW = REPO_ROOT / ".github/workflows/deploy-potato-link.yml"
 
 ACTION_PINS = (
     "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
@@ -16,6 +17,7 @@ ACTION_PINS = (
     "actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff",
     "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
     "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+    "actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e",
 )
 
 
@@ -37,7 +39,11 @@ class WorkflowHardeningTests(unittest.TestCase):
         self.assertNotIn("git push\n", content.split("  build:", 1)[1].split("  publish:", 1)[0])
 
     def test_workflows_pin_every_action_to_reviewed_sha(self) -> None:
-        combined = SYNC_WORKFLOW.read_text(encoding="utf-8") + VERIFY_WORKFLOW.read_text(encoding="utf-8")
+        combined = (
+            SYNC_WORKFLOW.read_text(encoding="utf-8")
+            + VERIFY_WORKFLOW.read_text(encoding="utf-8")
+            + DEPLOY_WORKFLOW.read_text(encoding="utf-8")
+        )
 
         for pin in ACTION_PINS:
             with self.subTest(pin=pin):
@@ -46,6 +52,67 @@ class WorkflowHardeningTests(unittest.TestCase):
                 else:
                     self.assertIn(pin, combined)
         self.assertNotRegex(combined, r"uses: actions/[^@]+@v\d")
+
+    def test_potato_link_workflow_is_pinned_and_read_only(self) -> None:
+        content = DEPLOY_WORKFLOW.read_text(encoding="utf-8")
+
+        self.assertIn(
+            "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
+            content,
+        )
+        self.assertIn(
+            "actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
+            content,
+        )
+        self.assertIn(
+            "actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e",
+            content,
+        )
+        self.assertIn('node-version: "22.17.1"', content)
+        self.assertIn("permissions:\n  contents: read", content)
+        self.assertIn("persist-credentials: false", content)
+        self.assertNotRegex(content, r"uses: actions/[^@]+@v\d")
+
+    def test_potato_link_workflow_verifies_before_trusted_deploy(self) -> None:
+        content = DEPLOY_WORKFLOW.read_text(encoding="utf-8")
+        verify = content.split("  verify:", 1)[1].split("  deploy:", 1)[0]
+        deploy = content.split("  deploy:", 1)[1]
+
+        for required in (
+            "push:",
+            "pull_request:",
+            "workflow_dispatch:",
+            "workflow_run:",
+            'workflows: ["Sync rule lists"]',
+            "npm ci --ignore-scripts",
+            "python3 scripts/build_potato_link_worker.py",
+            "git diff --exit-code",
+            "npm run deploy:dry",
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, content)
+        self.assertNotIn("CLOUDFLARE_API_TOKEN", verify)
+        self.assertIn("needs: verify", deploy)
+        self.assertIn("github.event.workflow_run.conclusion == 'success'", deploy)
+        self.assertIn("github.ref == 'refs/heads/main'", deploy)
+        self.assertIn(
+            "CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}",
+            deploy,
+        )
+        self.assertIn(
+            "CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}",
+            deploy,
+        )
+
+    def test_release_workflows_regenerate_embedded_destinations(self) -> None:
+        sync = SYNC_WORKFLOW.read_text(encoding="utf-8")
+        verify = VERIFY_WORKFLOW.read_text(encoding="utf-8")
+        generated = "cloudflare/potato-link/dist/destinations.js"
+
+        self.assertIn("python3 scripts/build_potato_link_worker.py", sync)
+        self.assertIn("python3 scripts/build_potato_link_worker.py", verify)
+        self.assertIn(generated, sync)
+        self.assertTrue(is_allowed_publish_path(generated))
 
     def test_verification_workflow_is_read_only(self) -> None:
         content = VERIFY_WORKFLOW.read_text(encoding="utf-8")
