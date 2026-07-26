@@ -23,6 +23,7 @@ consumer-списков в `rules/`. Проект поддерживает ав�
 - `shadowrocket_whitelist.conf` — custom-only аварийный whitelist-профиль: direct allowlist/RU напрямую, всё остальное в один выбранный `PROXY`.
 - `distillate/` — канонический manifest, локальные overlays и собранные text/`dat`.
 - `rules/` — вручную поддерживаемые rule-list'ы и generated consumer-списки.
+- `HAPP/RU-VPN.*` — дополнительный HAPP-профиль: российские домены/IP через proxy, остальное напрямую.
 - `modules/tailscale_direct.module` — отдельный модуль DIRECT для Tailscale tailnet (`100.64.0.0/10`, `100.100.100.100`, `ts.net`, `tailscale.com`).
 - Источники истины разделены: `shadowrocket.conf` отвечает за порядок routing-правил и proxy-groups базового профиля, а `distillate/manifest.json` вместе с `distillate/overlays/*` и `distillate/filters/*` отвечает за состав и сборку большинства consumer-списков.
 
@@ -58,6 +59,15 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_cus
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_whitelist.conf
 ```
 В нём остаются только локальные исключения, `whitelist_direct.list`, `.ru/.рф/.su` и `GEOIP,RU,DIRECT`; весь Google и любой другой non-direct трафик уходит в `PROXY`. После импорта выберите в группе `PROXY` любой доступный узел с маркером `WL`: публичный профиль не закрепляет имя конкретного часто меняющегося узла.
+
+Дополнительный HAPP-профиль для доступа к российским ресурсам через
+российский VPN-узел:
+```
+https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/RU-VPN.DEEPLINK
+```
+`RU-VPN` направляет `geosite:category-ru` и `geoip:ru` через выбранный proxy,
+а весь несовпавший трафик — напрямую. Профиль выбирает трафик, но не страну
+сервера: перед активацией выберите узел с проверенным российским выходным IP.
 
 ## Clash Verge Rev (Windows)
 
