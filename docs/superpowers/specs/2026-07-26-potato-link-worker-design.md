@@ -2,38 +2,38 @@
 
 ## Goal
 
-Publish a neutral, clickable `workers.dev` URL that redirects directly to the
-current HAPP RU routing-profile deeplink. The public Worker name is
-`potato-link`; it must not contain `vpn`, `proxy`, `happ`, or routing-related
-words.
+Publish two neutral, clickable `workers.dev` URLs that redirect directly to
+the current HAPP default and RU routing-profile deeplinks. The public Worker
+name is `potato-link`; it must not contain `vpn`, `proxy`, `happ`, or
+routing-related words.
 
 This is a `shared` repository change because the redirector is a public entry
 point for a generated profile already published by the repository.
 
 ## User experience
 
-Opening:
+The same Worker exposes two short links:
 
 ```text
 https://potato-link.<cloudflare-subdomain>.workers.dev/
+https://potato-link.<cloudflare-subdomain>.workers.dev/ru
 ```
 
-returns `302 Found` with the current contents of `HAPP/RU-VPN.DEEPLINK` in the
-`Location` header. A normal tap therefore hands the deeplink to HAPP without
-requiring the user to copy it.
+The root path returns `302 Found` with the current contents of
+`HAPP/DEFAULT.DEEPLINK` in the `Location` header. The `/ru` path does the same
+with `HAPP/RU-VPN.DEEPLINK`. A normal tap therefore hands the selected deeplink
+to HAPP without requiring the user to copy it.
 
 The custom-scheme destination necessarily starts with `happ://` after the HTTP
 redirect, but the visible public URL and Worker name remain neutral.
 
-Only `/` and `/open` redirect. Other paths return a plain-text `404`. This
-provides one short canonical address plus an explicit path that can be useful
-in clients that normalize a bare domain.
+Only `/` and `/ru` redirect. Other paths return a plain-text `404`.
 
 ## Embedded destination
 
 The Worker does not fetch GitHub at request time. A deterministic build script
-reads `HAPP/RU-VPN.DEEPLINK`, validates it, JSON-escapes it, and embeds it into
-the deployable Worker module.
+reads `HAPP/DEFAULT.DEEPLINK` and `HAPP/RU-VPN.DEEPLINK`, validates them,
+JSON-escapes them, and embeds both into the deployable Worker module.
 
 Validation requires:
 
@@ -47,10 +47,10 @@ committed so repository checks can detect stale output before deployment.
 
 ## Worker behavior
 
-For `GET` and `HEAD` requests to `/` or `/open`, the Worker returns:
+For `GET` and `HEAD` requests to `/` or `/ru`, the Worker returns:
 
 - status `302`;
-- `Location: <embedded deeplink>`;
+- `Location: <embedded default or RU deeplink selected by the path>`;
 - `Cache-Control: no-store`;
 - `Referrer-Policy: no-referrer`;
 - `X-Content-Type-Options: nosniff`.
@@ -66,7 +66,7 @@ custom domain.
 
 A GitHub Actions workflow runs when `main` changes any of:
 
-- `HAPP/RU-VPN.DEEPLINK`;
+- `HAPP/DEFAULT.DEEPLINK` or `HAPP/RU-VPN.DEEPLINK`;
 - the Worker source, generated output, tests, or configuration;
 - the embedding build script.
 
@@ -97,8 +97,8 @@ run build and tests without receiving Cloudflare secrets or deploying.
 Dependency-free Node tests exercise the generated module with the built-in
 `Request` and `Response` APIs:
 
-- `/` returns `302` and the exact embedded destination;
-- `/open` behaves identically;
+- `/` returns `302` and the exact embedded default destination;
+- `/ru` returns `302` and the exact embedded RU destination;
 - `HEAD` redirects without a response body;
 - an unknown path returns `404`;
 - a non-GET/HEAD request returns `405`;
@@ -121,15 +121,18 @@ After deployment:
 ```bash
 curl -I --max-redirs 0 \
   https://potato-link.<cloudflare-subdomain>.workers.dev/
+curl -I --max-redirs 0 \
+  https://potato-link.<cloudflare-subdomain>.workers.dev/ru
 ```
 
-Acceptance requires `302` and a `Location` header beginning with
-`happ://routing/onadd/`. The final manual check is tapping the HTTPS URL on the
-phone and confirming that HAPP opens the profile import.
+Acceptance requires both requests to return `302`, each with the expected
+distinct `Location` header beginning with `happ://routing/onadd/`. The final
+manual check is tapping both HTTPS URLs on the phone and confirming that HAPP
+opens the corresponding profile import.
 
 ## Rollout
 
-The current local RU-profile commits must reach GitHub before enabling the
+The current local profile commits must reach GitHub before enabling the
 deployment workflow. The first real deployment may be performed locally after
 Cloudflare browser authentication, or by manually dispatching the workflow
 after its two repository secrets are configured.
