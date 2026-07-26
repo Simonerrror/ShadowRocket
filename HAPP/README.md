@@ -2,6 +2,10 @@
 
 ## Быстрые ссылки
 
+- DEFAULT (`роут-MotivatoPotato`), открыть сразу в HAPP:
+  [potato-link.motivato-potato.workers.dev](https://potato-link.motivato-potato.workers.dev/)
+- RU-VPN, открыть сразу в HAPP:
+  [potato-link.motivato-potato.workers.dev/ru](https://potato-link.motivato-potato.workers.dev/ru)
 - DEFAULT (`роут-MotivatoPotato`), deeplink:  
   [DEFAULT.DEEPLINK](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/DEFAULT.DEEPLINK)
 - DEFAULT (`роут-MotivatoPotato`), JSON:  
@@ -13,6 +17,11 @@
 - Local geodata:
   [distillate/dat/geoip.dat](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/distillate/dat/geoip.dat)  
   [distillate/dat/geosite.dat](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/distillate/dat/geosite.dat)
+
+Ссылки `potato-link` отвечают HTTP-редиректом на соответствующий deeplink,
+поэтому обычный тап должен сразу открыть импорт в HAPP. Raw-ссылки остаются
+запасным вариантом для клиентов, блокирующих переходы на пользовательские
+схемы.
 
 ## Пакет
 
@@ -94,3 +103,5 @@ PY
 
 - `/.github/workflows/sync-lists.yml` обновляет vendored upstream, distillate, XKeen и HAPP.
 - `/.github/workflows/build-happ-routing.yml` пересобирает оба профиля при изменениях в конфиге или сборочных входах.
+- `/.github/workflows/deploy-potato-link.yml` проверяет и публикует оба
+  кликабельных редиректа после изменения deeplink.
