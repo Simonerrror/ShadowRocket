@@ -109,6 +109,7 @@ class ShadowrocketWhitelistConfigTests(unittest.TestCase):
         ]
 
         self.assertEqual("100.100.100.100, *.ts.net, *.tailscale.com", module_general["skip-proxy"])
+        self.assertEqual("100.64.0.0/10", module_general.get("tun-excluded-routes"))
         self.assertNotIn("100.100.100.100", custom_content)
         self.assertNotIn("ts.net", custom_content)
         self.assertNotIn("tailscale.com", custom_content)
