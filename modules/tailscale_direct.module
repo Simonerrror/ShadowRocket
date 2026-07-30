@@ -4,6 +4,7 @@
 
 [General]
 skip-proxy = 100.100.100.100, *.ts.net, *.tailscale.com
+tun-excluded-routes = 100.64.0.0/10
 
 [Rule]
 IP-CIDR,100.64.0.0/10,DIRECT,no-resolve
