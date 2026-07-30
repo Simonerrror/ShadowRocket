@@ -25,6 +25,7 @@ consumer-списков в `rules/`. Проект поддерживает ав�
 - `rules/` — вручную поддерживаемые rule-list'ы и generated consumer-списки.
 - `HAPP/RU-VPN.*` — дополнительный HAPP-профиль: российские домены/IP через proxy, остальное напрямую.
 - `modules/tailscale_direct.module` — отдельный модуль DIRECT для Tailscale tailnet (`100.64.0.0/10`, `100.100.100.100`, `ts.net`, `tailscale.com`).
+- `modules/wechat_direct.module` — отдельный custom-only модуль DIRECT для WeChat и его CDN без широкого обхода всего Tencent/QQ.
 - Источники истины разделены: `shadowrocket.conf` отвечает за порядок routing-правил и proxy-groups базового профиля, а `distillate/manifest.json` вместе с `distillate/overlays/*` и `distillate/filters/*` отвечает за состав и сборку большинства consumer-списков.
 
 ## Быстрый старт (Shadowrocket)
@@ -119,10 +120,25 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/RU-VPN.DEEP
 | `scripts/` | Вспомогательные скрипты |
 
 Практическое правило сопровождения:
-- вручную редактируются `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_custom_private_dns.conf`, `shadowrocket_whitelist.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `rules/adobe_telemetry_custom.list`, `rules/russia_extended.list`, `rules/voice_ports.list`, `modules/GFN-AM.module`, `modules/tailscale_direct.module`;
+- вручную редактируются `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_custom_private_dns.conf`, `shadowrocket_whitelist.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `rules/adobe_telemetry_custom.list`, `rules/russia_extended.list`, `rules/voice_ports.list`, `modules/GFN-AM.module`, `modules/tailscale_direct.module`, `modules/wechat_direct.module`;
 - generated-артефакты (`clash_config.yaml`, `HAPP/DEFAULT.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/summary.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/openai.list`, `rules/telegram.list`, `rules/whitelist_direct.list`, `rules/greylist_proxy.list`, `rules/anti_advertising.list`, `rules/anti_advertising*.[0-9][0-9].list`) не поддерживаются вручную;
 - `modules/anti_advertising.module` и `modules/anti_advertising_custom.module` semi-generated: ручной заголовок сохраняется, а ссылки на anti-ad chunks переписываются сборкой.
 - Tailscale DIRECT вынесен из custom-профиля в отдельный модуль `modules/tailscale_direct.module`.
+
+### WeChat напрямую
+
+Если при активном VPN в WeChat не загружаются сообщения, изображения или
+мини-программы, подключите отдельный модуль:
+
+```text
+https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/wechat_direct.module
+```
+
+В Shadowrocket откройте **Config → Modules → Add**, вставьте URL и включите
+модуль. Если одновременно используется anti-advertising модуль, расположите
+`WeChat Direct` выше anti-advertising, чтобы DIRECT-правила применялись раньше
+блокирующих правил. Модуль направляет напрямую только домены WeChat и нужные
+CDN; весь Tencent/QQ он не обходит.
 
 ## Логика `shadowrocket.conf`
 

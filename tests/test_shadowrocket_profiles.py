@@ -10,6 +10,7 @@ CUSTOM_CONF = REPO_ROOT / "shadowrocket_custom.conf"
 PRIVATE_DNS_CONF = REPO_ROOT / "shadowrocket_custom_private_dns.conf"
 TAILSCALE_MODULE = REPO_ROOT / "modules" / "tailscale_direct.module"
 WECHAT_MODULE = REPO_ROOT / "modules" / "wechat_direct.module"
+README = REPO_ROOT / "README.md"
 
 
 def section_lines(path: Path, section: str, *, keep_comments: bool = False) -> list[str]:
@@ -134,6 +135,16 @@ class ShadowrocketProfilesTests(unittest.TestCase):
         self.assertNotIn("DOMAIN-SUFFIX,gtimg.cn,DIRECT", rules)
         self.assertNotIn("DOMAIN-SUFFIX,tencent.com,DIRECT", rules)
         self.assertFalse(any(rule.startswith(("IP-CIDR,", "IP-CIDR6,")) for rule in rules))
+
+    def test_readme_documents_wechat_direct_module(self) -> None:
+        content = README.read_text(encoding="utf-8")
+
+        self.assertIn("modules/wechat_direct.module", content)
+        self.assertIn(
+            "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/wechat_direct.module",
+            content,
+        )
+        self.assertIn("выше anti-advertising", content)
 
     def test_rule_comments_have_visual_spacing(self) -> None:
         for path in (BASE_CONF, CUSTOM_CONF, PRIVATE_DNS_CONF):
