@@ -36,13 +36,13 @@ consumer-списков в `rules/`. Проект поддерживает ав�
    ```
    > В конфиге указан `update-url`, поэтому он будет обновляться автоматически.
 2. **Добавьте подписку** на сервера в Shadowrocket (URL от вашего провайдера).
-   В `_custom` профилях локальные группы берут только `WL`-узлы и дополнительно исключают `Russia`, чтобы авто-выбор не цеплял РФ-узлы из подписки.
+   В профилях локальные группы берут все узлы подписки, кроме имён с `Russia` (без учёта регистра) и standalone-токена `SS`, чтобы авто-выбор не цеплял РФ-узлы и Shadowsocks из подписки.
 3. **Проверьте группы прокси**:
-   - `MANUAL-PROXY` — ручной выбор `WL`-узлов подписки.
-   - `AUTO-SPEED` — `url-test`: выбирает самый быстрый живой `WL`-узел.
-   - `AUTO-STABILITY` — `fallback`: берёт первый живой `WL`-узел в порядке подписки.
+   - `MANUAL-PROXY` — ручной выбор узла подписки вне РФ и без standalone `SS`.
+   - `AUTO-SPEED` — `url-test`: выбирает самый быстрый живой узел вне РФ и без standalone `SS`.
+   - `AUTO-STABILITY` — `fallback`: берёт первый живой узел вне РФ и без standalone `SS` в порядке подписки.
    - `GOOGLE` — отдельный ручной выбор узла для Google/Gemini/YouTube.
-   - В основном профиле четыре группы используют простой `policy-regex-filter=WL`. В `_custom` профилях применяется `(?i)^(?!.*Russia).*WL.*$`, чтобы дополнительно исключить РФ-ноды.
+   - Во всех профилях эти четыре группы используют `policy-regex-filter=(?i)^(?!.*Russia)(?!.*\bSS\b).*$`: `\bSS\b` исключает только standalone протокол `SS`, не задевая `Vless`.
    - `PROXY` — главный переключатель (Select): по умолчанию выбран `AUTO-STABILITY`; вручную можно переключаться между `MANUAL-PROXY`, `AUTO-SPEED`, `AUTO-STABILITY` и `DIRECT`.
 
 Кастомный профиль для GFN/NVIDIA (с `always-real-ip`, тем же DNS-набором, что и основной профиль, и `dns-direct-system = false`):
@@ -59,7 +59,7 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_cus
 ```
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_whitelist.conf
 ```
-В нём остаются только локальные исключения, `whitelist_direct.list`, `.ru/.рф/.su` и `GEOIP,RU,DIRECT`; весь Google и любой другой non-direct трафик уходит в `PROXY`. После импорта выберите в группе `PROXY` любой доступный узел с маркером `WL`: публичный профиль не закрепляет имя конкретного часто меняющегося узла.
+В нём остаются только локальные исключения, `whitelist_direct.list`, `.ru/.рф/.su` и `GEOIP,RU,DIRECT`; весь Google и любой другой non-direct трафик уходит в `PROXY`. После импорта выберите в группе `PROXY` любой доступный узел вне РФ и без standalone `SS`: публичный профиль не закрепляет имя конкретного часто меняющегося узла.
 
 Дополнительный HAPP-профиль для доступа к российским ресурсам через
 российский VPN-узел:
@@ -149,12 +149,12 @@ CDN; весь Tencent/QQ он не обходит.
 - `update-url` указывает на конфиг в репозитории.
 
 ### [Proxy Group]
-- **MANUAL-PROXY** — ручной выбор `WL`-узлов подписки вне РФ; `_custom` профили используют `policy-regex-filter=(?i)^(?!.*Russia).*WL.*$`.
+- **MANUAL-PROXY** — ручной выбор узлов подписки вне РФ и без standalone `SS`; все профили используют `policy-regex-filter=(?i)^(?!.*Russia)(?!.*\bSS\b).*$`.
 - **AUTO-SPEED** — `url-test`-группа для выбора самого быстрого живого узла из подписки:
   `url=https://abs.twimg.com/favicon.ico`, `interval=300`, `tolerance=200`, `timeout=7`.
 - **AUTO-STABILITY** — `fallback`-группа для выбора первого живого узла в порядке подписки:
   `url=https://abs.twimg.com/favicon.ico`, `interval=780`, `timeout=7`.
-- **GOOGLE** — отдельная `select`-группа для ручного выбора узла под Google/Gemini/YouTube; `_custom` профили наполняют её `WL`-узлами вне РФ.
+- **GOOGLE** — отдельная `select`-группа для ручного выбора узла под Google/Gemini/YouTube; группа использует тот же фильтр узлов вне РФ и без standalone `SS`.
 - **PROXY** — Select-группа; по умолчанию выбран `AUTO-STABILITY`, вручную можно переключаться между `MANUAL-PROXY`/`AUTO-SPEED`/`AUTO-STABILITY`/`DIRECT`.
   В `AUTO-STABILITY` первичным считается первый живой узел в порядке уже фильтрованной подписки.
 
