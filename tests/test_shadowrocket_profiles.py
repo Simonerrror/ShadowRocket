@@ -12,7 +12,8 @@ PRIVATE_DNS_CONF = REPO_ROOT / "shadowrocket_custom_private_dns.conf"
 TAILSCALE_MODULE = REPO_ROOT / "modules" / "tailscale_direct.module"
 WECHAT_MODULE = REPO_ROOT / "modules" / "wechat_direct.module"
 README = REPO_ROOT / "README.md"
-EXPECTED_SUBSCRIPTION_FILTER = r"(?i)^(?!.*Russia)(?!.*\bSS\b).*$"
+EXPECTED_AUTO_FILTER = r"(?i)^(?!.*Russia)(?!.*\bSS\b)(?!.*\bWL\b).*$"
+EXPECTED_WL_FILTER = r"(?i)\bWL\b"
 
 
 def section_lines(path: Path, section: str, *, keep_comments: bool = False) -> list[str]:
@@ -43,18 +44,28 @@ class ShadowrocketProfilesTests(unittest.TestCase):
     def test_custom_proxy_groups_match_each_other(self) -> None:
         self.assertEqual(section_lines(CUSTOM_CONF, "Proxy Group"), section_lines(PRIVATE_DNS_CONF, "Proxy Group"))
 
-    def test_proxy_groups_filter_russia_and_ss_from_all_subscription_nodes(self) -> None:
+    def test_proxy_groups_reserve_wl_for_dedicated_group(self) -> None:
         profiles = (BASE_CONF, CUSTOM_CONF, PRIVATE_DNS_CONF)
 
         for path in profiles:
             groups = key_values(path, "Proxy Group")
-            for key in ("MANUAL-PROXY", "AUTO-SPEED", "AUTO-STABILITY", "GOOGLE"):
+            for key, expected_filter in (
+                ("MANUAL-PROXY", EXPECTED_AUTO_FILTER),
+                ("AUTO-SPEED", EXPECTED_AUTO_FILTER),
+                ("AUTO-STABILITY", EXPECTED_AUTO_FILTER),
+                ("GOOGLE", EXPECTED_AUTO_FILTER),
+                ("WL", EXPECTED_WL_FILTER),
+            ):
                 with self.subTest(path=path.name, key=key):
                     actual_filter = groups[key].split("policy-regex-filter=", 1)[1].split(",", 1)[0]
-                    self.assertEqual(EXPECTED_SUBSCRIPTION_FILTER, actual_filter)
+                    self.assertEqual(expected_filter, actual_filter)
+
+            self.assertTrue(groups["GOOGLE"].startswith("fallback,"))
+            self.assertTrue(groups["WL"].startswith("select,"))
+            self.assertIn("WL", groups["PROXY"].split(","))
 
     def test_subscription_filter_uses_standalone_ss_token_boundary(self) -> None:
-        subscription_filter = re.compile(EXPECTED_SUBSCRIPTION_FILTER)
+        subscription_filter = re.compile(EXPECTED_AUTO_FILTER)
 
         for name in (
             "🇺🇸 United States Vless",
@@ -65,11 +76,22 @@ class ShadowrocketProfilesTests(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertTrue(subscription_filter.fullmatch(name))
 
-        for name in ("🇷🇺 Russia Vless", "rUsSiA Hysteria2", "Germany SS"):
+        for name in ("🇷🇺 Russia Vless", "rUsSiA Hysteria2", "Germany SS", "WL-lte Germany"):
             with self.subTest(name=name):
                 self.assertFalse(subscription_filter.fullmatch(name))
 
-        self.assertNotIn(",", EXPECTED_SUBSCRIPTION_FILTER)
+        self.assertNotIn(",", EXPECTED_AUTO_FILTER)
+
+    def test_auto_filter_excludes_only_standalone_wl_token(self) -> None:
+        auto_filter = re.compile(EXPECTED_AUTO_FILTER)
+
+        for name in ("🇺🇸 United States Vless", "BOWL relay", "WLAN Germany"):
+            with self.subTest(name=name):
+                self.assertTrue(auto_filter.fullmatch(name))
+
+        for name in ("WL-lte Germany", "🇫🇷 WL France", "wl LTE"):
+            with self.subTest(name=name):
+                self.assertFalse(auto_filter.fullmatch(name))
 
     def test_base_and_custom_use_same_dns(self) -> None:
         base_general = key_values(BASE_CONF, "General")
