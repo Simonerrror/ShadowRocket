@@ -111,13 +111,13 @@ proxy-groups:
     type: select
     use:
       - Main-Sub
-    exclude-filter: "(?i)Russia|\\bSS\\b"
+    exclude-filter: "(?i)Russia|\\bSS\\b|\\bWL\\b"
 
   - name: AUTO-SPEED
     type: url-test
     use:
       - Main-Sub
-    exclude-filter: "(?i)Russia|\\bSS\\b"
+    exclude-filter: "(?i)Russia|\\bSS\\b|\\bWL\\b"
     url: "https://abs.twimg.com/favicon.ico"
     interval: 300
     tolerance: 200
@@ -126,15 +126,23 @@ proxy-groups:
     type: fallback
     use:
       - Main-Sub
-    exclude-filter: "(?i)Russia|\\bSS\\b"
+    exclude-filter: "(?i)Russia|\\bSS\\b|\\bWL\\b"
     url: "https://abs.twimg.com/favicon.ico"
     interval: 780
 
   - name: GOOGLE
+    type: fallback
+    use:
+      - Main-Sub
+    exclude-filter: "(?i)Russia|\\bSS\\b|\\bWL\\b"
+    url: "https://abs.twimg.com/favicon.ico"
+    interval: 780
+
+  - name: WL
     type: select
     use:
       - Main-Sub
-    exclude-filter: "(?i)Russia|\\bSS\\b"
+    filter: "(?i)\\bWL\\b"
 
   - name: PROXY
     type: select
@@ -142,6 +150,7 @@ proxy-groups:
       - MANUAL-PROXY
       - AUTO-SPEED
       - AUTO-STABILITY
+      - WL
       - DIRECT
 
 # 6. RULES

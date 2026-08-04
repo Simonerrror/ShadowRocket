@@ -20,7 +20,9 @@ DEFAULT_HEALTHCHECK_URL = "https://abs.twimg.com/favicon.ico"
 DEFAULT_HEALTHCHECK_INTERVAL = 780
 RULE_PROVIDER_INTERVAL = 86400
 SHADOWROCKET_SUBSCRIPTION_FILTER = r"(?i)^(?!.*Russia)(?!.*\bSS\b).*$"
+SHADOWROCKET_AUTO_SUBSCRIPTION_FILTER = r"(?i)^(?!.*Russia)(?!.*\bSS\b)(?!.*\bWL\b).*$"
 MIHOMO_SUBSCRIPTION_EXCLUDE_FILTER = r"(?i)Russia|\bSS\b"
+MIHOMO_AUTO_SUBSCRIPTION_EXCLUDE_FILTER = r"(?i)Russia|\bSS\b|\bWL\b"
 FAKE_IP_FILTER = [
     "+.lan",
     "+.local",
@@ -208,6 +210,8 @@ def render_proxy_groups(groups: list[GroupSpec]) -> tuple[list[str], list[str]]:
             rendered.extend(["    use:", "      - Main-Sub"])
             if regex_filter == SHADOWROCKET_SUBSCRIPTION_FILTER:
                 rendered.append(f"    exclude-filter: {yaml_quote(MIHOMO_SUBSCRIPTION_EXCLUDE_FILTER)}")
+            elif regex_filter == SHADOWROCKET_AUTO_SUBSCRIPTION_FILTER:
+                rendered.append(f"    exclude-filter: {yaml_quote(MIHOMO_AUTO_SUBSCRIPTION_EXCLUDE_FILTER)}")
             else:
                 rendered.append(f"    filter: {yaml_quote(regex_filter)}")
         elif not group.members:

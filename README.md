@@ -36,14 +36,15 @@ consumer-списков в `rules/`. Проект поддерживает ав�
    ```
    > В конфиге указан `update-url`, поэтому он будет обновляться автоматически.
 2. **Добавьте подписку** на сервера в Shadowrocket (URL от вашего провайдера).
-   В профилях локальные группы берут все узлы подписки, кроме имён с `Russia` (без учёта регистра) и standalone-токена `SS`, чтобы авто-выбор не цеплял РФ-узлы и Shadowsocks из подписки.
+   Общие группы `MANUAL-PROXY`, `AUTO-SPEED`, `AUTO-STABILITY` и `GOOGLE` исключают имена с `Russia` (без учёта регистра), standalone-токены `SS` и `WL`; узлы `WL`/`WL-lte` доступны только в отдельной группе `WL`.
 3. **Проверьте группы прокси**:
-   - `MANUAL-PROXY` — ручной выбор узла подписки вне РФ и без standalone `SS`.
-   - `AUTO-SPEED` — `url-test`: выбирает самый быстрый живой узел вне РФ и без standalone `SS`.
-   - `AUTO-STABILITY` — `fallback`: берёт первый живой узел вне РФ и без standalone `SS` в порядке подписки.
-   - `GOOGLE` — отдельный ручной выбор узла для Google/Gemini/YouTube.
-   - Во всех профилях эти четыре группы используют `policy-regex-filter=(?i)^(?!.*Russia)(?!.*\bSS\b).*$`: `\bSS\b` исключает только standalone протокол `SS`, не задевая `Vless`.
-   - `PROXY` — главный переключатель (Select): по умолчанию выбран `AUTO-STABILITY`; вручную можно переключаться между `MANUAL-PROXY`, `AUTO-SPEED`, `AUTO-STABILITY` и `DIRECT`.
+   - `MANUAL-PROXY` — ручной выбор узла подписки вне РФ, без standalone `SS` и `WL`.
+   - `AUTO-SPEED` — `url-test`: выбирает самый быстрый живой узел вне РФ, без standalone `SS` и `WL`.
+   - `AUTO-STABILITY` — `fallback`: берёт первый живой узел вне РФ, без standalone `SS` и `WL`, в порядке подписки.
+   - `GOOGLE` — `fallback` для Google/Gemini/YouTube с тем же auto-фильтром; проверка использует URL `https://abs.twimg.com/favicon.ico`, интервал `780`, timeout `7`.
+   - `WL` — отдельная `select`-группа только для WL-трафика (`policy-regex-filter=(?i)\bWL\b`), включая `WL-lte`.
+   - `\bSS\b` и `\bWL\b` — standalone-токены: они не задевают имена вроде `BASS`, `BOWL` или `WLAN`.
+   - `PROXY` — главный переключатель (Select): по умолчанию выбран `AUTO-STABILITY`; вручную можно переключаться между `MANUAL-PROXY`, `AUTO-SPEED`, `AUTO-STABILITY`, `WL` и `DIRECT`.
 
 Кастомный профиль для GFN/NVIDIA (с `always-real-ip`, тем же DNS-набором, что и основной профиль, и `dns-direct-system = false`):
 ```
@@ -75,8 +76,9 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/RU-VPN.DEEP
 > `clash_config.yaml` больше не поддерживается вручную отдельно: он генерируется из
 > `shadowrocket.conf` через `scripts/build_clash_config.py`.
 > Для автопроверки серверов `proxy-providers.Main-Sub.health-check`, `proxy-groups.AUTO-SPEED`,
-> `proxy-groups.AUTO-STABILITY` используется `https://abs.twimg.com/favicon.ico`
-> (`AUTO-SPEED`: интервал 300, tolerance 200; `AUTO-STABILITY`: интервал 780).
+> `proxy-groups.AUTO-STABILITY` и `proxy-groups.GOOGLE` используется
+> `https://abs.twimg.com/favicon.ico` (`AUTO-SPEED`: интервал 300, tolerance 200;
+> `AUTO-STABILITY` и `GOOGLE`: интервал 780).
 
 1. **Скачайте Clash Verge Rev**:  
    https://github.com/clash-verge-rev/clash-verge-rev/releases  
@@ -149,13 +151,14 @@ CDN; весь Tencent/QQ он не обходит.
 - `update-url` указывает на конфиг в репозитории.
 
 ### [Proxy Group]
-- **MANUAL-PROXY** — ручной выбор узлов подписки вне РФ и без standalone `SS`; все профили используют `policy-regex-filter=(?i)^(?!.*Russia)(?!.*\bSS\b).*$`.
+- **MANUAL-PROXY** — ручной выбор узлов подписки вне РФ, без standalone `SS` и `WL`; все профили используют `policy-regex-filter=(?i)^(?!.*Russia)(?!.*\bSS\b)(?!.*\bWL\b).*$`.
 - **AUTO-SPEED** — `url-test`-группа для выбора самого быстрого живого узла из подписки:
-  `url=https://abs.twimg.com/favicon.ico`, `interval=300`, `tolerance=200`, `timeout=7`.
+  auto-фильтр дополнительно исключает standalone `WL`; `url=https://abs.twimg.com/favicon.ico`, `interval=300`, `tolerance=200`, `timeout=7`.
 - **AUTO-STABILITY** — `fallback`-группа для выбора первого живого узла в порядке подписки:
-  `url=https://abs.twimg.com/favicon.ico`, `interval=780`, `timeout=7`.
-- **GOOGLE** — отдельная `select`-группа для ручного выбора узла под Google/Gemini/YouTube; группа использует тот же фильтр узлов вне РФ и без standalone `SS`.
-- **PROXY** — Select-группа; по умолчанию выбран `AUTO-STABILITY`, вручную можно переключаться между `MANUAL-PROXY`/`AUTO-SPEED`/`AUTO-STABILITY`/`DIRECT`.
+  auto-фильтр исключает standalone `WL`; `url=https://abs.twimg.com/favicon.ico`, `interval=780`, `timeout=7`.
+- **GOOGLE** — `fallback`-группа для Google/Gemini/YouTube с auto-фильтром; `url=https://abs.twimg.com/favicon.ico`, `interval=780`, `timeout=7`.
+- **WL** — отдельная `select`-группа только для узлов с standalone `WL` (включая `WL-lte`), фильтр `(?i)\bWL\b`.
+- **PROXY** — Select-группа; по умолчанию выбран `AUTO-STABILITY`, вручную можно переключаться между `MANUAL-PROXY`/`AUTO-SPEED`/`AUTO-STABILITY`/`WL`/`DIRECT`.
   В `AUTO-STABILITY` первичным считается первый живой узел в порядке уже фильтрованной подписки.
 
 ### [Rule]
@@ -220,6 +223,7 @@ GitHub Actions:
 - `.github/workflows/build-happ-routing.yml` — read-only проверка cached rebuild и тестов; она ничего не коммитит.
 
 Политика изменений:
+- Изменение групп `MANUAL-PROXY`, `WL`, auto-фильтра и `GOOGLE` — **shared**: синхронизировано в `shadowrocket.conf`, `shadowrocket_custom.conf` и `shadowrocket_custom_private_dns.conf`; custom-only поля `[General]` сохранены. Все общие группы `MANUAL-PROXY`/`AUTO-SPEED`/`AUTO-STABILITY`/`GOOGLE` исключают WL, а отдельная `WL`-группа содержит WL/WL-lte.
 - `shadowrocket_custom.conf`, `shadowrocket_custom_private_dns.conf`, `shadowrocket_whitelist.conf` и `modules/anti_advertising_custom.module` считаются `custom-only` и содержат single-user/GFN логику.
 - Если улучшение полезно всем, его нужно переносить и в основной конфиг, и в кастомные файлы.
 - При изменении generated `rules/*.list` меняйте `distillate/manifest.json`, `distillate/overlays/*` или `distillate/filters/*`, а не итоговые generated-файлы.
