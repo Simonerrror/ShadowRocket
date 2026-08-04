@@ -1,0 +1,18 @@
+#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/wechat_direct.module
+#!name=WeChat Direct
+#!desc=Route WeChat and its required content CDN hosts directly.
+
+[Rule]
+DOMAIN-SUFFIX,wechat.com,DIRECT
+DOMAIN-SUFFIX,wechatapp.com,DIRECT
+DOMAIN-SUFFIX,wechatlegal.net,DIRECT
+DOMAIN-SUFFIX,wechatpay.com,DIRECT
+DOMAIN-SUFFIX,weixin.com,DIRECT
+DOMAIN-SUFFIX,weixin.qq.com,DIRECT
+DOMAIN-SUFFIX,weixinbridge.com,DIRECT
+DOMAIN-SUFFIX,servicewechat.com,DIRECT
+DOMAIN-SUFFIX,qpic.cn,DIRECT
+DOMAIN-SUFFIX,qlogo.cn,DIRECT
+DOMAIN-SUFFIX,wx.gtimg.com,DIRECT
+DOMAIN,miniapp.gtimg.cn,DIRECT
+DOMAIN,res.wx.qq.com,DIRECT

@@ -1,4 +1,5 @@
 .DS_Store
+.worktrees/
 __pycache__/
 cloudflare/potato-link/node_modules/
 .wrangler/
