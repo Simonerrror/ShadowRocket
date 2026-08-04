@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import unittest
 from pathlib import Path
 
@@ -11,6 +12,7 @@ PRIVATE_DNS_CONF = REPO_ROOT / "shadowrocket_custom_private_dns.conf"
 TAILSCALE_MODULE = REPO_ROOT / "modules" / "tailscale_direct.module"
 WECHAT_MODULE = REPO_ROOT / "modules" / "wechat_direct.module"
 README = REPO_ROOT / "README.md"
+EXPECTED_SUBSCRIPTION_FILTER = r"(?i)^(?!.*Russia)(?!.*\bSS\b).*$"
 
 
 def section_lines(path: Path, section: str, *, keep_comments: bool = False) -> list[str]:
@@ -41,20 +43,33 @@ class ShadowrocketProfilesTests(unittest.TestCase):
     def test_custom_proxy_groups_match_each_other(self) -> None:
         self.assertEqual(section_lines(CUSTOM_CONF, "Proxy Group"), section_lines(PRIVATE_DNS_CONF, "Proxy Group"))
 
-    def test_custom_proxy_groups_filter_russia_from_subscription_keys(self) -> None:
-        custom_groups = key_values(CUSTOM_CONF, "Proxy Group")
-        private_dns_groups = key_values(PRIVATE_DNS_CONF, "Proxy Group")
-        expected_filter = "policy-regex-filter=(?i)^(?!.*Russia).*WL.*$"
+    def test_proxy_groups_filter_russia_and_ss_from_all_subscription_nodes(self) -> None:
+        profiles = (BASE_CONF, CUSTOM_CONF, PRIVATE_DNS_CONF)
 
-        for groups in (custom_groups, private_dns_groups):
+        for path in profiles:
+            groups = key_values(path, "Proxy Group")
             for key in ("MANUAL-PROXY", "AUTO-SPEED", "AUTO-STABILITY", "GOOGLE"):
-                with self.subTest(key=key):
-                    self.assertIn(expected_filter, groups[key])
+                with self.subTest(path=path.name, key=key):
+                    actual_filter = groups[key].split("policy-regex-filter=", 1)[1].split(",", 1)[0]
+                    self.assertEqual(EXPECTED_SUBSCRIPTION_FILTER, actual_filter)
 
-    def test_base_proxy_groups_keep_plain_wl_filter(self) -> None:
-        base_groups = section_lines(BASE_CONF, "Proxy Group")
+    def test_subscription_filter_uses_standalone_ss_token_boundary(self) -> None:
+        subscription_filter = re.compile(EXPECTED_SUBSCRIPTION_FILTER)
 
-        self.assertIn("MANUAL-PROXY = select,policy-regex-filter=WL", base_groups)
+        for name in (
+            "🇺🇸 United States Vless",
+            "🇫🇷 France Hysteria2",
+            "USA VLESS SS2022",
+            "BASS relay",
+        ):
+            with self.subTest(name=name):
+                self.assertTrue(subscription_filter.fullmatch(name))
+
+        for name in ("🇷🇺 Russia Vless", "rUsSiA Hysteria2", "Germany SS"):
+            with self.subTest(name=name):
+                self.assertFalse(subscription_filter.fullmatch(name))
+
+        self.assertNotIn(",", EXPECTED_SUBSCRIPTION_FILTER)
 
     def test_base_and_custom_use_same_dns(self) -> None:
         base_general = key_values(BASE_CONF, "General")

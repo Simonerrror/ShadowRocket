@@ -111,13 +111,13 @@ proxy-groups:
     type: select
     use:
       - Main-Sub
-    filter: "WL"
+    exclude-filter: "(?i)Russia|\\bSS\\b"
 
   - name: AUTO-SPEED
     type: url-test
     use:
       - Main-Sub
-    filter: "WL"
+    exclude-filter: "(?i)Russia|\\bSS\\b"
     url: "https://abs.twimg.com/favicon.ico"
     interval: 300
     tolerance: 200
@@ -126,7 +126,7 @@ proxy-groups:
     type: fallback
     use:
       - Main-Sub
-    filter: "WL"
+    exclude-filter: "(?i)Russia|\\bSS\\b"
     url: "https://abs.twimg.com/favicon.ico"
     interval: 780
 
@@ -134,7 +134,7 @@ proxy-groups:
     type: select
     use:
       - Main-Sub
-    filter: "WL"
+    exclude-filter: "(?i)Russia|\\bSS\\b"
 
   - name: PROXY
     type: select

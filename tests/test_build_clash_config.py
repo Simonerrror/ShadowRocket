@@ -2,7 +2,17 @@ from __future__ import annotations
 
 import unittest
 
-from scripts.build_clash_config import DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL, build_config, parse_proxy_groups
+from scripts.build_clash_config import (
+    DEFAULT_CONF,
+    DEFAULT_SUBSCRIPTION_URL,
+    build_config,
+    parse_proxy_groups,
+    yaml_quote,
+)
+
+
+EXPECTED_SHADOWROCKET_FILTER = r"(?i)^(?!.*Russia)(?!.*\bSS\b).*$"
+EXPECTED_MIHOMO_EXCLUDE_FILTER = r"(?i)Russia|\bSS\b"
 
 
 class BuildClashConfigTests(unittest.TestCase):
@@ -25,7 +35,8 @@ class BuildClashConfigTests(unittest.TestCase):
         google_group = content.split("  - name: GOOGLE", 1)[1].split("  - name:", 1)[0]
         self.assertIn("    type: select", google_group)
         self.assertIn("    use:\n      - Main-Sub", google_group)
-        self.assertIn('    filter: "WL"', google_group)
+        self.assertIn(f"    exclude-filter: {yaml_quote(EXPECTED_MIHOMO_EXCLUDE_FILTER)}", google_group)
+        self.assertNotIn("\n    filter:", google_group)
 
     def test_subscription_provider_is_unfiltered_for_manual_selection(self) -> None:
         content, _warnings = build_config(DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL)
@@ -39,16 +50,17 @@ class BuildClashConfigTests(unittest.TestCase):
 
         for name in ("MANUAL-PROXY", "AUTO-SPEED", "AUTO-STABILITY", "GOOGLE"):
             with self.subTest(name=name):
-                self.assertEqual(groups[name].attrs.get("policy-regex-filter"), "WL")
+                self.assertEqual(groups[name].attrs.get("policy-regex-filter"), EXPECTED_SHADOWROCKET_FILTER)
                 self.assertNotIn("use", groups[name].attrs)
                 self.assertFalse(groups[name].members)
 
-    def test_manual_proxy_uses_subscription_with_wl_filter(self) -> None:
+    def test_manual_proxy_uses_subscription_with_mihomo_exclude_filter(self) -> None:
         content, warnings = build_config(DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL)
         manual_group = content.split("  - name: MANUAL-PROXY", 1)[1].split("  - name:", 1)[0]
 
         self.assertIn("    use:\n      - Main-Sub", manual_group)
-        self.assertIn('    filter: "WL"', manual_group)
+        self.assertIn(f"    exclude-filter: {yaml_quote(EXPECTED_MIHOMO_EXCLUDE_FILTER)}", manual_group)
+        self.assertNotIn("\n    filter:", manual_group)
         self.assertNotIn("unsupported proxy-group option use=true", "\n".join(warnings))
 
     def test_auto_speed_uses_url_test_and_auto_stability_uses_fallback(self) -> None:
@@ -61,8 +73,9 @@ class BuildClashConfigTests(unittest.TestCase):
 
         self.assertIn("    type: url-test", speed_group)
         self.assertIn("    type: fallback", stability_group)
-        self.assertIn('    filter: "WL"', speed_group)
-        self.assertIn('    filter: "WL"', stability_group)
+        for group in (speed_group, stability_group):
+            self.assertIn(f"    exclude-filter: {yaml_quote(EXPECTED_MIHOMO_EXCLUDE_FILTER)}", group)
+            self.assertNotIn("\n    filter:", group)
         self.assertIn("      - MANUAL-PROXY", proxy_group)
         self.assertIn("      - AUTO-SPEED", proxy_group)
         self.assertIn("      - AUTO-STABILITY", proxy_group)
