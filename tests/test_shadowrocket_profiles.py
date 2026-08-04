@@ -9,6 +9,8 @@ BASE_CONF = REPO_ROOT / "shadowrocket.conf"
 CUSTOM_CONF = REPO_ROOT / "shadowrocket_custom.conf"
 PRIVATE_DNS_CONF = REPO_ROOT / "shadowrocket_custom_private_dns.conf"
 TAILSCALE_MODULE = REPO_ROOT / "modules" / "tailscale_direct.module"
+WECHAT_MODULE = REPO_ROOT / "modules" / "wechat_direct.module"
+README = REPO_ROOT / "README.md"
 
 
 def section_lines(path: Path, section: str, *, keep_comments: bool = False) -> list[str]:
@@ -101,6 +103,48 @@ class ShadowrocketProfilesTests(unittest.TestCase):
         self.assertIn("100.100.100.100", module_content)
         self.assertIn("DOMAIN-SUFFIX,ts.net,DIRECT", module_content)
         self.assertIn("DOMAIN-SUFFIX,tailscale.com,DIRECT", module_content)
+
+    def test_wechat_direct_module_has_approved_rules(self) -> None:
+        content = WECHAT_MODULE.read_text(encoding="utf-8")
+        rules = section_lines(WECHAT_MODULE, "Rule")
+        expected_rules = [
+            "DOMAIN-SUFFIX,wechat.com,DIRECT",
+            "DOMAIN-SUFFIX,wechatapp.com,DIRECT",
+            "DOMAIN-SUFFIX,wechatlegal.net,DIRECT",
+            "DOMAIN-SUFFIX,wechatpay.com,DIRECT",
+            "DOMAIN-SUFFIX,weixin.com,DIRECT",
+            "DOMAIN-SUFFIX,weixin.qq.com,DIRECT",
+            "DOMAIN-SUFFIX,weixinbridge.com,DIRECT",
+            "DOMAIN-SUFFIX,servicewechat.com,DIRECT",
+            "DOMAIN-SUFFIX,qpic.cn,DIRECT",
+            "DOMAIN-SUFFIX,qlogo.cn,DIRECT",
+            "DOMAIN-SUFFIX,wx.gtimg.com,DIRECT",
+            "DOMAIN,miniapp.gtimg.cn,DIRECT",
+            "DOMAIN,res.wx.qq.com,DIRECT",
+        ]
+
+        self.assertIn("#!name=WeChat Direct", content)
+        self.assertIn("[Rule]", content)
+        self.assertEqual(expected_rules, rules)
+
+    def test_wechat_direct_module_excludes_broad_tencent_and_ip_rules(self) -> None:
+        rules = section_lines(WECHAT_MODULE, "Rule")
+
+        self.assertNotIn("DOMAIN-SUFFIX,qq.com,DIRECT", rules)
+        self.assertNotIn("DOMAIN-SUFFIX,gtimg.com,DIRECT", rules)
+        self.assertNotIn("DOMAIN-SUFFIX,gtimg.cn,DIRECT", rules)
+        self.assertNotIn("DOMAIN-SUFFIX,tencent.com,DIRECT", rules)
+        self.assertFalse(any(rule.startswith(("IP-CIDR,", "IP-CIDR6,")) for rule in rules))
+
+    def test_readme_documents_wechat_direct_module(self) -> None:
+        content = README.read_text(encoding="utf-8")
+
+        self.assertIn("modules/wechat_direct.module", content)
+        self.assertIn(
+            "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/wechat_direct.module",
+            content,
+        )
+        self.assertIn("выше anti-advertising", content)
 
     def test_rule_comments_have_visual_spacing(self) -> None:
         for path in (BASE_CONF, CUSTOM_CONF, PRIVATE_DNS_CONF):
