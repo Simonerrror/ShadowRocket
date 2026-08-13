@@ -111,15 +111,13 @@ proxy-groups:
     type: select
     use:
       - Main-Sub
-    filter: "(?i)\\bVLESS\\b"
-    exclude-filter: "(?i)Russia|\\bWL\\b"
+    exclude-filter: "(?i)Russia|\\bSS\\b|\\bTrojan\\b|\\bWL\\b"
 
   - name: AUTO-SPEED
     type: url-test
     use:
       - Main-Sub
-    filter: "(?i)\\bVLESS\\b"
-    exclude-filter: "(?i)Russia|\\bWL\\b"
+    exclude-filter: "(?i)Russia|\\bSS\\b|\\bTrojan\\b|\\bWL\\b"
     url: "https://abs.twimg.com/favicon.ico"
     interval: 180
     tolerance: 100
@@ -128,8 +126,7 @@ proxy-groups:
     type: fallback
     use:
       - Main-Sub
-    filter: "(?i)\\bVLESS\\b"
-    exclude-filter: "(?i)Russia|\\bWL\\b"
+    exclude-filter: "(?i)Russia|\\bSS\\b|\\bTrojan\\b|\\bWL\\b"
     url: "https://abs.twimg.com/favicon.ico"
     interval: 780
 
@@ -137,8 +134,7 @@ proxy-groups:
     type: url-test
     use:
       - Main-Sub
-    filter: "(?i)\\bVLESS\\b"
-    exclude-filter: "(?i)Russia|\\bWL\\b"
+    exclude-filter: "(?i)Russia|\\bSS\\b|\\bTrojan\\b|\\bWL\\b"
     url: "https://abs.twimg.com/favicon.ico"
     interval: 180
     tolerance: 100
