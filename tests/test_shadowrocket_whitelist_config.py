@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import unittest
 from pathlib import Path
 
@@ -8,7 +9,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 CUSTOM_CONF = REPO_ROOT / "shadowrocket_custom.conf"
 WHITELIST_CONF = REPO_ROOT / "shadowrocket_whitelist.conf"
 TAILSCALE_MODULE = REPO_ROOT / "modules" / "tailscale_direct.module"
-EXPECTED_SUBSCRIPTION_FILTER = r"(?i)^(?!.*Russia)(?!.*\bSS\b).*$"
+EXPECTED_SUBSCRIPTION_FILTER = r"(?i)^(?=.*\bVLESS\b)(?!.*Russia).*$"
 
 
 def section_lines(content: str, section: str) -> list[str]:
@@ -58,7 +59,7 @@ class ShadowrocketWhitelistConfigTests(unittest.TestCase):
         self.assertTrue(groups[0].startswith("PROXY = select,"))
         self.assertNotIn("DIRECT", groups[0])
 
-    def test_proxy_group_excludes_russia_and_standalone_ss_without_personal_default(self) -> None:
+    def test_proxy_group_requires_vless_and_excludes_russia_without_personal_default(self) -> None:
         content = WHITELIST_CONF.read_text(encoding="utf-8")
         groups = section_lines(content, "Proxy Group")
 
@@ -67,6 +68,22 @@ class ShadowrocketWhitelistConfigTests(unittest.TestCase):
             [f"PROXY = select,policy-regex-filter={EXPECTED_SUBSCRIPTION_FILTER}"],
         )
         self.assertNotIn("policy-select-name=", content)
+
+        subscription_filter = re.compile(EXPECTED_SUBSCRIPTION_FILTER)
+        for name in ("🇺🇸 United States Vless", "WL-lte VLESS"):
+            with self.subTest(name=name):
+                self.assertTrue(subscription_filter.fullmatch(name))
+
+        for name in (
+            "🇷🇺 Russia Vless",
+            "🇫🇷 France Hysteria2",
+            "USA Trojan",
+            "Germany SS",
+            "Japan VMess",
+            "BASS relay",
+        ):
+            with self.subTest(name=name):
+                self.assertFalse(subscription_filter.fullmatch(name))
 
     def test_service_specific_proxy_lists_are_not_used(self) -> None:
         content = WHITELIST_CONF.read_text(encoding="utf-8")

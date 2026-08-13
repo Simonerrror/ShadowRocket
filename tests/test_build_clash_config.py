@@ -11,9 +11,11 @@ from scripts.build_clash_config import (
 )
 
 
-EXPECTED_AUTO_FILTER = r"(?i)^(?!.*Russia)(?!.*\bSS\b)(?!.*\bWL\b).*$"
+EXPECTED_AUTO_FILTER = r"(?i)^(?=.*\bVLESS\b)(?!.*Russia)(?!.*\bWL\b).*$"
 EXPECTED_WL_FILTER = r"(?i)\bWL\b"
-EXPECTED_MIHOMO_AUTO_EXCLUDE_FILTER = r"(?i)Russia|\bSS\b|\bWL\b"
+EXPECTED_MIHOMO_VLESS_FILTER = r"(?i)\bVLESS\b"
+EXPECTED_MIHOMO_AUTO_EXCLUDE_FILTER = r"(?i)Russia|\bWL\b"
+EXPECTED_MIHOMO_WL_FILTER = r"(?i)\bWL\b"
 
 
 class BuildClashConfigTests(unittest.TestCase):
@@ -34,10 +36,13 @@ class BuildClashConfigTests(unittest.TestCase):
         self.assertIn("  - RULE-SET,google_all,GOOGLE", content)
         self.assertIn("  - name: GOOGLE", content)
         google_group = content.split("  - name: GOOGLE", 1)[1].split("  - name:", 1)[0]
-        self.assertIn("    type: fallback", google_group)
+        self.assertIn("    type: url-test", google_group)
         self.assertIn("    use:\n      - Main-Sub", google_group)
+        self.assertIn(f"    filter: {yaml_quote(EXPECTED_MIHOMO_VLESS_FILTER)}", google_group)
         self.assertIn(f"    exclude-filter: {yaml_quote(EXPECTED_MIHOMO_AUTO_EXCLUDE_FILTER)}", google_group)
-        self.assertNotIn("\n    filter:", google_group)
+        self.assertIn('    url: "https://abs.twimg.com/favicon.ico"', google_group)
+        self.assertIn("    interval: 180", google_group)
+        self.assertIn("    tolerance: 100", google_group)
 
     def test_subscription_provider_is_unfiltered_for_manual_selection(self) -> None:
         content, _warnings = build_config(DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL)
@@ -62,13 +67,13 @@ class BuildClashConfigTests(unittest.TestCase):
                 self.assertNotIn("use", groups[name].attrs)
                 self.assertFalse(groups[name].members)
 
-    def test_manual_proxy_uses_subscription_with_mihomo_exclude_filter(self) -> None:
+    def test_manual_proxy_uses_subscription_with_vless_filter(self) -> None:
         content, warnings = build_config(DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL)
         manual_group = content.split("  - name: MANUAL-PROXY", 1)[1].split("  - name:", 1)[0]
 
         self.assertIn("    use:\n      - Main-Sub", manual_group)
+        self.assertIn(f"    filter: {yaml_quote(EXPECTED_MIHOMO_VLESS_FILTER)}", manual_group)
         self.assertIn(f"    exclude-filter: {yaml_quote(EXPECTED_MIHOMO_AUTO_EXCLUDE_FILTER)}", manual_group)
-        self.assertNotIn("\n    filter:", manual_group)
         self.assertNotIn("unsupported proxy-group option use=true", "\n".join(warnings))
 
     def test_auto_speed_uses_url_test_and_auto_stability_uses_fallback(self) -> None:
@@ -81,9 +86,12 @@ class BuildClashConfigTests(unittest.TestCase):
 
         self.assertIn("    type: url-test", speed_group)
         self.assertIn("    type: fallback", stability_group)
+        self.assertIn('    url: "https://abs.twimg.com/favicon.ico"', speed_group)
+        self.assertIn("    interval: 180", speed_group)
+        self.assertIn("    tolerance: 100", speed_group)
         for group in (speed_group, stability_group):
+            self.assertIn(f"    filter: {yaml_quote(EXPECTED_MIHOMO_VLESS_FILTER)}", group)
             self.assertIn(f"    exclude-filter: {yaml_quote(EXPECTED_MIHOMO_AUTO_EXCLUDE_FILTER)}", group)
-            self.assertNotIn("\n    filter:", group)
         self.assertIn("      - MANUAL-PROXY", proxy_group)
         self.assertIn("      - AUTO-SPEED", proxy_group)
         self.assertIn("      - AUTO-STABILITY", proxy_group)
@@ -91,7 +99,7 @@ class BuildClashConfigTests(unittest.TestCase):
 
         wl_group = content.split("  - name: WL", 1)[1].split("  - name:", 1)[0]
         self.assertIn("    type: select", wl_group)
-        self.assertIn(f"    filter: {yaml_quote(EXPECTED_WL_FILTER)}", wl_group)
+        self.assertIn(f"    filter: {yaml_quote(EXPECTED_MIHOMO_WL_FILTER)}", wl_group)
 
 
 if __name__ == "__main__":
