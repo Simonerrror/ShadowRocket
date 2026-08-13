@@ -12,7 +12,7 @@ PRIVATE_DNS_CONF = REPO_ROOT / "shadowrocket_custom_private_dns.conf"
 TAILSCALE_MODULE = REPO_ROOT / "modules" / "tailscale_direct.module"
 WECHAT_MODULE = REPO_ROOT / "modules" / "wechat_direct.module"
 README = REPO_ROOT / "README.md"
-EXPECTED_AUTO_FILTER = r"(?i)^(?=.*\bVLESS\b)(?!.*Russia)(?!.*\bWL\b).*$"
+EXPECTED_AUTO_FILTER = r"(?i)^(?!.*Russia)(?!.*\bSS\b)(?!.*\bTrojan\b)(?!.*\bWL\b).*$"
 EXPECTED_WL_FILTER = r"(?i)\bWL\b"
 
 
@@ -65,29 +65,34 @@ class ShadowrocketProfilesTests(unittest.TestCase):
             self.assertTrue(groups["WL"].startswith("select,"))
             self.assertIn("WL", groups["PROXY"].split(","))
 
-    def test_subscription_filter_requires_standalone_vless_and_rejects_other_protocols(self) -> None:
+    def test_subscription_filter_accepts_non_excluded_protocols(self) -> None:
         subscription_filter = re.compile(EXPECTED_AUTO_FILTER)
 
         for name in (
             "🇺🇸 United States Vless",
             "BASS relay VLESS",
+            "🇫🇷 France Hysteria",
+            "🇫🇷 France Hysteria2",
+            "Japan VMess",
+            "BASS relay",
             "USA VLESS SS2022",
         ):
             with self.subTest(name=name):
                 self.assertTrue(subscription_filter.fullmatch(name))
 
         for name in (
-            "🇫🇷 France Hysteria2",
-            "USA Trojan",
-            "Germany SS",
-            "Japan VMess",
-            "BASS relay",
             "🇷🇺 Russia Vless",
+            "Germany SS",
+            "USA Trojan",
             "WL-lte VLESS",
-            "Germany VLESS2",
+            "VLESS WL",
         ):
             with self.subTest(name=name):
                 self.assertFalse(subscription_filter.fullmatch(name))
+
+        for name in ("Germany VLESS2", "USA SS2022", "Japan Trojan2", "WLAN VLESS", "BOWL relay"):
+            with self.subTest(name=name):
+                self.assertTrue(subscription_filter.fullmatch(name))
 
     def test_wl_filter_accepts_any_protocol_with_standalone_wl_token(self) -> None:
         wl_filter = re.compile(EXPECTED_WL_FILTER)
@@ -105,14 +110,22 @@ class ShadowrocketProfilesTests(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertIsNone(wl_filter.search(name))
 
-    def test_auto_filter_preserves_russia_and_wl_exclusions(self) -> None:
+    def test_auto_filter_rejects_standalone_excluded_protocol_tokens(self) -> None:
         auto_filter = re.compile(EXPECTED_AUTO_FILTER)
 
-        for name in ("🇺🇸 United States Vless", "BOWL relay VLESS", "WLAN Germany VLESS"):
+        for name in ("🇺🇸 United States Vless", "BOWL relay VLESS", "WLAN Germany VLESS", "BASS relay Hysteria2"):
             with self.subTest(name=name):
                 self.assertTrue(auto_filter.fullmatch(name))
 
-        for name in ("WL-lte VLESS Germany", "🇫🇷 WL VLESS France", "wl VLESS LTE"):
+        for name in (
+            "WL-lte VLESS Germany",
+            "🇫🇷 WL VLESS France",
+            "wl VLESS LTE",
+            "Germany SS",
+            "USA Trojan",
+            "TROJAN Hysteria2",
+            "🇷🇺 Russia Hysteria2",
+        ):
             with self.subTest(name=name):
                 self.assertFalse(auto_filter.fullmatch(name))
 
