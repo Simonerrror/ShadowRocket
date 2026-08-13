@@ -111,32 +111,37 @@ proxy-groups:
     type: select
     use:
       - Main-Sub
-    exclude-filter: "(?i)Russia|\\bSS\\b|\\bWL\\b"
+    filter: "(?i)\\bVLESS\\b"
+    exclude-filter: "(?i)Russia|\\bWL\\b"
 
   - name: AUTO-SPEED
     type: url-test
     use:
       - Main-Sub
-    exclude-filter: "(?i)Russia|\\bSS\\b|\\bWL\\b"
+    filter: "(?i)\\bVLESS\\b"
+    exclude-filter: "(?i)Russia|\\bWL\\b"
     url: "https://abs.twimg.com/favicon.ico"
-    interval: 300
-    tolerance: 200
+    interval: 180
+    tolerance: 100
 
   - name: AUTO-STABILITY
     type: fallback
     use:
       - Main-Sub
-    exclude-filter: "(?i)Russia|\\bSS\\b|\\bWL\\b"
+    filter: "(?i)\\bVLESS\\b"
+    exclude-filter: "(?i)Russia|\\bWL\\b"
     url: "https://abs.twimg.com/favicon.ico"
     interval: 780
 
   - name: GOOGLE
-    type: fallback
+    type: url-test
     use:
       - Main-Sub
-    exclude-filter: "(?i)Russia|\\bSS\\b|\\bWL\\b"
+    filter: "(?i)\\bVLESS\\b"
+    exclude-filter: "(?i)Russia|\\bWL\\b"
     url: "https://abs.twimg.com/favicon.ico"
-    interval: 780
+    interval: 180
+    tolerance: 100
 
   - name: WL
     type: select
