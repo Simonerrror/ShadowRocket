@@ -27,6 +27,23 @@ test("/ru redirects to the RU profile", async () => {
   assert.notEqual(DESTINATIONS.ru, DESTINATIONS.default);
 });
 
+test("/incy redirects to the INCY default profile", async () => {
+  const response = await request("/incy");
+
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.get("location"), DESTINATIONS.incyDefault);
+  assert.match(DESTINATIONS.incyDefault, /^incy:\/\/routing\/(onadd|add)\//);
+});
+
+test("/incy/ru redirects to the INCY RU profile", async () => {
+  const response = await request("/incy/ru");
+
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.get("location"), DESTINATIONS.incyRu);
+  assert.match(DESTINATIONS.incyRu, /^incy:\/\/routing\/(onadd|add)\//);
+  assert.notEqual(DESTINATIONS.incyRu, DESTINATIONS.incyDefault);
+});
+
 test("HEAD redirects without a body", async () => {
   const response = await request("/ru", "HEAD");
 
@@ -47,6 +64,13 @@ test("unknown paths return 404 without exposing a deeplink", async () => {
 
   assert.equal(response.status, 404);
   assert.doesNotMatch(await response.text(), /happ:/);
+});
+
+test("unknown INCY paths return 404 without exposing a deeplink", async () => {
+  const response = await request("/incy/missing");
+
+  assert.equal(response.status, 404);
+  assert.doesNotMatch(await response.text(), /incy:/);
 });
 
 test("unsupported methods return 405 on a known path", async () => {

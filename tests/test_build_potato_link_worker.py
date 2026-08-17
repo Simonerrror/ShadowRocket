@@ -14,14 +14,24 @@ from scripts.build_potato_link_worker import (
 
 VALID_DEFAULT = "happ://routing/onadd/eyJOYW1lIjoiZGVmYXVsdCJ9"
 VALID_RU = "happ://routing/onadd/eyJOYW1lIjoicnUifQ=="
+VALID_INCY_DEFAULT = "incy://routing/onadd/eyJOYW1lIjoiZGVmYXVsdCJ9"
+VALID_INCY_RU = "incy://routing/onadd/eyJOYW1lIjoicnUifQ=="
+VALID_INCY_ADD = "incy://routing/add/eyJOYW1lIjoiZGVmYXVsdCJ9"
 
 
 class PotatoLinkBuildTests(unittest.TestCase):
-    def test_build_module_embeds_both_destinations(self) -> None:
-        module = build_module(VALID_DEFAULT, VALID_RU)
+    def test_build_module_embeds_all_four_scheme_specific_destinations(self) -> None:
+        module = build_module(
+            VALID_DEFAULT,
+            VALID_RU,
+            VALID_INCY_DEFAULT,
+            VALID_INCY_RU,
+        )
 
         self.assertIn(f'default: "{VALID_DEFAULT}"', module)
         self.assertIn(f'ru: "{VALID_RU}"', module)
+        self.assertIn(f'incyDefault: "{VALID_INCY_DEFAULT}"', module)
+        self.assertIn(f'incyRu: "{VALID_INCY_RU}"', module)
 
     def test_read_deeplink_accepts_one_trailing_lf(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -37,6 +47,19 @@ class PotatoLinkBuildTests(unittest.TestCase):
     def test_rejects_unexpected_scheme(self) -> None:
         with self.assertRaisesRegex(ValueError, "prefix"):
             validate_deeplink("https://example.com/value", Path("bad"))
+
+    def test_validate_deeplink_requires_matching_scheme_prefix(self) -> None:
+        with self.assertRaisesRegex(ValueError, "prefix"):
+            validate_deeplink(VALID_INCY_DEFAULT, Path("bad"), scheme="happ")
+
+        with self.assertRaisesRegex(ValueError, "prefix"):
+            validate_deeplink(VALID_DEFAULT, Path("bad"), scheme="incy")
+
+    def test_validate_deeplink_accepts_supported_add_mode(self) -> None:
+        self.assertEqual(
+            validate_deeplink(VALID_INCY_ADD, Path("incy-add"), scheme="incy"),
+            VALID_INCY_ADD,
+        )
 
     def test_rejects_invalid_base64(self) -> None:
         with self.assertRaisesRegex(ValueError, "base64"):
