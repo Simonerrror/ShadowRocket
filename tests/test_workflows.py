@@ -133,6 +133,20 @@ class WorkflowHardeningTests(unittest.TestCase):
             with self.subTest(path=path):
                 self.assertIn(path, deploy)
 
+    def test_sync_workflow_publishes_incy_geodata_release_assets(self) -> None:
+        content = SYNC_WORKFLOW.read_text(encoding="utf-8")
+
+        self.assertIn("gh release upload incy-geodata", content)
+        for path in (
+            "distillate/dat/geoip.dat",
+            "distillate/dat/geoip.dat.sha256",
+            "distillate/dat/geosite.dat",
+            "distillate/dat/geosite.dat.sha256",
+        ):
+            with self.subTest(path=path):
+                self.assertIn(path, content)
+        self.assertIn("--clobber", content)
+
     def test_publish_path_allowlist_accepts_incy_generated_outputs(self) -> None:
         for path in (
             "INCY/DEFAULT.JSON",

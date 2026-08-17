@@ -177,6 +177,21 @@ jobs:
             echo "No changes to publish."
           fi
 
+      - name: Publish INCY geodata release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view incy-geodata >/dev/null 2>&1 || \
+            gh release create incy-geodata \
+              --title "INCY geodata" \
+              --notes "Stable geo assets for INCY routing profiles."
+          gh release upload incy-geodata \
+            distillate/dat/geoip.dat \
+            distillate/dat/geoip.dat.sha256 \
+            distillate/dat/geosite.dat \
+            distillate/dat/geosite.dat.sha256 \
+            --clobber
+
   notify:
     needs: [build, publish]
     if: ${{ always() && (needs.build.result == 'failure' || needs.publish.result == 'failure') }}

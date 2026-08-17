@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
+import re
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -88,6 +92,61 @@ class IncyProfileContractTests(unittest.TestCase):
             )
 
             self.assertEqual(resolve_build_stamp(root, "", out_dir), "1234567890")
+
+    def test_generator_publishes_release_urls_and_sha256_sidecars(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / "shadowrocket.conf").write_text("[General]\n", encoding="utf-8")
+            dat_dir = root / "distillate" / "dat"
+            dat_dir.mkdir(parents=True)
+            dat_contents = {
+                "geoip.dat": b"test geoip payload\n",
+                "geosite.dat": b"test geosite payload\n",
+            }
+            for name, content in dat_contents.items():
+                (dat_dir / name).write_bytes(content)
+
+            for kind in ("domain", "ip"):
+                directory = root / "distillate" / "text" / kind
+                directory.mkdir(parents=True)
+                for bucket in ("direct", "proxy", "block"):
+                    (directory / f"sr-{bucket}.txt").write_text("\n", encoding="utf-8")
+            (root / "distillate" / "text" / "domain" / "motivato_block.txt").write_text(
+                "domain:block.example\n", encoding="utf-8"
+            )
+
+            subprocess.run(
+                ["git", "init", "--quiet"],
+                cwd=root,
+                check=True,
+            )
+            subprocess.run(
+                ["git", "remote", "add", "origin", "https://github.com/Simonerrror/ShadowRocket.git"],
+                cwd=root,
+                check=True,
+            )
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(Path(__file__).parents[1] / "scripts" / "build_incy_routing.py"),
+                    "--build-stamp",
+                    "42",
+                ],
+                cwd=root,
+                check=True,
+            )
+
+            expected_base = "https://github.com/Simonerrror/ShadowRocket/releases/download/incy-geodata"
+            for profile_name in ("DEFAULT.JSON", "RU-VPN.JSON"):
+                profile = json.loads((root / "INCY" / profile_name).read_text(encoding="utf-8"))
+                self.assertEqual(profile["Geoipurl"], f"{expected_base}/geoip.dat")
+                self.assertEqual(profile["Geositeurl"], f"{expected_base}/geosite.dat")
+
+            for name, content in dat_contents.items():
+                sidecar = dat_dir / f"{name}.sha256"
+                sidecar_text = sidecar.read_text(encoding="utf-8")
+                self.assertIsNotNone(re.fullmatch(r"[0-9a-f]{64}\n", sidecar_text))
+                self.assertEqual(sidecar_text, f"{hashlib.sha256(content).hexdigest()}\n")
 
 
 if __name__ == "__main__":
