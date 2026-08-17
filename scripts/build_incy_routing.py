@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import hashlib
 import json
 from pathlib import Path
 
@@ -161,6 +162,17 @@ def write_text_if_changed(path: Path, content: str) -> None:
     happ.write_text_if_changed(path, content)
 
 
+def release_geodata_base(repo_slug: str) -> str:
+    return f"https://github.com/{repo_slug}/releases/download/incy-geodata"
+
+
+def write_geodata_checksums(dat_dir: Path) -> None:
+    for filename in ("geoip.dat", "geosite.dat"):
+        source = dat_dir / filename
+        digest = hashlib.sha256(source.read_bytes()).hexdigest()
+        write_text_if_changed(source.with_name(f"{filename}.sha256"), f"{digest}\n")
+
+
 def remove_obsolete_incy_files(out_dir: Path) -> None:
     for name in OBSOLETE_INCY_FILES:
         (out_dir / name).unlink(missing_ok=True)
@@ -184,11 +196,12 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     remove_obsolete_incy_files(out_dir)
+    write_geodata_checksums(distillate_dir / "dat")
     data = happ.load_build_data_from_distillate(distillate_dir)
     general_direct_ips = happ.dedupe_preserve(
         happ.extract_skip_proxy_ips(conf_path) + happ.extract_bypass_tun_ips(conf_path)
     )
-    geodata_base = f"https://raw.githubusercontent.com/{happ.repo_slug(repo_root)}/main/{args.distillate_dir.strip('/')}/dat"
+    geodata_base = release_geodata_base(happ.repo_slug(repo_root))
     block_site_tag = (
         "motivato-block"
         if happ.read_text_lines(distillate_dir / "text" / "domain" / "motivato_block.txt")
