@@ -4,6 +4,8 @@ import { DESTINATIONS } from "../dist/destinations.js";
 const PATHS = new Map([
   ["/", DESTINATIONS.default],
   ["/ru", DESTINATIONS.ru],
+  ["/incy", DESTINATIONS.incyDefault],
+  ["/incy/ru", DESTINATIONS.incyRu],
 ]);
 
 const TEXT_HEADERS = {

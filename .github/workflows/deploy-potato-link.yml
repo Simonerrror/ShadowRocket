@@ -8,6 +8,8 @@ on:
     paths:
       - "HAPP/DEFAULT.DEEPLINK"
       - "HAPP/RU-VPN.DEEPLINK"
+      - "INCY/DEFAULT.DEEPLINK"
+      - "INCY/RU-VPN.DEEPLINK"
       - "cloudflare/potato-link/**"
       - "scripts/build_potato_link_worker.py"
       - "tests/test_build_potato_link_worker.py"
@@ -17,6 +19,8 @@ on:
     paths:
       - "HAPP/DEFAULT.DEEPLINK"
       - "HAPP/RU-VPN.DEEPLINK"
+      - "INCY/DEFAULT.DEEPLINK"
+      - "INCY/RU-VPN.DEEPLINK"
       - "cloudflare/potato-link/**"
       - "scripts/build_potato_link_worker.py"
       - "tests/test_build_potato_link_worker.py"

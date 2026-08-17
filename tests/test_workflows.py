@@ -114,6 +114,35 @@ class WorkflowHardeningTests(unittest.TestCase):
         self.assertIn(generated, sync)
         self.assertTrue(is_allowed_publish_path(generated))
 
+    def test_release_workflows_build_and_publish_incy_artifacts(self) -> None:
+        sync = SYNC_WORKFLOW.read_text(encoding="utf-8")
+        verify = VERIFY_WORKFLOW.read_text(encoding="utf-8")
+        deploy = DEPLOY_WORKFLOW.read_text(encoding="utf-8")
+
+        for content in (sync, verify):
+            with self.subTest(content="workflow build"):
+                self.assertIn("python3 scripts/build_incy_routing.py", content)
+        for path in ("INCY/DEFAULT.JSON", "INCY/RU-VPN.DEEPLINK"):
+            with self.subTest(path=path):
+                self.assertIn(path, sync)
+        self.assertIn('"INCY/**"', verify)
+        for path in (
+            '"INCY/DEFAULT.DEEPLINK"',
+            '"INCY/RU-VPN.DEEPLINK"',
+        ):
+            with self.subTest(path=path):
+                self.assertIn(path, deploy)
+
+    def test_publish_path_allowlist_accepts_incy_generated_outputs(self) -> None:
+        for path in (
+            "INCY/DEFAULT.JSON",
+            "INCY/DEFAULT.DEEPLINK",
+            "INCY/RU-VPN.JSON",
+            "INCY/RU-VPN.DEEPLINK",
+        ):
+            with self.subTest(path=path):
+                self.assertTrue(is_allowed_publish_path(path))
+
     def test_verification_workflow_is_read_only(self) -> None:
         content = VERIFY_WORKFLOW.read_text(encoding="utf-8")
 
