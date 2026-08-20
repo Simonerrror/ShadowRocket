@@ -1,0 +1,59 @@
+{
+  "mode": "exclude-vpn",
+  "intent": "Addresses from this list must not go through VPN; all other IPv4 addresses go through VPN.",
+  "encoding": {
+    "hostname": "cidr-<network-octets>-<prefix>.invalid",
+    "ip": "canonical IPv4 CIDR",
+    "note": "CIDR stays in ip because the Amnezia importer strips '/' from hostname"
+  },
+  "sources": {
+    "ru_ipv4": {
+      "count": 12813,
+      "unique_count": 12813
+    },
+    "sr_direct_ipv4": {
+      "count": 2,
+      "unique_count": 2
+    },
+    "fixed_exclusions": {
+      "count": 6,
+      "unique_count": 6
+    },
+    "sr_direct_domains": {
+      "count": 27
+    }
+  },
+  "output_cidr_count": 12821,
+  "unrepresented_domain_direct_rules": {
+    "count": 27,
+    "entries": [
+      "full:ipify.org",
+      "full:checkip.amazonaws.com",
+      "full:ifconfig.me",
+      "full:2ip.ru",
+      "domain:government.ru",
+      "domain:gov.ru",
+      "domain:gosuslugi.ru",
+      "domain:cbr.ru",
+      "domain:nalog.ru",
+      "domain:mos.ru",
+      "domain:yandex.com",
+      "domain:yandex.net",
+      "domain:yandexcloud.net",
+      "domain:yastatic.net",
+      "domain:vk.com",
+      "domain:vk.me",
+      "domain:vk.cc",
+      "domain:userapi.com",
+      "domain:mycdn.me",
+      "domain:2gis.com",
+      "domain:pathofexile.com",
+      "domain:poecdn.com",
+      "keyword:pathofexile",
+      "keyword:pasthofexile",
+      "domain:ru",
+      "domain:xn--p1ai",
+      "domain:su"
+    ]
+  }
+}
