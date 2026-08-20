@@ -1,0 +1,10 @@
+#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/eis_transition_tls.module
+#!name=ЕИС: временное TLS-исключение
+#!desc=Только zakupki.gov.ru. Не включать без отдельного подтверждения и проверки остальных MITM-модулей.
+#!expires=2027-03-16
+
+[MITM]
+# Не используйте %APPEND%: список расшифровки должен остаться эксклюзивным.
+hostname = zakupki.gov.ru
+# Параметр относится к upstream-сертификату сайта, а не к сертификату прокси-узла.
+skip-server-cert-verify = true
