@@ -8,8 +8,23 @@
 - Не добавляйте новые правила без явного указания пользователя.
 - Предпочитайте минимальные изменения: не переформатируйте файлы без необходимости.
 - Любое изменение по умолчанию нужно явно классифицировать как `shared` или `custom-only`.
+- AmneziaVPN IPv4-профиль и его summary относятся к `shared` routing-артефактам.
 - Изменения для GFN/NVIDIA и одного пользователя по умолчанию считаются `custom-only`.
 - Если улучшение полезно всем, его нужно раскатывать и в основной конфиг, и в кастомные файлы.
+
+## Git preflight и синхронизация между Mac
+
+Перед любым изменением:
+
+1. Выполните `git fetch --prune origin`.
+2. Выполните `git status --short --branch` и `git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}'`.
+3. Если рабочее дерево не чистое или upstream не настроен, остановитесь и покажите состояние. Не применяйте stash, reset или rebase автоматически.
+4. Выполните `git rev-list --left-right --count HEAD...'@{upstream}'`.
+5. Если локальная ветка содержит свои коммиты или история разошлась, остановитесь. Не используйте force-push.
+6. Если локальная ветка только отстаёт, выполните `git pull --ff-only`.
+7. Повторно проверьте, что текущая ветка соответствует задаче и имеет `0 ahead / 0 behind` относительно upstream.
+
+Перед переходом на другой Mac завершите проверку, закоммитьте согласованные изменения и отправьте их в upstream. Не публикуйте private subscription, токены, ключи, Tailnet/SSH-параметры и machine-specific конфигурацию. Перед push проверьте `git diff --cached`.
 
 ## Источники истины
 - `shadowrocket.conf` — source of truth для порядка `[Rule]`, inline-правил, `[General]` и `[Proxy Group]` базового профиля.
@@ -28,12 +43,12 @@
 - `rules/`: часть списков поддерживается вручную, часть генерируется скриптами и коммитится в эту же ветку.
 - `modules/`: модули Shadowrocket. Не ломайте совместимость с существующими конфигами.
 - `scripts/`: вспомогательные утилиты; обновляйте README, если меняете публичный интерфейс скриптов.
-- `distillate/upstream`, `distillate/text`, `distillate/dat`, `distillate/summary.json`, `HAPP/DEFAULT.*`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`: generated-артефакты; при изменении сборки обновляйте их вместе с кодом.
+- `distillate/upstream`, `distillate/text`, `distillate/dat`, `distillate/summary.json`, `distillate/upstream/v2fly/ru_ipv4.txt`, `Amnezia/SR-DEFAULT-EXCLUDE.json`, `Amnezia/SR-DEFAULT-EXCLUDE.summary.json`, `HAPP/DEFAULT.*`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`: generated-артефакты; при изменении сборки обновляйте их вместе с кодом.
 - `clash_config.yaml`: generated-артефакт от `shadowrocket.conf` и Clash/Mihomo template-настроек; при изменении логики сборки обновляйте его вместе с кодом.
 
 ## Ownership файлов
 - Редактируются вручную: `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_custom_private_dns.conf`, `shadowrocket_whitelist.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `rules/adobe_telemetry_custom.list`, `rules/russia_extended.list`, `rules/voice_ports.list`, `modules/GFN-AM.module`, `modules/tailscale_direct.module`, `modules/wechat_direct.module`.
-- Generated, не редактировать вручную: `clash_config.yaml`, `HAPP/DEFAULT.*`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/summary.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/openai.list`, `rules/telegram.list`, `rules/whitelist_direct.list`, `rules/greylist_proxy.list`, `rules/anti_advertising*.list`.
+- Generated, не редактировать вручную: `clash_config.yaml`, `HAPP/DEFAULT.*`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/summary.json`, `distillate/upstream/v2fly/ru_ipv4.txt`, `Amnezia/SR-DEFAULT-EXCLUDE.json`, `Amnezia/SR-DEFAULT-EXCLUDE.summary.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/openai.list`, `rules/telegram.list`, `rules/whitelist_direct.list`, `rules/greylist_proxy.list`, `rules/anti_advertising*.list`.
 - Semi-generated: `modules/anti_advertising.module` и `modules/anti_advertising_custom.module` хранят ручные заголовки и локальные исключения, но `RULE-SET` на anti-ad chunks переписываются сборкой.
 
 ## Документация
@@ -50,6 +65,7 @@
 - Изменили `shadowrocket.conf`: пересоберите `clash_config.yaml`, `HAPP/DEFAULT.*` и `INCY/*`.
 - Изменили `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*` или vendored upstream в `distillate/upstream/*`: пересоберите `distillate/text/*`, `distillate/dat/*`, `distillate/summary.json`, generated `rules/*.list`, anti-ad module refs, `HAPP/*` и `INCY/*`.
 - Изменили `scripts/build_distillate.py`: проверьте, не затрагивает ли это `rules/*.list`, anti-ad chunking и `modules/anti_advertising*.module`.
+- Изменили `scripts/build_distillate.py` или `scripts/build_amnezia_routing.py`: пересоберите cached RU IPv4 и `Amnezia/SR-DEFAULT-EXCLUDE*.json`; summary должен явно показывать domain DIRECT правила, которые не представлены в IPv4.
 - Изменили набор generated outputs или build inputs: обновите `.github/workflows/*.yml` path-фильтры и списки `git add`.
 
 ## Тесты/проверки
@@ -60,7 +76,9 @@
   - `python3 scripts/build_incy_routing.py`
 - После изменения `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*` или vendored upstream запускайте:
   - `python3 scripts/build_distillate.py`
+  - `python3 scripts/build_amnezia_routing.py`
   - `python3 scripts/build_happ_routing.py`
   - `python3 scripts/build_incy_routing.py`
+- Для отдельной проверки Amnezia: `python3 scripts/build_amnezia_routing.py`, затем проверьте JSON-массив `{ "hostname": "cidr-...invalid", "ip": "CIDR" }`, IPv4-only canonical CIDR и summary.
 - Если менялся weekly sync flow, отдельно проверяйте `python3 scripts/sync_lists.py --no-pull`.
 - При возможности указывайте ручные шаги проверки, например импорт конфига в Shadowrocket/Clash или проверку обновлённых generated-артефактов.
