@@ -24,6 +24,8 @@ consumer-списков в `rules/`. Проект поддерживает ав�
 - `distillate/` — канонический manifest, локальные overlays и собранные text/`dat`.
 - `rules/` — вручную поддерживаемые rule-list'ы и generated consumer-списки.
 - `HAPP/RU-VPN.*` — дополнительный HAPP-профиль: российские домены/IP через proxy, остальное напрямую.
+- `INCY/DEFAULT.*` и `INCY/RU-VPN.*` — те же routing-профили для INCY с `incy://` deeplink.
+- `Amnezia/SR-DEFAULT-EXCLUDE.json` — shared-профиль исключений IPv4 для AmneziaVPN на iOS/Premium.
 - `modules/tailscale_direct.module` — отдельный модуль DIRECT для Tailscale tailnet (`100.64.0.0/10`, `100.100.100.100`, `ts.net`, `tailscale.com`), исключающий tailnet из TUN Shadowrocket, чтобы системный маршрут оставался за Tailscale.
 - `modules/wechat_direct.module` — отдельный custom-only модуль DIRECT для WeChat и его CDN без широкого обхода всего Tencent/QQ.
 - Источники истины разделены: `shadowrocket.conf` отвечает за порядок routing-правил и proxy-groups базового профиля, а `distillate/manifest.json` вместе с `distillate/overlays/*` и `distillate/filters/*` отвечает за состав и сборку большинства consumer-списков.
@@ -70,6 +72,25 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/RU-VPN.DEEP
 `RU-VPN` направляет `geosite:category-ru` и `geoip:ru` через выбранный proxy,
 а весь несовпавший трафик — напрямую. Профиль выбирает трафик, но не страну
 сервера: перед активацией выберите узел с проверенным российским выходным IP.
+
+Те же профили для INCY:
+```
+https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/INCY/DEFAULT.DEEPLINK
+https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/INCY/RU-VPN.DEEPLINK
+```
+Кликабельные редиректы Worker: `/incy` и `/incy/ru` на домене
+`potato-link.motivato-potato.workers.dev`.
+
+### AmneziaVPN (iOS / Premium)
+
+Профиль исключений для split tunneling:
+```
+https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/Amnezia/SR-DEFAULT-EXCLUDE.json
+```
+Импортируйте JSON в AmneziaVPN и выберите режим **«Адреса из списка не должны открываться через VPN»** (`Addresses from list must not go through VPN`). Список содержит IPv4-сети RU, локальные/служебные диапазоны и IPv4 из общего `sr-direct`; весь остальной IPv4-трафик направляется через VPN.
+После импорта записи отображаются как `cidr-...invalid`; полная CIDR намеренно находится в поле `ip`, поскольку текущий importer удаляет `/` из `hostname`.
+
+Профиль IPv4-only и не обновляется автоматически: после обновления репозитория скачайте JSON заново. Доменные DIRECT-правила Shadowrocket не переносятся в список адресов; они перечислены в `Amnezia/SR-DEFAULT-EXCLUDE.summary.json`.
 
 ## Clash Verge Rev (Windows)
 
@@ -118,13 +139,15 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/RU-VPN.DEEP
 | `shadowrocket_whitelist.conf` | Custom-only аварийный whitelist-профиль: direct allowlist/RU напрямую, всё остальное через один `PROXY` |
 | `INCY/DEFAULT.*`, `INCY/RU-VPN.*` | Generated routing-профили и `incy://` deeplink для INCY |
 | `distillate/` | Канонический manifest, overlays и generated артефакты |
+| `Amnezia/SR-DEFAULT-EXCLUDE.json` | Generated IPv4 список исключений AmneziaVPN |
+| `Amnezia/SR-DEFAULT-EXCLUDE.summary.json` | Generated отчёт о составе списка и непредставленных domain DIRECT правилах |
 | `rules/` | Вручную поддерживаемые и generated consumer-списки |
 | `modules/` | Готовые модули для Shadowrocket |
 | `scripts/` | Вспомогательные скрипты |
 
 Практическое правило сопровождения:
 - вручную редактируются `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_custom_private_dns.conf`, `shadowrocket_whitelist.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `rules/adobe_telemetry_custom.list`, `rules/russia_extended.list`, `rules/voice_ports.list`, `modules/GFN-AM.module`, `modules/tailscale_direct.module`, `modules/wechat_direct.module`;
-- generated-артефакты (`clash_config.yaml`, `HAPP/DEFAULT.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/summary.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/openai.list`, `rules/telegram.list`, `rules/whitelist_direct.list`, `rules/greylist_proxy.list`, `rules/anti_advertising.list`, `rules/anti_advertising*.[0-9][0-9].list`) не поддерживаются вручную;
+- generated-артефакты (`clash_config.yaml`, `HAPP/DEFAULT.*`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/upstream/v2fly/ru_ipv4.txt`, `distillate/summary.json`, `Amnezia/SR-DEFAULT-EXCLUDE*.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/openai.list`, `rules/telegram.list`, `rules/whitelist_direct.list`, `rules/greylist_proxy.list`, `rules/anti_advertising.list`, `rules/anti_advertising*.[0-9][0-9].list`) не поддерживаются вручную;
 - `modules/anti_advertising.module` и `modules/anti_advertising_custom.module` semi-generated: ручной заголовок сохраняется, а ссылки на anti-ad chunks переписываются сборкой.
 - Tailscale DIRECT вынесен из custom-профиля в отдельный модуль `modules/tailscale_direct.module`; `tun-excluded-routes = 100.64.0.0/10` не даёт Shadowrocket перехватить системный маршрут Tailscale.
 
@@ -192,6 +215,7 @@ CDN; весь Tencent/QQ он не обходит.
 - Канонические источники истины разделены: `shadowrocket.conf` задаёт routing order и базовые proxy-groups, `distillate/manifest.json` задаёт состав категорий и generation rule-list'ов.
 - `scripts/sync_lists.py` раз в неделю подтягивает upstream-листы в `distillate/upstream/*`, затем обновляет `distillate/text/*`, `distillate/summary.json`, `rules/*.list`, anti-ad module refs и публикуемые артефакты.
 - `scripts/build_distillate.py` работает только с уже закешированными файлами из `distillate/upstream/*` и собирает `distillate/text/*` плюс `distillate/dat/geosite.dat` и `distillate/dat/geoip.dat`.
+- `scripts/build_amnezia_routing.py` собирает `Amnezia/SR-DEFAULT-EXCLUDE.json` из cached RU IPv4 (`distillate/upstream/v2fly/ru_ipv4.txt`), `sr-direct` и фиксированных локальных/служебных сетей; domain DIRECT правила только перечисляются в summary.
 - `scripts/build_clash_config.py` читает `[General]`, `[Proxy Group]` и `[Rule]` из базового `shadowrocket.conf` и пересобирает `clash_config.yaml` для Mihomo.
   Он переносит все поддерживаемые rule/group mapping'и, а неподдерживаемые для Clash детали (`force-remote-dns`, `policy-select-name`, `timeout`) оставляет в предупреждениях сборки.
 - `scripts/build_happ_routing.py` не ходит в BM7: он берет агрегаты `sr-direct`/`sr-proxy` и `motivato_block` из `distillate/text/*`, затем собирает `HAPP/DEFAULT.*` (`роут-MotivatoPotato`) с детерминированным `LastUpdated`.
@@ -214,6 +238,7 @@ Fallback policy:
 ```bash
 python3 scripts/sync_lists.py --no-pull
 python3 scripts/build_distillate.py
+python3 scripts/build_amnezia_routing.py
 python3 scripts/build_clash_config.py
 python3 scripts/build_happ_routing.py
 python3 scripts/build_incy_routing.py
@@ -225,6 +250,8 @@ GitHub Actions:
 - Для проверенного резкого изменения количества правил ручной запуск поддерживает `allow_large_diff`; пустые обязательные категории, неверный формат и запрещённые пути этот флаг не разрешает.
 - При ошибке или аномалии workflow создаёт GitHub issue со ссылкой на run, поэтому уведомление приходит через стандартные GitHub notifications/email.
 - `.github/workflows/build-happ-routing.yml` — read-only проверка cached rebuild и тестов; она ничего не коммитит.
+- Amnezia-профиль относится к shared routing-артефактам; оба release workflow пересобирают и проверяют его вместе с distillate.
+- HAPP и INCY-профили относятся к shared routing-артефактам; при изменении входов оба генератора и Worker-пакет пересобираются вместе.
 
 Политика изменений:
 - Изменение групп `MANUAL-PROXY`, `WL`, auto-фильтра и `GOOGLE` — **shared**: синхронизировано в `shadowrocket.conf`, `shadowrocket_custom.conf` и `shadowrocket_custom_private_dns.conf`; custom-only поля `[General]` сохранены. Все общие группы `MANUAL-PROXY`/`AUTO-SPEED`/`AUTO-STABILITY`/`GOOGLE` используют negative-фильтр и исключают `Russia` и standalone `SS`/`Trojan`/`WL`, а отдельная `WL`-группа принимает любой протокол со standalone `WL`.

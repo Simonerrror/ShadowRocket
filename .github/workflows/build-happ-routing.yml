@@ -10,6 +10,7 @@ on:
       - "modules/**"
       - "rules/*.list"
       - "distillate/**"
+      - "Amnezia/**"
       - "scripts/**"
       - "tests/**"
       - "HAPP/**"
@@ -36,6 +37,7 @@ jobs:
       - name: Rebuild cached artifacts
         run: |
           python3 scripts/build_distillate.py --skip-compiled
+          python3 scripts/build_amnezia_routing.py
           python3 scripts/build_clash_config.py --conf shadowrocket.conf
           python3 scripts/build_happ_routing.py
           python3 scripts/build_incy_routing.py

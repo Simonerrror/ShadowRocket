@@ -13,7 +13,9 @@ from scripts.build_distillate import (
     GEOSITE_COMMIT,
     CategoryResult,
     DistillateError,
+    RU_IPV4_PATH,
     build_distillate,
+    canonicalize_ipv4_text,
     checkout_pinned_repo,
     compiled_geosite_tags,
     geoip_compiler_inputs,
@@ -84,6 +86,18 @@ class BuildDistillateSafetyTests(unittest.TestCase):
         self.assertEqual(inputs[0]["args"]["wantedList"], ["ru"])
         self.assertEqual(inputs[0]["args"]["uri"], "/repo/distillate/upstream/v2fly/geoip.dat")
         self.assertIn("ru", wanted)
+
+    def test_canonicalize_compiled_ru_text_keeps_only_ipv4(self) -> None:
+        canonical = canonicalize_ipv4_text(
+            "203.0.113.128/25\n2001:db8::/32\n203.0.113.0/25\n"
+        )
+
+        self.assertEqual(canonical, ["203.0.113.0/24"])
+        self.assertEqual(RU_IPV4_PATH.as_posix(), "distillate/upstream/v2fly/ru_ipv4.txt")
+
+    def test_canonicalize_compiled_ru_text_rejects_empty_output(self) -> None:
+        with self.assertRaisesRegex(DistillateError, "empty"):
+            canonicalize_ipv4_text("# no CIDRs\n2001:db8::/32\n")
 
     def test_publish_failure_restores_every_replaced_output(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

@@ -49,6 +49,7 @@ GEOSITE_COMMIT = "bb622a2b75b3dfbec83719c1eb6e748720ea698e"
 GEOIP_DATA_COMMIT = "402b99afef60cf55058350b5d8c29322835636cd"
 GEOIP_DATA_SHA256 = "b71d1999439dde2de2d2b6844a2befa50c50211ff739785c005ca7c230a17d6a"
 GEOIP_DATA_PATH = Path("distillate/upstream/v2fly/geoip.dat")
+RU_IPV4_PATH = Path("distillate/upstream/v2fly/ru_ipv4.txt")
 RULE_HEADER = "# Generated from distillate/manifest.json"
 FETCH_USER_AGENT = "ShadowRocketDistillate/1.0"
 MAX_FETCH_BYTES = 64 * 1024 * 1024
@@ -290,6 +291,28 @@ def normalize_keyword(value: str) -> str:
 
 def normalize_cidr(value: str) -> str:
     return str(ipaddress.ip_network(value.strip(), strict=False))
+
+
+def canonicalize_ipv4_text(raw_text: str) -> list[str]:
+    """Return deterministic, collapsed IPv4 CIDRs from compiler text output."""
+
+    networks: list[ipaddress.IPv4Network] = []
+    for raw in raw_text.splitlines():
+        value = raw.strip().lstrip("\ufeff")
+        if not value or value.startswith(("#", "!", ";", "//")):
+            continue
+        try:
+            network = ipaddress.ip_network(value, strict=False)
+        except ValueError as exc:
+            raise DistillateError(f"Invalid CIDR in compiled RU GeoIP text: {value!r}") from exc
+        if network.version != 4:
+            continue
+        networks.append(network)
+    if not networks:
+        raise DistillateError("Compiled RU GeoIP text is empty")
+    collapsed = ipaddress.collapse_addresses(networks)
+    ordered = sorted(collapsed, key=lambda network: (int(network.network_address), network.prefixlen))
+    return [str(network) for network in ordered]
 
 
 def normalize_asn(value: str) -> str:
@@ -885,7 +908,16 @@ def compile_geoip_dat(repo_root: Path, categories: dict[str, CategoryResult]) ->
                         "outputName": "geoip.dat",
                         "wantedList": wanted_lists,
                     },
-                }
+                },
+                {
+                    "type": "text",
+                    "action": "output",
+                    "args": {
+                        "outputDir": str(repo / "output" / "text"),
+                        "wantedList": ["ru"],
+                        "onlyIPType": "ipv4",
+                    },
+                },
             ],
         }
         config_path = repo / "config.distillate.json"
@@ -895,6 +927,13 @@ def compile_geoip_dat(repo_root: Path, categories: dict[str, CategoryResult]) ->
         if not source.exists():
             raise DistillateError("Failed to build geoip.dat: output/dat/geoip.dat not found")
         shutil.copy2(source, repo_root / DAT_DIR / "geoip.dat")
+        ru_source = repo / "output" / "text" / "ru.txt"
+        if not ru_source.exists():
+            raise DistillateError("Failed to build ru IPv4 text: output/text/ru.txt not found")
+        write_text_file(
+            repo_root / RU_IPV4_PATH,
+            canonicalize_ipv4_text(ru_source.read_text(encoding="utf-8")),
+        )
 
 
 def write_summary(
@@ -975,7 +1014,7 @@ def generated_output_paths(
     *,
     skip_compiled: bool,
 ) -> list[Path]:
-    paths = {TEXT_DIR, SUMMARY_PATH, *OBSOLETE_COMPILED_DIRS}
+    paths = {TEXT_DIR, SUMMARY_PATH, RU_IPV4_PATH, *OBSOLETE_COMPILED_DIRS}
     if not skip_compiled:
         paths.add(DAT_DIR)
     for spec in manifest.get("categories", []):
