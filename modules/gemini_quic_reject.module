@@ -1,0 +1,15 @@
+#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/gemini_quic_reject.module
+#!name=Блокировка QUIC для Gemini
+#!desc=Отключает QUIC только для доменов Gemini на UDP/443; остальной QUIC не затрагивает.
+
+[Rule]
+AND,((PROTOCOL,UDP),(DEST-PORT,443),(DOMAIN,ai.google.dev)),REJECT-NO-DROP
+AND,((PROTOCOL,UDP),(DEST-PORT,443),(DOMAIN,alkalimakersuite-pa.clients6.google.com)),REJECT-NO-DROP
+AND,((PROTOCOL,UDP),(DEST-PORT,443),(DOMAIN,makersuite.google.com)),REJECT-NO-DROP
+AND,((PROTOCOL,UDP),(DEST-PORT,443),(DOMAIN-SUFFIX,bard.google.com)),REJECT-NO-DROP
+AND,((PROTOCOL,UDP),(DEST-PORT,443),(DOMAIN-SUFFIX,deepmind.com)),REJECT-NO-DROP
+AND,((PROTOCOL,UDP),(DEST-PORT,443),(DOMAIN-SUFFIX,deepmind.google)),REJECT-NO-DROP
+AND,((PROTOCOL,UDP),(DEST-PORT,443),(DOMAIN-SUFFIX,gemini.google.com)),REJECT-NO-DROP
+AND,((PROTOCOL,UDP),(DEST-PORT,443),(DOMAIN-SUFFIX,generativeai.google)),REJECT-NO-DROP
+AND,((PROTOCOL,UDP),(DEST-PORT,443),(DOMAIN-SUFFIX,proactivebackend-pa.googleapis.com)),REJECT-NO-DROP
+AND,((PROTOCOL,UDP),(DEST-PORT,443),(DOMAIN-KEYWORD,generativelanguage)),REJECT-NO-DROP
