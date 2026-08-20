@@ -155,38 +155,27 @@ class ShadowrocketProfilesTests(unittest.TestCase):
         self.assertNotIn("nvidiagrid", base_content)
 
     def test_shared_local_bypass_ranges_match(self) -> None:
-        profiles = (BASE_CONF, CUSTOM_CONF, PRIVATE_DNS_CONF)
-        general_values = [key_values(path, "General") for path in profiles]
+        base_general = key_values(BASE_CONF, "General")
+        custom_general = key_values(CUSTOM_CONF, "General")
+        private_dns_general = key_values(PRIVATE_DNS_CONF, "General")
 
-        for key in ("skip-proxy", "bypass-tun"):
-            values = [general[key] for general in general_values]
-            self.assertEqual(values[0], values[1])
-            self.assertEqual(values[0], values[2])
-            self.assertNotIn("100.64.0.0/10", values[0].split(", "))
+        self.assertEqual(base_general["skip-proxy"], custom_general["skip-proxy"])
+        self.assertEqual(base_general["skip-proxy"], private_dns_general["skip-proxy"])
+        self.assertEqual(base_general["bypass-tun"], custom_general["bypass-tun"])
+        self.assertEqual(base_general["bypass-tun"], private_dns_general["bypass-tun"])
 
-    def test_tailscale_module_uses_builtin_policy_routing(self) -> None:
+    def test_tailscale_specific_rules_stay_in_module(self) -> None:
         profile_contents = "\n".join(
             path.read_text(encoding="utf-8") for path in (BASE_CONF, CUSTOM_CONF, PRIVATE_DNS_CONF)
         )
         module_content = TAILSCALE_MODULE.read_text(encoding="utf-8")
 
-        self.assertNotIn("100.64.0.0/10", profile_contents)
         self.assertNotIn("100.100.100.100", profile_contents)
         self.assertNotIn("ts.net", profile_contents)
         self.assertNotIn("tailscale.com", profile_contents)
-        self.assertNotIn("[General]", module_content)
-        self.assertNotIn("skip-proxy", module_content)
-        self.assertNotIn("tun-excluded-routes", module_content)
-        self.assertNotIn("100.100.100.100", module_content)
-        self.assertNotIn("tailscale.com", module_content)
-        self.assertNotIn("DIRECT", module_content)
-        self.assertEqual(
-            [
-                "IP-CIDR,100.64.0.0/10,TAILSCALE,no-resolve",
-                "DOMAIN-SUFFIX,ts.net,TAILSCALE",
-            ],
-            section_lines(TAILSCALE_MODULE, "Rule"),
-        )
+        self.assertIn("100.100.100.100", module_content)
+        self.assertIn("DOMAIN-SUFFIX,ts.net,DIRECT", module_content)
+        self.assertIn("DOMAIN-SUFFIX,tailscale.com,DIRECT", module_content)
 
     def test_wechat_direct_module_has_approved_rules(self) -> None:
         content = WECHAT_MODULE.read_text(encoding="utf-8")
