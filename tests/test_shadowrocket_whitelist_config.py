@@ -125,17 +125,18 @@ class ShadowrocketWhitelistConfigTests(unittest.TestCase):
         custom_content = CUSTOM_CONF.read_text(encoding="utf-8")
         module_content = TAILSCALE_MODULE.read_text(encoding="utf-8")
         custom_rules = section_lines(custom_content, "Rule")
-        module_general = key_values(section_lines(module_content, "General"))
         module_rules = section_lines(module_content, "Rule")
         tailscale_rules = [
-            "IP-CIDR,100.64.0.0/10,DIRECT,no-resolve",
-            "IP-CIDR,100.100.100.100/32,DIRECT,no-resolve",
-            "DOMAIN-SUFFIX,ts.net,DIRECT",
-            "DOMAIN-SUFFIX,tailscale.com,DIRECT",
+            "IP-CIDR,100.64.0.0/10,TAILSCALE,no-resolve",
+            "DOMAIN-SUFFIX,ts.net,TAILSCALE",
         ]
 
-        self.assertEqual("100.100.100.100, *.ts.net, *.tailscale.com", module_general["skip-proxy"])
-        self.assertEqual("100.64.0.0/10", module_general.get("tun-excluded-routes"))
+        self.assertNotIn("[General]", module_content)
+        self.assertNotIn("skip-proxy", module_content)
+        self.assertNotIn("tun-excluded-routes", module_content)
+        self.assertNotIn("100.100.100.100", module_content)
+        self.assertNotIn("tailscale.com", module_content)
+        self.assertNotIn("DIRECT", module_content)
         self.assertNotIn("100.100.100.100", custom_content)
         self.assertNotIn("ts.net", custom_content)
         self.assertNotIn("tailscale.com", custom_content)
