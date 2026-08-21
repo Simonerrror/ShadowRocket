@@ -126,10 +126,9 @@ class ShadowrocketProfilesTests(unittest.TestCase):
         google_filter = re.compile(EXPECTED_GOOGLE_FILTER)
 
         for name in (
-            "🇦🇲 Armenia(L) SS",
             "🇫🇷 France(LK) Vless",
-            "🇸🇬 Singapore PS Trojan",
-            "🇪🇸 Spain(N) SS",
+            "🇸🇬 Singapore PS Vless",
+            "🇪🇸 Spain(N) Vless",
             "🇺🇸 USA NY Vless Global",
         ):
             with self.subTest(name=name):
@@ -137,9 +136,12 @@ class ShadowrocketProfilesTests(unittest.TestCase):
 
         for name in (
             "🇦🇲 Armenia(L) Trojan",
+            "🇦🇲 Armenia(L) SS",
             "🇫🇷 France Vless",
             "🇸🇬 Singapore Trojan",
+            "🇸🇬 Singapore PS Trojan",
             "🇪🇸 Spain(N) Hysteria2",
+            "🇪🇸 Spain(N) SS",
             "🇺🇸 USA NY Vless",
         ):
             with self.subTest(name=name):
