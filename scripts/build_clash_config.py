@@ -19,9 +19,14 @@ DEFAULT_PROVIDER_EXCLUDE_FILTER = ""
 DEFAULT_HEALTHCHECK_URL = "https://abs.twimg.com/favicon.ico"
 DEFAULT_HEALTHCHECK_INTERVAL = 780
 RULE_PROVIDER_INTERVAL = 86400
-SHADOWROCKET_AUTO_SUBSCRIPTION_FILTER = r"(?i)^(?!.*Russia)(?!.*\bSS\b)(?!.*\bTrojan\b)(?!.*\bWL\b).*$"
+SHADOWROCKET_MANUAL_SUBSCRIPTION_FILTER = r"(?i)^(?!.*\bWL\b).*$"
+SHADOWROCKET_AUTO_SUBSCRIPTION_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\bVLESS\b.*$"
+SHADOWROCKET_GOOGLE_SUBSCRIPTION_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bSS\b)(?!.*\bTrojan\b)(?!.*\bWL\b).*$"
 SHADOWROCKET_WL_SUBSCRIPTION_FILTER = r"(?i)\bWL\b"
-MIHOMO_AUTO_SUBSCRIPTION_EXCLUDE_FILTER = r"(?i)Russia|\bSS\b|\bTrojan\b|\bWL\b"
+MIHOMO_MANUAL_SUBSCRIPTION_EXCLUDE_FILTER = r"(?i)\bWL\b"
+MIHOMO_AUTO_SUBSCRIPTION_FILTER = r"(?i)\bVLESS\b"
+MIHOMO_AUTO_SUBSCRIPTION_EXCLUDE_FILTER = r"(?i)Russia|Belarus|Ukraine|\bWL\b"
+MIHOMO_GOOGLE_SUBSCRIPTION_EXCLUDE_FILTER = r"(?i)Russia|Belarus|Ukraine|\bSS\b|\bTrojan\b|\bWL\b"
 MIHOMO_WL_FILTER = r"(?i)\bWL\b"
 FAKE_IP_FILTER = [
     "+.lan",
@@ -208,8 +213,13 @@ def render_proxy_groups(groups: list[GroupSpec]) -> tuple[list[str], list[str]]:
         regex_filter = group.attrs.get("policy-regex-filter")
         if regex_filter:
             rendered.extend(["    use:", "      - Main-Sub"])
-            if regex_filter == SHADOWROCKET_AUTO_SUBSCRIPTION_FILTER:
+            if regex_filter == SHADOWROCKET_MANUAL_SUBSCRIPTION_FILTER:
+                rendered.append(f"    exclude-filter: {yaml_quote(MIHOMO_MANUAL_SUBSCRIPTION_EXCLUDE_FILTER)}")
+            elif regex_filter == SHADOWROCKET_AUTO_SUBSCRIPTION_FILTER:
+                rendered.append(f"    filter: {yaml_quote(MIHOMO_AUTO_SUBSCRIPTION_FILTER)}")
                 rendered.append(f"    exclude-filter: {yaml_quote(MIHOMO_AUTO_SUBSCRIPTION_EXCLUDE_FILTER)}")
+            elif regex_filter == SHADOWROCKET_GOOGLE_SUBSCRIPTION_FILTER:
+                rendered.append(f"    exclude-filter: {yaml_quote(MIHOMO_GOOGLE_SUBSCRIPTION_EXCLUDE_FILTER)}")
             elif regex_filter == SHADOWROCKET_WL_SUBSCRIPTION_FILTER:
                 rendered.append(f"    filter: {yaml_quote(MIHOMO_WL_FILTER)}")
             else:

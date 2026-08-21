@@ -12,7 +12,9 @@ PRIVATE_DNS_CONF = REPO_ROOT / "shadowrocket_custom_private_dns.conf"
 TAILSCALE_MODULE = REPO_ROOT / "modules" / "tailscale_direct.module"
 WECHAT_MODULE = REPO_ROOT / "modules" / "wechat_direct.module"
 README = REPO_ROOT / "README.md"
-EXPECTED_AUTO_FILTER = r"(?i)^(?!.*Russia)(?!.*\bSS\b)(?!.*\bTrojan\b)(?!.*\bWL\b).*$"
+EXPECTED_MANUAL_FILTER = r"(?i)^(?!.*\bWL\b).*$"
+EXPECTED_AUTO_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\bVLESS\b.*$"
+EXPECTED_GOOGLE_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bSS\b)(?!.*\bTrojan\b)(?!.*\bWL\b).*$"
 EXPECTED_WL_FILTER = r"(?i)\bWL\b"
 
 
@@ -44,55 +46,50 @@ class ShadowrocketProfilesTests(unittest.TestCase):
     def test_custom_proxy_groups_match_each_other(self) -> None:
         self.assertEqual(section_lines(CUSTOM_CONF, "Proxy Group"), section_lines(PRIVATE_DNS_CONF, "Proxy Group"))
 
-    def test_proxy_groups_reserve_wl_for_dedicated_group(self) -> None:
+    def test_proxy_groups_apply_each_subscription_scope(self) -> None:
         profiles = (BASE_CONF, CUSTOM_CONF, PRIVATE_DNS_CONF)
 
         for path in profiles:
             groups = key_values(path, "Proxy Group")
             for key, expected_filter in (
-                ("MANUAL-PROXY", EXPECTED_AUTO_FILTER),
+                ("MANUAL-PROXY", EXPECTED_MANUAL_FILTER),
                 ("AUTO-SPEED", EXPECTED_AUTO_FILTER),
                 ("AUTO-STABILITY", EXPECTED_AUTO_FILTER),
-                ("GOOGLE", EXPECTED_AUTO_FILTER),
+                ("GOOGLE", EXPECTED_GOOGLE_FILTER),
                 ("WL", EXPECTED_WL_FILTER),
             ):
                 with self.subTest(path=path.name, key=key):
-                    actual_filter = groups[key].split("policy-regex-filter=", 1)[1].split(",", 1)[0]
+                    actual_filter = groups[key].partition("policy-regex-filter=")[2].split(",", 1)[0]
                     self.assertEqual(expected_filter, actual_filter)
 
             self.assertTrue(groups["GOOGLE"].startswith("url-test,"))
             self.assertIn(",interval=180,tolerance=100,url=https://abs.twimg.com/favicon.ico,timeout=7", groups["GOOGLE"])
             self.assertTrue(groups["WL"].startswith("select,"))
-            self.assertIn("WL", groups["PROXY"].split(","))
+            self.assertEqual(
+                ["select", "MANUAL-PROXY", "AUTO-SPEED", "AUTO-STABILITY", "WL", "policy-select-name=AUTO-STABILITY"],
+                groups["PROXY"].split(","),
+            )
 
-    def test_subscription_filter_accepts_non_excluded_protocols(self) -> None:
-        subscription_filter = re.compile(EXPECTED_AUTO_FILTER)
+    def test_manual_filter_accepts_everything_except_standalone_wl(self) -> None:
+        subscription_filter = re.compile(EXPECTED_MANUAL_FILTER)
 
         for name in (
             "🇺🇸 United States Vless",
-            "BASS relay VLESS",
+            "🇷🇺 Russia Vless",
+            "🇧🇾 Belarus SS",
+            "🇺🇦 Ukraine Trojan",
             "🇫🇷 France Hysteria",
-            "🇫🇷 France Hysteria2",
             "Japan VMess",
-            "BASS relay",
-            "USA VLESS SS2022",
         ):
             with self.subTest(name=name):
                 self.assertTrue(subscription_filter.fullmatch(name))
 
         for name in (
-            "🇷🇺 Russia Vless",
-            "Germany SS",
-            "USA Trojan",
             "WL-lte VLESS",
             "VLESS WL",
         ):
             with self.subTest(name=name):
                 self.assertFalse(subscription_filter.fullmatch(name))
-
-        for name in ("Germany VLESS2", "USA SS2022", "Japan Trojan2", "WLAN VLESS", "BOWL relay"):
-            with self.subTest(name=name):
-                self.assertTrue(subscription_filter.fullmatch(name))
 
     def test_wl_filter_accepts_any_protocol_with_standalone_wl_token(self) -> None:
         wl_filter = re.compile(EXPECTED_WL_FILTER)
@@ -110,21 +107,44 @@ class ShadowrocketProfilesTests(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertIsNone(wl_filter.search(name))
 
-    def test_auto_filter_rejects_standalone_excluded_protocol_tokens(self) -> None:
+    def test_google_filter_excludes_cis_legacy_protocols_and_wl(self) -> None:
+        google_filter = re.compile(EXPECTED_GOOGLE_FILTER)
+
+        for name in ("France VLESS", "Germany Hysteria2", "Japan VMess", "USA SS2022"):
+            with self.subTest(name=name):
+                self.assertTrue(google_filter.fullmatch(name))
+
+        for name in (
+            "Russia VLESS",
+            "Belarus Hysteria2",
+            "Ukraine VMess",
+            "Germany SS",
+            "USA Trojan",
+            "France WL Mobile VLESS",
+        ):
+            with self.subTest(name=name):
+                self.assertFalse(google_filter.fullmatch(name))
+
+    def test_auto_filter_keeps_only_vless_outside_ru_by_ua(self) -> None:
         auto_filter = re.compile(EXPECTED_AUTO_FILTER)
 
-        for name in ("🇺🇸 United States Vless", "BOWL relay VLESS", "WLAN Germany VLESS", "BASS relay Hysteria2"):
+        for name in (
+            "🇺🇸 United States Vless",
+            "BOWL relay VLESS",
+            "WLAN Germany VLESS",
+        ):
             with self.subTest(name=name):
                 self.assertTrue(auto_filter.fullmatch(name))
 
         for name in (
-            "WL-lte VLESS Germany",
-            "🇫🇷 WL VLESS France",
-            "wl VLESS LTE",
+            "🇷🇺 Russia Vless",
+            "🇧🇾 Belarus(M) Vless",
+            "🇺🇦 Ukraine VLESS",
+            "🇫🇷 France WL Mobile Vless",
             "Germany SS",
             "USA Trojan",
             "TROJAN Hysteria2",
-            "🇷🇺 Russia Hysteria2",
+            "Germany VLESS2",
         ):
             with self.subTest(name=name):
                 self.assertFalse(auto_filter.fullmatch(name))
@@ -170,6 +190,7 @@ class ShadowrocketProfilesTests(unittest.TestCase):
         )
         module_content = TAILSCALE_MODULE.read_text(encoding="utf-8")
 
+        self.assertNotIn("100.64.0.0/10", profile_contents)
         self.assertNotIn("100.100.100.100", profile_contents)
         self.assertNotIn("ts.net", profile_contents)
         self.assertNotIn("tailscale.com", profile_contents)
