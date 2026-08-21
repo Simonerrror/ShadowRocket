@@ -1,13 +1,6 @@
-🇦🇲 Armenia(L) SS
 🇫🇷 France(LK) Vless
-🇫🇷 France(LK) SS
-🇫🇷 France(LK) Trojan
 🇸🇬 Singapore Vless
 🇸🇬 Singapore PS Vless
-🇸🇬 Singapore PS SS
-🇸🇬 Singapore PS Trojan
 🇪🇸 Spain(N) Vless
-🇪🇸 Spain(N) SS
-🇪🇸 Spain(N) Trojan
 🇦🇪 UAE(MO) Vless
 🇺🇸 USA NY Vless Global
