@@ -173,6 +173,7 @@ CDN; весь Tencent/QQ он не обходит.
 - Основной и custom-профиль используют общий DNS/skip/bypass каркас; `shadowrocket_custom_private_dns.conf` остаётся отдельной DoH/DoT альтернативой.
 - GFN/NVIDIA `always-real-ip` остаётся custom-only и не переносится в основной профиль.
 - `update-url` указывает на конфиг в репозитории.
+- Каждый публикуемый Shadowrocket-профиль содержит `Config-Version` сразу после `[General]`. Формат версии: `YYYY.MM.DD.N`, где `N` — номер ревизии за день.
 
 ### [Proxy Group]
 - **MANUAL-PROXY** — ручной выбор всей подписки без standalone `WL`.

@@ -9,6 +9,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 BASE_CONF = REPO_ROOT / "shadowrocket.conf"
 CUSTOM_CONF = REPO_ROOT / "shadowrocket_custom.conf"
 PRIVATE_DNS_CONF = REPO_ROOT / "shadowrocket_custom_private_dns.conf"
+WHITELIST_CONF = REPO_ROOT / "shadowrocket_whitelist.conf"
 TAILSCALE_MODULE = REPO_ROOT / "modules" / "tailscale_direct.module"
 WECHAT_MODULE = REPO_ROOT / "modules" / "wechat_direct.module"
 README = REPO_ROOT / "README.md"
@@ -16,6 +17,11 @@ EXPECTED_MANUAL_FILTER = r"(?i)^(?!.*\bWL\b).*$"
 EXPECTED_AUTO_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\bVLESS\b.*$"
 EXPECTED_GOOGLE_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bSS\b)(?!.*\bTrojan\b)(?!.*\bWL\b).*$"
 EXPECTED_WL_FILTER = r"(?i)\bWL\b"
+EXPECTED_PROVENANCE = [
+    "# Config-Version: 2026.08.21.1",
+    "# Maintainer: Simonerrror; contact: https://t.me/AIDHDaily",
+    "# README: https://github.com/Simonerrror/ShadowRocket#readme",
+]
 
 
 def section_lines(path: Path, section: str, *, keep_comments: bool = False) -> list[str]:
@@ -43,6 +49,13 @@ def key_values(path: Path, section: str) -> dict[str, str]:
 
 
 class ShadowrocketProfilesTests(unittest.TestCase):
+    def test_published_profiles_show_version_maintainer_and_readme(self) -> None:
+        for path in (BASE_CONF, CUSTOM_CONF, PRIVATE_DNS_CONF, WHITELIST_CONF):
+            lines = path.read_text(encoding="utf-8").splitlines()
+            general_index = lines.index("[General]")
+            with self.subTest(path=path.name):
+                self.assertEqual(EXPECTED_PROVENANCE, lines[general_index + 1 : general_index + 4])
+
     def test_custom_proxy_groups_match_each_other(self) -> None:
         self.assertEqual(section_lines(CUSTOM_CONF, "Proxy Group"), section_lines(PRIVATE_DNS_CONF, "Proxy Group"))
 
