@@ -47,17 +47,10 @@ class EisTransitionTlsModuleTests(unittest.TestCase):
         self.assertNotIn("ignore-certificate-errors", content)
         self.assertNotIn("skip-cert-verify", content)
 
-    def test_module_has_a_hard_repository_removal_deadline(self) -> None:
-        self.assertTrue(MODULE.is_file(), f"missing module: {MODULE}")
-        content = MODULE.read_text(encoding="utf-8")
-        expires_line = next(
-            line for line in content.splitlines() if line.startswith("#!expires=")
-        )
+        expires_line = next(line for line in lines if line.startswith("#!expires="))
         expires = dt.date.fromisoformat(expires_line.split("=", 1)[1])
-
         self.assertEqual(dt.date(2027, 3, 16), expires)
         self.assertLess(dt.date.today(), expires, "remove the expired EIS TLS exception")
-
 
 if __name__ == "__main__":
     unittest.main()

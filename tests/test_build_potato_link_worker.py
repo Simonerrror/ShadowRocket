@@ -40,36 +40,23 @@ class PotatoLinkBuildTests(unittest.TestCase):
 
             self.assertEqual(read_deeplink(path), VALID_DEFAULT)
 
-    def test_rejects_multiline_input(self) -> None:
-        with self.assertRaisesRegex(ValueError, "single line"):
-            validate_deeplink(VALID_DEFAULT + "\n" + VALID_RU, Path("bad"))
-
-    def test_rejects_unexpected_scheme(self) -> None:
-        with self.assertRaisesRegex(ValueError, "prefix"):
-            validate_deeplink("https://example.com/value", Path("bad"))
-
-    def test_validate_deeplink_requires_matching_scheme_prefix(self) -> None:
-        with self.assertRaisesRegex(ValueError, "prefix"):
-            validate_deeplink(VALID_INCY_DEFAULT, Path("bad"), scheme="happ")
-
-        with self.assertRaisesRegex(ValueError, "prefix"):
-            validate_deeplink(VALID_DEFAULT, Path("bad"), scheme="incy")
-
-    def test_validate_deeplink_accepts_supported_add_mode(self) -> None:
+    def test_validation_accepts_supported_modes_and_rejects_unsafe_inputs(self) -> None:
         self.assertEqual(
             validate_deeplink(VALID_INCY_ADD, Path("incy-add"), scheme="incy"),
             VALID_INCY_ADD,
         )
-
-    def test_rejects_invalid_base64(self) -> None:
-        with self.assertRaisesRegex(ValueError, "base64"):
-            validate_deeplink("happ://routing/onadd/not-valid!", Path("bad"))
-
-    def test_rejects_oversized_input(self) -> None:
-        value = "happ://routing/onadd/" + ("A" * MAX_DEEPLINK_LENGTH)
-
-        with self.assertRaisesRegex(ValueError, "16 KiB"):
-            validate_deeplink(value, Path("bad"))
+        cases = (
+            (VALID_DEFAULT + "\n" + VALID_RU, "happ", "single line"),
+            ("https://example.com/value", "happ", "prefix"),
+            (VALID_INCY_DEFAULT, "happ", "prefix"),
+            (VALID_DEFAULT, "incy", "prefix"),
+            ("happ://routing/onadd/not-valid!", "happ", "base64"),
+            ("happ://routing/onadd/" + ("A" * MAX_DEEPLINK_LENGTH), "happ", "16 KiB"),
+        )
+        for value, scheme, message in cases:
+            with self.subTest(message=message, scheme=scheme):
+                with self.assertRaisesRegex(ValueError, message):
+                    validate_deeplink(value, Path("bad"), scheme=scheme)
 
 
 if __name__ == "__main__":

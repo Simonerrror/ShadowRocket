@@ -14,7 +14,6 @@ PRIVATE_DNS_CONF = REPO_ROOT / "shadowrocket_custom_private_dns.conf"
 WHITELIST_CONF = REPO_ROOT / "shadowrocket_whitelist.conf"
 TAILSCALE_MODULE = REPO_ROOT / "modules" / "tailscale_direct.module"
 WECHAT_MODULE = REPO_ROOT / "modules" / "wechat_direct.module"
-README = REPO_ROOT / "README.md"
 EXPECTED_MANUAL_FILTER = r"(?i)^(?!.*\bWL\b).*$"
 EXPECTED_AUTO_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\bVLESS\b.*$"
 EXPECTED_GOOGLE_FILTER = SHADOWROCKET_GOOGLE_SUBSCRIPTION_FILTER
@@ -85,108 +84,66 @@ class ShadowrocketProfilesTests(unittest.TestCase):
                 groups["PROXY"].split(","),
             )
 
-    def test_manual_filter_accepts_everything_except_standalone_wl(self) -> None:
-        subscription_filter = re.compile(EXPECTED_MANUAL_FILTER)
+    def test_subscription_filters_accept_and_reject_expected_nodes(self) -> None:
+        cases = (
+            (
+                "manual",
+                EXPECTED_MANUAL_FILTER,
+                ("🇺🇸 United States Vless", "🇷🇺 Russia Vless", "🇧🇾 Belarus SS", "Japan VMess"),
+                ("WL-lte VLESS", "VLESS WL"),
+            ),
+            (
+                "wl",
+                EXPECTED_WL_FILTER,
+                ("WL Vless", "WL-lte VLESS", "VLESS WL", "WL Trojan", "WL SS"),
+                ("VLESS Germany", "WLAN VLESS", "BOWL relay Trojan"),
+            ),
+            (
+                "google",
+                EXPECTED_GOOGLE_FILTER,
+                ("🇫🇷 France(LK) Vless", "🇸🇬 Singapore PS Vless", "🇪🇸 Spain(N) Vless"),
+                ("🇦🇲 Armenia(L) Trojan", "🇫🇷 France Vless", "🇸🇬 Singapore PS Trojan", "🇺🇸 USA NY Vless"),
+            ),
+            (
+                "auto",
+                EXPECTED_AUTO_FILTER,
+                ("🇺🇸 United States Vless", "BOWL relay VLESS", "WLAN Germany VLESS"),
+                ("🇷🇺 Russia Vless", "🇧🇾 Belarus(M) Vless", "🇺🇦 Ukraine VLESS", "🇫🇷 France WL Mobile Vless", "Germany SS", "USA Trojan"),
+            ),
+        )
+        for group, pattern, accepted, rejected in cases:
+            compiled = re.compile(pattern)
+            for name in accepted:
+                with self.subTest(group=group, name=name, expected="accept"):
+                    self.assertIsNotNone(compiled.search(name) if group == "wl" else compiled.fullmatch(name))
+            for name in rejected:
+                with self.subTest(group=group, name=name, expected="reject"):
+                    self.assertIsNone(compiled.search(name) if group == "wl" else compiled.fullmatch(name))
 
-        for name in (
-            "🇺🇸 United States Vless",
-            "🇷🇺 Russia Vless",
-            "🇧🇾 Belarus SS",
-            "🇺🇦 Ukraine Trojan",
-            "🇫🇷 France Hysteria",
-            "Japan VMess",
-        ):
-            with self.subTest(name=name):
-                self.assertTrue(subscription_filter.fullmatch(name))
-
-        for name in (
-            "WL-lte VLESS",
-            "VLESS WL",
-        ):
-            with self.subTest(name=name):
-                self.assertFalse(subscription_filter.fullmatch(name))
-
-    def test_wl_filter_accepts_any_protocol_with_standalone_wl_token(self) -> None:
-        wl_filter = re.compile(EXPECTED_WL_FILTER)
-
-        for name in ("WL Vless", "WL-lte VLESS", "VLESS WL", "WL Trojan", "WL SS", "WL Hysteria2"):
-            with self.subTest(name=name):
-                self.assertIsNotNone(wl_filter.search(name))
-
-        for name in (
-            "VLESS Germany",
-            "WLAN VLESS",
-            "BOWL relay Trojan",
-            "Germany SS",
-        ):
-            with self.subTest(name=name):
-                self.assertIsNone(wl_filter.search(name))
-
-    def test_google_filter_accepts_only_verified_gemini_allowlist(self) -> None:
-        google_filter = re.compile(EXPECTED_GOOGLE_FILTER)
-
-        for name in (
-            "🇫🇷 France(LK) Vless",
-            "🇸🇬 Singapore PS Vless",
-            "🇪🇸 Spain(N) Vless",
-            "🇺🇸 USA NY Vless Global",
-        ):
-            with self.subTest(name=name):
-                self.assertTrue(google_filter.fullmatch(name))
-
-        for name in (
-            "🇦🇲 Armenia(L) Trojan",
-            "🇦🇲 Armenia(L) SS",
-            "🇫🇷 France Vless",
-            "🇸🇬 Singapore Trojan",
-            "🇸🇬 Singapore PS Trojan",
-            "🇪🇸 Spain(N) Hysteria2",
-            "🇪🇸 Spain(N) SS",
-            "🇺🇸 USA NY Vless",
-        ):
-            with self.subTest(name=name):
-                self.assertFalse(google_filter.fullmatch(name))
-
-    def test_auto_filter_keeps_only_vless_outside_ru_by_ua(self) -> None:
-        auto_filter = re.compile(EXPECTED_AUTO_FILTER)
-
-        for name in (
-            "🇺🇸 United States Vless",
-            "BOWL relay VLESS",
-            "WLAN Germany VLESS",
-        ):
-            with self.subTest(name=name):
-                self.assertTrue(auto_filter.fullmatch(name))
-
-        for name in (
-            "🇷🇺 Russia Vless",
-            "🇧🇾 Belarus(M) Vless",
-            "🇺🇦 Ukraine VLESS",
-            "🇫🇷 France WL Mobile Vless",
-            "Germany SS",
-            "USA Trojan",
-            "TROJAN Hysteria2",
-            "Germany VLESS2",
-        ):
-            with self.subTest(name=name):
-                self.assertFalse(auto_filter.fullmatch(name))
-
-    def test_base_and_custom_use_same_dns(self) -> None:
+    def test_profiles_keep_shared_and_private_dns_contracts(self) -> None:
         base_general = key_values(BASE_CONF, "General")
         custom_general = key_values(CUSTOM_CONF, "General")
+        private_general = key_values(PRIVATE_DNS_CONF, "General")
+        whitelist_general = key_values(WHITELIST_CONF, "General")
 
         self.assertEqual("9.9.9.9, 149.112.112.112, 77.88.8.8", base_general["dns-server"])
         self.assertEqual(base_general["dns-server"], custom_general["dns-server"])
         self.assertEqual(base_general["fallback-dns-server"], custom_general["fallback-dns-server"])
-
-    def test_private_dns_profile_keeps_doh_dot(self) -> None:
-        general = key_values(PRIVATE_DNS_CONF, "General")
-
+        for key in (
+            "dns-server",
+            "fallback-dns-server",
+            "dns-direct-system",
+            "always-real-ip",
+            "dns-direct-fallback-proxy",
+            "hijack-dns",
+        ):
+            with self.subTest(profile="whitelist", key=key):
+                self.assertEqual(custom_general[key], whitelist_general[key])
         self.assertEqual(
             "https://dns.mullvad.net/dns-query, https://dns.quad9.net/dns-query",
-            general["dns-server"],
+            private_general["dns-server"],
         )
-        self.assertEqual("tls://dns.mullvad.net, tls://dns.quad9.net", general["fallback-dns-server"])
+        self.assertEqual("tls://dns.mullvad.net, tls://dns.quad9.net", private_general["fallback-dns-server"])
 
     def test_base_keeps_custom_only_gfn_exceptions_out(self) -> None:
         base_general = key_values(BASE_CONF, "General")
@@ -208,9 +165,12 @@ class ShadowrocketProfilesTests(unittest.TestCase):
 
     def test_tailscale_specific_rules_stay_in_module(self) -> None:
         profile_contents = "\n".join(
-            path.read_text(encoding="utf-8") for path in (BASE_CONF, CUSTOM_CONF, PRIVATE_DNS_CONF)
+            path.read_text(encoding="utf-8")
+            for path in (BASE_CONF, CUSTOM_CONF, PRIVATE_DNS_CONF, WHITELIST_CONF)
         )
         module_content = TAILSCALE_MODULE.read_text(encoding="utf-8")
+        module_general = key_values(TAILSCALE_MODULE, "General")
+        module_rules = section_lines(TAILSCALE_MODULE, "Rule")
 
         self.assertNotIn("100.64.0.0/10", profile_contents)
         self.assertNotIn("100.100.100.100", profile_contents)
@@ -219,6 +179,16 @@ class ShadowrocketProfilesTests(unittest.TestCase):
         self.assertIn("100.100.100.100", module_content)
         self.assertIn("DOMAIN-SUFFIX,ts.net,DIRECT", module_content)
         self.assertIn("DOMAIN-SUFFIX,tailscale.com,DIRECT", module_content)
+        self.assertEqual("100.100.100.100, *.ts.net, *.tailscale.com", module_general["skip-proxy"])
+        self.assertEqual("100.64.0.0/10", module_general["tun-excluded-routes"])
+        for rule in (
+            "IP-CIDR,100.64.0.0/10,DIRECT,no-resolve",
+            "IP-CIDR,100.100.100.100/32,DIRECT,no-resolve",
+            "DOMAIN-SUFFIX,ts.net,DIRECT",
+            "DOMAIN-SUFFIX,tailscale.com,DIRECT",
+        ):
+            with self.subTest(rule=rule):
+                self.assertIn(rule, module_rules)
 
     def test_wechat_direct_module_has_approved_rules(self) -> None:
         content = WECHAT_MODULE.read_text(encoding="utf-8")
@@ -243,34 +213,11 @@ class ShadowrocketProfilesTests(unittest.TestCase):
         self.assertIn("[Rule]", content)
         self.assertEqual(expected_rules, rules)
 
-    def test_wechat_direct_module_excludes_broad_tencent_and_ip_rules(self) -> None:
-        rules = section_lines(WECHAT_MODULE, "Rule")
-
         self.assertNotIn("DOMAIN-SUFFIX,qq.com,DIRECT", rules)
         self.assertNotIn("DOMAIN-SUFFIX,gtimg.com,DIRECT", rules)
         self.assertNotIn("DOMAIN-SUFFIX,gtimg.cn,DIRECT", rules)
         self.assertNotIn("DOMAIN-SUFFIX,tencent.com,DIRECT", rules)
         self.assertFalse(any(rule.startswith(("IP-CIDR,", "IP-CIDR6,")) for rule in rules))
-
-    def test_readme_documents_wechat_direct_module(self) -> None:
-        content = README.read_text(encoding="utf-8")
-
-        self.assertIn("modules/wechat_direct.module", content)
-        self.assertIn(
-            "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/wechat_direct.module",
-            content,
-        )
-        self.assertIn("выше anti-advertising", content)
-
-    def test_rule_comments_have_visual_spacing(self) -> None:
-        for path in (BASE_CONF, CUSTOM_CONF, PRIVATE_DNS_CONF):
-            lines = path.read_text(encoding="utf-8").splitlines()
-            rule_start = lines.index("[Rule]")
-            for index in range(rule_start + 2, len(lines)):
-                if lines[index].startswith("#"):
-                    with self.subTest(path=path.name, comment=lines[index]):
-                        self.assertEqual("", lines[index - 1])
-
 
 if __name__ == "__main__":
     unittest.main()

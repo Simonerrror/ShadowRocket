@@ -55,18 +55,14 @@ class BuildDistillateSafetyTests(unittest.TestCase):
             for path, content in sentinels.items():
                 self.assertEqual(path.read_text(encoding="utf-8"), content)
 
-    def test_compiler_commits_are_reviewed_immutable_shas(self) -> None:
+    def test_external_geoip_inputs_are_pinned_and_verified(self) -> None:
         self.assertEqual(GEOSITE_COMMIT, "bb622a2b75b3dfbec83719c1eb6e748720ea698e")
         self.assertEqual(GEOIP_COMMIT, "fbeec6d51a544ba4c19d75cf04260f74c965fbd7")
-
-    def test_ru_geoip_source_is_pinned_and_checksum_verified(self) -> None:
         self.assertEqual(GEOIP_DATA_COMMIT, "402b99afef60cf55058350b5d8c29322835636cd")
         self.assertEqual(
             GEOIP_DATA_SHA256,
             "b71d1999439dde2de2d2b6844a2befa50c50211ff739785c005ca7c230a17d6a",
         )
-
-    def test_verify_ru_geoip_source_rejects_wrong_payload(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             path = Path(tmpdir) / "geoip.dat"
             path.write_bytes(b"wrong")
@@ -74,28 +70,22 @@ class BuildDistillateSafetyTests(unittest.TestCase):
             with self.assertRaisesRegex(DistillateError, "checksum mismatch"):
                 verify_ru_geoip_source(path)
 
-    def test_compiled_geosite_tags_include_category_ru(self) -> None:
+    def test_ru_compiler_inputs_include_required_geosite_and_geoip_sources(self) -> None:
         tags = compiled_geosite_tags({"sr-direct": CategoryResult("sr-direct")})
-
         self.assertEqual(tags, ["category-ru", "sr-direct"])
-
-    def test_geoip_inputs_import_ru_from_cached_v2fly_dat(self) -> None:
         inputs, wanted = geoip_compiler_inputs(Path("/repo"), {})
-
         self.assertEqual(inputs[0]["type"], "v2rayGeoIPDat")
         self.assertEqual(inputs[0]["args"]["wantedList"], ["ru"])
         self.assertEqual(inputs[0]["args"]["uri"], "/repo/distillate/upstream/v2fly/geoip.dat")
         self.assertIn("ru", wanted)
 
-    def test_canonicalize_compiled_ru_text_keeps_only_ipv4(self) -> None:
+    def test_canonicalize_compiled_ru_text_keeps_ipv4_and_rejects_empty_output(self) -> None:
         canonical = canonicalize_ipv4_text(
             "203.0.113.128/25\n2001:db8::/32\n203.0.113.0/25\n"
         )
 
         self.assertEqual(canonical, ["203.0.113.0/24"])
         self.assertEqual(RU_IPV4_PATH.as_posix(), "distillate/upstream/v2fly/ru_ipv4.txt")
-
-    def test_canonicalize_compiled_ru_text_rejects_empty_output(self) -> None:
         with self.assertRaisesRegex(DistillateError, "empty"):
             canonicalize_ipv4_text("# no CIDRs\n2001:db8::/32\n")
 

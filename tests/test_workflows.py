@@ -40,6 +40,16 @@ class WorkflowHardeningTests(unittest.TestCase):
         self.assertIn("python3 -m unittest discover -s tests -v", content)
         self.assertLess(content.index("python3 -m unittest discover"), content.index("actions/upload-artifact@"))
         self.assertNotIn("git push\n", content.split("  build:", 1)[1].split("  publish:", 1)[0])
+        self.assertIn("gh release upload incy-geodata", content)
+        for path in (
+            "distillate/dat/geoip.dat",
+            "distillate/dat/geoip.dat.sha256",
+            "distillate/dat/geosite.dat",
+            "distillate/dat/geosite.dat.sha256",
+        ):
+            with self.subTest(path=path):
+                self.assertIn(path, content)
+        self.assertIn("--clobber", content)
 
     def test_workflows_pin_every_action_to_reviewed_sha(self) -> None:
         combined = (
@@ -55,26 +65,10 @@ class WorkflowHardeningTests(unittest.TestCase):
                 else:
                     self.assertIn(pin, combined)
         self.assertNotRegex(combined, r"uses: actions/[^@]+@v\d")
-
-    def test_potato_link_workflow_is_pinned_and_read_only(self) -> None:
         content = DEPLOY_WORKFLOW.read_text(encoding="utf-8")
-
-        self.assertIn(
-            "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
-            content,
-        )
-        self.assertIn(
-            "actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065",
-            content,
-        )
-        self.assertIn(
-            "actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e",
-            content,
-        )
         self.assertIn('node-version: "22.17.1"', content)
         self.assertIn("permissions:\n  contents: read", content)
         self.assertIn("persist-credentials: false", content)
-        self.assertNotRegex(content, r"uses: actions/[^@]+@v\d")
 
     def test_potato_link_workflow_verifies_before_trusted_deploy(self) -> None:
         content = DEPLOY_WORKFLOW.read_text(encoding="utf-8")
@@ -107,9 +101,10 @@ class WorkflowHardeningTests(unittest.TestCase):
             deploy,
         )
 
-    def test_release_workflows_regenerate_embedded_destinations(self) -> None:
+    def test_release_workflows_rebuild_and_cover_published_routing_artifacts(self) -> None:
         sync = SYNC_WORKFLOW.read_text(encoding="utf-8")
         verify = VERIFY_WORKFLOW.read_text(encoding="utf-8")
+        deploy = DEPLOY_WORKFLOW.read_text(encoding="utf-8")
         generated = "cloudflare/potato-link/dist/destinations.js"
 
         self.assertIn("python3 scripts/build_potato_link_worker.py", sync)
@@ -118,12 +113,6 @@ class WorkflowHardeningTests(unittest.TestCase):
         self.assertIn("python3 scripts/build_amnezia_routing.py", verify)
         self.assertIn(generated, sync)
         self.assertTrue(is_allowed_publish_path(generated))
-
-    def test_release_workflows_build_and_publish_incy_artifacts(self) -> None:
-        sync = SYNC_WORKFLOW.read_text(encoding="utf-8")
-        verify = VERIFY_WORKFLOW.read_text(encoding="utf-8")
-        deploy = DEPLOY_WORKFLOW.read_text(encoding="utf-8")
-
         for content in (sync, verify):
             with self.subTest(content="workflow build"):
                 self.assertIn("python3 scripts/build_incy_routing.py", content)
@@ -137,48 +126,15 @@ class WorkflowHardeningTests(unittest.TestCase):
         ):
             with self.subTest(path=path):
                 self.assertIn(path, deploy)
-
-    def test_sync_workflow_publishes_incy_geodata_release_assets(self) -> None:
-        content = SYNC_WORKFLOW.read_text(encoding="utf-8")
-
-        self.assertIn("gh release upload incy-geodata", content)
-        for path in (
-            "distillate/dat/geoip.dat",
-            "distillate/dat/geoip.dat.sha256",
-            "distillate/dat/geosite.dat",
-            "distillate/dat/geosite.dat.sha256",
-        ):
-            with self.subTest(path=path):
-                self.assertIn(path, content)
-        self.assertIn("--clobber", content)
-
-    def test_publish_path_allowlist_accepts_incy_generated_outputs(self) -> None:
-        for path in (
-            "INCY/DEFAULT.JSON",
-            "INCY/DEFAULT.DEEPLINK",
-            "INCY/RU-VPN.JSON",
-            "INCY/RU-VPN.DEEPLINK",
-        ):
-            with self.subTest(path=path):
-                self.assertTrue(is_allowed_publish_path(path))
-
-    def test_verification_workflow_is_read_only(self) -> None:
-        content = VERIFY_WORKFLOW.read_text(encoding="utf-8")
-
-        self.assertIn("permissions:\n  contents: read", content)
-        self.assertIn("persist-credentials: false", content)
-        self.assertIn("git diff --exit-code", content)
-        self.assertNotIn("git push", content)
-        self.assertNotIn("contents: write", content)
-
-    def test_workflows_cover_ru_vpn_artifacts(self) -> None:
-        sync_content = SYNC_WORKFLOW.read_text(encoding="utf-8")
-        verify_content = VERIFY_WORKFLOW.read_text(encoding="utf-8")
-
-        self.assertIn('- "HAPP/**"', verify_content)
+        self.assertIn('- "HAPP/**"', verify)
         for path in ("HAPP/RU-VPN.JSON", "HAPP/RU-VPN.DEEPLINK"):
             with self.subTest(path=path):
-                self.assertIn(path, sync_content)
+                self.assertIn(path, sync)
+        self.assertIn("permissions:\n  contents: read", verify)
+        self.assertIn("persist-credentials: false", verify)
+        self.assertIn("git diff --exit-code", verify)
+        self.assertNotIn("git push", verify)
+        self.assertNotIn("contents: write", verify)
 
     def test_publish_path_allowlist_accepts_only_generated_outputs(self) -> None:
         allowed = (

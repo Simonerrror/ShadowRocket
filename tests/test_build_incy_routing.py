@@ -64,22 +64,16 @@ class IncyProfileContractTests(unittest.TestCase):
         self.assertIs(incy["useChunkFiles"], False)
         self.assertNotIn("UseChunkFiles", incy)
 
-    def test_incy_deeplink_is_compact_standard_base64_and_decodes_to_profile(self) -> None:
+    def test_incy_deeplink_modes_are_compact_base64_and_decode_to_profile(self) -> None:
         profile = {"Name": "RU-VPN", "GlobalProxy": "false", "useChunkFiles": False}
-
-        pretty, compact, deeplink = profile_to_deeplink(profile, "onadd")
-        encoded = deeplink.rsplit("/", 1)[1]
-
-        self.assertTrue(deeplink.startswith("incy://routing/onadd/"))
-        self.assertEqual(base64.b64decode(encoded).decode("utf-8"), compact)
-        self.assertEqual(json.loads(pretty), profile)
-        self.assertEqual(json.loads(compact), profile)
-
-    def test_incy_supports_add_and_onadd_modes(self) -> None:
-        profile = {"Name": "test", "useChunkFiles": False}
-
-        self.assertTrue(profile_to_deeplink(profile, "add")[2].startswith("incy://routing/add/"))
-        self.assertTrue(profile_to_deeplink(profile, "onadd")[2].startswith("incy://routing/onadd/"))
+        for mode in ("add", "onadd"):
+            with self.subTest(mode=mode):
+                pretty, compact, deeplink = profile_to_deeplink(profile, mode)
+                encoded = deeplink.rsplit("/", 1)[1]
+                self.assertTrue(deeplink.startswith(f"incy://routing/{mode}/"))
+                self.assertEqual(base64.b64decode(encoded).decode("utf-8"), compact)
+                self.assertEqual(json.loads(pretty), profile)
+                self.assertEqual(json.loads(compact), profile)
 
     def test_incy_stamp_preserves_existing_profile_stamp(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
