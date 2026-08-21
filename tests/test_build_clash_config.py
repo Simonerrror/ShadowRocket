@@ -13,12 +13,11 @@ from scripts.build_clash_config import (
 
 EXPECTED_MANUAL_FILTER = r"(?i)^(?!.*\bWL\b).*$"
 EXPECTED_AUTO_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\bVLESS\b.*$"
-EXPECTED_GOOGLE_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bSS\b)(?!.*\bTrojan\b)(?!.*\bWL\b).*$"
+EXPECTED_GOOGLE_FILTER = r"(?i)^(?:🇦🇲 Armenia\(L\) SS|🇫🇷 France\(LK\) Vless|🇫🇷 France\(LK\) SS|🇫🇷 France\(LK\) Trojan|🇸🇬 Singapore Vless|🇸🇬 Singapore PS Vless|🇸🇬 Singapore PS SS|🇸🇬 Singapore PS Trojan|🇪🇸 Spain\(N\) Vless|🇪🇸 Spain\(N\) SS|🇪🇸 Spain\(N\) Trojan|🇦🇪 UAE\(MO\) Vless|🇺🇸 USA NY Vless Global)$"
 EXPECTED_WL_FILTER = r"(?i)\bWL\b"
 EXPECTED_MIHOMO_MANUAL_EXCLUDE_FILTER = r"(?i)\bWL\b"
 EXPECTED_MIHOMO_AUTO_FILTER = r"(?i)\bVLESS\b"
 EXPECTED_MIHOMO_AUTO_EXCLUDE_FILTER = r"(?i)Russia|Belarus|Ukraine|\bWL\b"
-EXPECTED_MIHOMO_GOOGLE_EXCLUDE_FILTER = r"(?i)Russia|Belarus|Ukraine|\bSS\b|\bTrojan\b|\bWL\b"
 EXPECTED_MIHOMO_WL_FILTER = r"(?i)\bWL\b"
 
 
@@ -42,8 +41,8 @@ class BuildClashConfigTests(unittest.TestCase):
         google_group = content.split("  - name: GOOGLE", 1)[1].split("  - name:", 1)[0]
         self.assertIn("    type: url-test", google_group)
         self.assertIn("    use:\n      - Main-Sub", google_group)
-        self.assertIn(f"    exclude-filter: {yaml_quote(EXPECTED_MIHOMO_GOOGLE_EXCLUDE_FILTER)}", google_group)
-        self.assertNotIn("    filter:", google_group)
+        self.assertIn(f"    filter: {yaml_quote(EXPECTED_GOOGLE_FILTER)}", google_group)
+        self.assertNotIn("    exclude-filter:", google_group)
         self.assertIn('    url: "https://abs.twimg.com/favicon.ico"', google_group)
         self.assertIn("    interval: 180", google_group)
         self.assertIn("    tolerance: 100", google_group)

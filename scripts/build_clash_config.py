@@ -21,12 +21,12 @@ DEFAULT_HEALTHCHECK_INTERVAL = 780
 RULE_PROVIDER_INTERVAL = 86400
 SHADOWROCKET_MANUAL_SUBSCRIPTION_FILTER = r"(?i)^(?!.*\bWL\b).*$"
 SHADOWROCKET_AUTO_SUBSCRIPTION_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\bVLESS\b.*$"
-SHADOWROCKET_GOOGLE_SUBSCRIPTION_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bSS\b)(?!.*\bTrojan\b)(?!.*\bWL\b).*$"
+SHADOWROCKET_GOOGLE_SUBSCRIPTION_FILTER = r"(?i)^(?:🇦🇲 Armenia\(L\) SS|🇫🇷 France\(LK\) Vless|🇫🇷 France\(LK\) SS|🇫🇷 France\(LK\) Trojan|🇸🇬 Singapore Vless|🇸🇬 Singapore PS Vless|🇸🇬 Singapore PS SS|🇸🇬 Singapore PS Trojan|🇪🇸 Spain\(N\) Vless|🇪🇸 Spain\(N\) SS|🇪🇸 Spain\(N\) Trojan|🇦🇪 UAE\(MO\) Vless|🇺🇸 USA NY Vless Global)$"
 SHADOWROCKET_WL_SUBSCRIPTION_FILTER = r"(?i)\bWL\b"
 MIHOMO_MANUAL_SUBSCRIPTION_EXCLUDE_FILTER = r"(?i)\bWL\b"
 MIHOMO_AUTO_SUBSCRIPTION_FILTER = r"(?i)\bVLESS\b"
 MIHOMO_AUTO_SUBSCRIPTION_EXCLUDE_FILTER = r"(?i)Russia|Belarus|Ukraine|\bWL\b"
-MIHOMO_GOOGLE_SUBSCRIPTION_EXCLUDE_FILTER = r"(?i)Russia|Belarus|Ukraine|\bSS\b|\bTrojan\b|\bWL\b"
+MIHOMO_GOOGLE_SUBSCRIPTION_FILTER = SHADOWROCKET_GOOGLE_SUBSCRIPTION_FILTER
 MIHOMO_WL_FILTER = r"(?i)\bWL\b"
 FAKE_IP_FILTER = [
     "+.lan",
@@ -219,7 +219,7 @@ def render_proxy_groups(groups: list[GroupSpec]) -> tuple[list[str], list[str]]:
                 rendered.append(f"    filter: {yaml_quote(MIHOMO_AUTO_SUBSCRIPTION_FILTER)}")
                 rendered.append(f"    exclude-filter: {yaml_quote(MIHOMO_AUTO_SUBSCRIPTION_EXCLUDE_FILTER)}")
             elif regex_filter == SHADOWROCKET_GOOGLE_SUBSCRIPTION_FILTER:
-                rendered.append(f"    exclude-filter: {yaml_quote(MIHOMO_GOOGLE_SUBSCRIPTION_EXCLUDE_FILTER)}")
+                rendered.append(f"    filter: {yaml_quote(MIHOMO_GOOGLE_SUBSCRIPTION_FILTER)}")
             elif regex_filter == SHADOWROCKET_WL_SUBSCRIPTION_FILTER:
                 rendered.append(f"    filter: {yaml_quote(MIHOMO_WL_FILTER)}")
             else:

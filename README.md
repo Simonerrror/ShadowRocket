@@ -197,6 +197,7 @@ CDN; весь Tencent/QQ он не обходит.
 2. **Google/Gemini/YouTube**
    - Категория `google_all` собирается из BM7 `Google`/`GoogleDrive`/`GoogleEarth`/`GoogleFCM`/`GoogleSearch`/`GoogleVoice`/`YouTube`/`YouTubeMusic`/`Gemini`.
    - Домены и IP направляются в группу `GOOGLE` с `force-remote-dns` для доменных списков.
+   - Группа `GOOGLE` ограничена точным allowlist имён узлов, прошедших прикладную проверку доступности Gemini; её `url-test` выбирает живой и быстрый узел уже внутри этого списка.
 3. **Microsoft/Office 365/Teams/OneDrive**
    - Категория `microsoft` собирается из BM7 `Microsoft` и уходит в `PROXY`.
 4. **Community bundle**

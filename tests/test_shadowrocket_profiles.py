@@ -15,7 +15,7 @@ WECHAT_MODULE = REPO_ROOT / "modules" / "wechat_direct.module"
 README = REPO_ROOT / "README.md"
 EXPECTED_MANUAL_FILTER = r"(?i)^(?!.*\bWL\b).*$"
 EXPECTED_AUTO_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\bVLESS\b.*$"
-EXPECTED_GOOGLE_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bSS\b)(?!.*\bTrojan\b)(?!.*\bWL\b).*$"
+EXPECTED_GOOGLE_FILTER = r"(?i)^(?:🇦🇲 Armenia\(L\) SS|🇫🇷 France\(LK\) Vless|🇫🇷 France\(LK\) SS|🇫🇷 France\(LK\) Trojan|🇸🇬 Singapore Vless|🇸🇬 Singapore PS Vless|🇸🇬 Singapore PS SS|🇸🇬 Singapore PS Trojan|🇪🇸 Spain\(N\) Vless|🇪🇸 Spain\(N\) SS|🇪🇸 Spain\(N\) Trojan|🇦🇪 UAE\(MO\) Vless|🇺🇸 USA NY Vless Global)$"
 EXPECTED_WL_FILTER = r"(?i)\bWL\b"
 EXPECTED_PROVENANCE = [
     "# Config-Version: 2026.08.21.1",
@@ -120,20 +120,25 @@ class ShadowrocketProfilesTests(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertIsNone(wl_filter.search(name))
 
-    def test_google_filter_excludes_cis_legacy_protocols_and_wl(self) -> None:
+    def test_google_filter_accepts_only_verified_gemini_allowlist(self) -> None:
         google_filter = re.compile(EXPECTED_GOOGLE_FILTER)
 
-        for name in ("France VLESS", "Germany Hysteria2", "Japan VMess", "USA SS2022"):
+        for name in (
+            "🇦🇲 Armenia(L) SS",
+            "🇫🇷 France(LK) Vless",
+            "🇸🇬 Singapore PS Trojan",
+            "🇪🇸 Spain(N) SS",
+            "🇺🇸 USA NY Vless Global",
+        ):
             with self.subTest(name=name):
                 self.assertTrue(google_filter.fullmatch(name))
 
         for name in (
-            "Russia VLESS",
-            "Belarus Hysteria2",
-            "Ukraine VMess",
-            "Germany SS",
-            "USA Trojan",
-            "France WL Mobile VLESS",
+            "🇦🇲 Armenia(L) Trojan",
+            "🇫🇷 France Vless",
+            "🇸🇬 Singapore Trojan",
+            "🇪🇸 Spain(N) Hysteria2",
+            "🇺🇸 USA NY Vless",
         ):
             with self.subTest(name=name):
                 self.assertFalse(google_filter.fullmatch(name))
