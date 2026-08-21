@@ -5,6 +5,7 @@ import unittest
 from scripts.build_clash_config import (
     DEFAULT_CONF,
     DEFAULT_SUBSCRIPTION_URL,
+    SHADOWROCKET_GOOGLE_SUBSCRIPTION_FILTER,
     build_config,
     parse_proxy_groups,
     yaml_quote,
@@ -13,7 +14,7 @@ from scripts.build_clash_config import (
 
 EXPECTED_MANUAL_FILTER = r"(?i)^(?!.*\bWL\b).*$"
 EXPECTED_AUTO_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\bVLESS\b.*$"
-EXPECTED_GOOGLE_FILTER = r"(?i)^(?:🇦🇲 Armenia\(L\) SS|🇫🇷 France\(LK\) Vless|🇫🇷 France\(LK\) SS|🇫🇷 France\(LK\) Trojan|🇸🇬 Singapore Vless|🇸🇬 Singapore PS Vless|🇸🇬 Singapore PS SS|🇸🇬 Singapore PS Trojan|🇪🇸 Spain\(N\) Vless|🇪🇸 Spain\(N\) SS|🇪🇸 Spain\(N\) Trojan|🇦🇪 UAE\(MO\) Vless|🇺🇸 USA NY Vless Global)$"
+EXPECTED_GOOGLE_FILTER = SHADOWROCKET_GOOGLE_SUBSCRIPTION_FILTER
 EXPECTED_WL_FILTER = r"(?i)\bWL\b"
 EXPECTED_MIHOMO_MANUAL_EXCLUDE_FILTER = r"(?i)\bWL\b"
 EXPECTED_MIHOMO_AUTO_FILTER = r"(?i)\bVLESS\b"
