@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = REPO_ROOT / "clash_config.yaml"
 DEFAULT_CONF = REPO_ROOT / "shadowrocket.conf"
+DEFAULT_GEMINI_ALLOWLIST = REPO_ROOT / "gemini_node_allowlist.txt"
 DEFAULT_SUBSCRIPTION_URL = "<INSERT_SUBSCRIPTION_URL_HERE>"
 DEFAULT_PROVIDER_FILTER = ""
 DEFAULT_PROVIDER_EXCLUDE_FILTER = ""
@@ -21,7 +22,11 @@ DEFAULT_HEALTHCHECK_INTERVAL = 780
 RULE_PROVIDER_INTERVAL = 86400
 SHADOWROCKET_MANUAL_SUBSCRIPTION_FILTER = r"(?i)^(?!.*\bWL\b).*$"
 SHADOWROCKET_AUTO_SUBSCRIPTION_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\bVLESS\b.*$"
-SHADOWROCKET_GOOGLE_SUBSCRIPTION_FILTER = r"(?i)^(?:🇦🇲 Armenia\(L\) SS|🇫🇷 France\(LK\) Vless|🇫🇷 France\(LK\) SS|🇫🇷 France\(LK\) Trojan|🇸🇬 Singapore Vless|🇸🇬 Singapore PS Vless|🇸🇬 Singapore PS SS|🇸🇬 Singapore PS Trojan|🇪🇸 Spain\(N\) Vless|🇪🇸 Spain\(N\) SS|🇪🇸 Spain\(N\) Trojan|🇦🇪 UAE\(MO\) Vless|🇺🇸 USA NY Vless Global)$"
+SHADOWROCKET_GOOGLE_SUBSCRIPTION_FILTER = "(?i)^(?:" + "|".join(
+    re.escape(line.strip())
+    for line in DEFAULT_GEMINI_ALLOWLIST.read_text(encoding="utf-8").splitlines()
+    if line.strip()
+) + ")$"
 SHADOWROCKET_WL_SUBSCRIPTION_FILTER = r"(?i)\bWL\b"
 MIHOMO_MANUAL_SUBSCRIPTION_EXCLUDE_FILTER = r"(?i)\bWL\b"
 MIHOMO_AUTO_SUBSCRIPTION_FILTER = r"(?i)\bVLESS\b"

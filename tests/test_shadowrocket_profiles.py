@@ -4,6 +4,8 @@ import re
 import unittest
 from pathlib import Path
 
+from scripts.build_clash_config import SHADOWROCKET_GOOGLE_SUBSCRIPTION_FILTER
+
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 BASE_CONF = REPO_ROOT / "shadowrocket.conf"
@@ -15,7 +17,7 @@ WECHAT_MODULE = REPO_ROOT / "modules" / "wechat_direct.module"
 README = REPO_ROOT / "README.md"
 EXPECTED_MANUAL_FILTER = r"(?i)^(?!.*\bWL\b).*$"
 EXPECTED_AUTO_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\bVLESS\b.*$"
-EXPECTED_GOOGLE_FILTER = r"(?i)^(?:🇦🇲 Armenia\(L\) SS|🇫🇷 France\(LK\) Vless|🇫🇷 France\(LK\) SS|🇫🇷 France\(LK\) Trojan|🇸🇬 Singapore Vless|🇸🇬 Singapore PS Vless|🇸🇬 Singapore PS SS|🇸🇬 Singapore PS Trojan|🇪🇸 Spain\(N\) Vless|🇪🇸 Spain\(N\) SS|🇪🇸 Spain\(N\) Trojan|🇦🇪 UAE\(MO\) Vless|🇺🇸 USA NY Vless Global)$"
+EXPECTED_GOOGLE_FILTER = SHADOWROCKET_GOOGLE_SUBSCRIPTION_FILTER
 EXPECTED_WL_FILTER = r"(?i)\bWL\b"
 EXPECTED_PROVENANCE = [
     "# Config-Version: 2026.08.21.1",
