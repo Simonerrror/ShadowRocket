@@ -26,6 +26,12 @@
 
 Перед переходом на другой Mac завершите проверку, закоммитьте согласованные изменения и отправьте их в upstream. Не публикуйте private subscription, токены, ключи, Tailnet/SSH-параметры и machine-specific конфигурацию. Перед push проверьте `git diff --cached`.
 
+## Падения CI
+
+- Если job этого репозитория падает, агент должен сразу найти и исправить причину без дополнительного подтверждения пользователя.
+- Агент должен обновить необходимые исходники, generated-артефакты, тесты и workflow, затем сделать commit/push и дождаться результата нового CI-запуска.
+- Агент не должен обходить проверки, ослаблять security controls, использовать force-push, раскрывать секреты или выполнять destructive-действия. Если исправление требует таких действий либо новых внешних прав, агент должен остановиться и запросить разрешение.
+
 ## Источники истины
 - `shadowrocket.conf` — source of truth для порядка `[Rule]`, inline-правил, `[General]` и `[Proxy Group]` базового профиля.
 - `distillate/manifest.json` — source of truth для состава категорий, bucket'ов, publish-политики и generation большинства `rules/*.list`.
@@ -43,7 +49,7 @@
 - `rules/`: часть списков поддерживается вручную, часть генерируется скриптами и коммитится в эту же ветку.
 - `modules/`: модули Shadowrocket. Не ломайте совместимость с существующими конфигами.
 - `scripts/`: вспомогательные утилиты; обновляйте README, если меняете публичный интерфейс скриптов.
-- `distillate/upstream`, `distillate/text`, `distillate/dat`, `distillate/summary.json`, `distillate/upstream/v2fly/ru_ipv4.txt`, `Amnezia/SR-DEFAULT-EXCLUDE.json`, `Amnezia/SR-DEFAULT-EXCLUDE.summary.json`, `HAPP/DEFAULT.*`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`: generated-артефакты; при изменении сборки обновляйте их вместе с кодом.
+- `distillate/upstream`, `distillate/text`, `distillate/dat`, `distillate/summary.json`, `distillate/upstream/v2fly/ru_ipv4.txt`, `Amnezia/SR-DEFAULT-EXCLUDE.json`, `Amnezia/SR-DEFAULT-EXCLUDE.summary.json`, `HAPP/DEFAULT.*`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`, `cloudflare/potato-link/dist/destinations.js`: generated-артефакты; при изменении сборки обновляйте их вместе с кодом.
 - `clash_config.yaml`: generated-артефакт от `shadowrocket.conf` и Clash/Mihomo template-настроек; при изменении логики сборки обновляйте его вместе с кодом.
 
 ## Ownership файлов
@@ -63,6 +69,7 @@
 
 ## Каскад пересборки
 - Изменили `shadowrocket.conf`: пересоберите `clash_config.yaml`, `HAPP/DEFAULT.*` и `INCY/*`.
+- Пересобрали `HAPP/*.DEEPLINK` или `INCY/*.DEEPLINK`: запустите `python3 scripts/build_potato_link_worker.py` и закоммитьте `cloudflare/potato-link/dist/destinations.js`.
 - Изменили `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*` или vendored upstream в `distillate/upstream/*`: пересоберите `distillate/text/*`, `distillate/dat/*`, `distillate/summary.json`, generated `rules/*.list`, anti-ad module refs, `HAPP/*` и `INCY/*`.
 - Изменили `scripts/build_distillate.py`: проверьте, не затрагивает ли это `rules/*.list`, anti-ad chunking и `modules/anti_advertising*.module`.
 - Изменили `scripts/build_distillate.py` или `scripts/build_amnezia_routing.py`: пересоберите cached RU IPv4 и `Amnezia/SR-DEFAULT-EXCLUDE*.json`; summary должен явно показывать domain DIRECT правила, которые не представлены в IPv4.
