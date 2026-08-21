@@ -31,25 +31,16 @@ class FetchTextTests(unittest.TestCase):
             fetch_text("http://example.com/list.txt")
 
     @patch("scripts.build_distillate.urlopen")
-    def test_rejects_empty_payload(self, mock_urlopen: object) -> None:
-        mock_urlopen.return_value = FakeResponse(b"")
-
-        with self.assertRaisesRegex(DistillateError, "empty"):
-            fetch_text("https://example.com/list.txt", attempts=1)
-
-    @patch("scripts.build_distillate.urlopen")
-    def test_rejects_payload_over_size_limit(self, mock_urlopen: object) -> None:
-        mock_urlopen.return_value = FakeResponse(b"a" * 17)
-
-        with self.assertRaisesRegex(DistillateError, "exceeds"):
-            fetch_text("https://example.com/list.txt", attempts=1, max_bytes=16)
-
-    @patch("scripts.build_distillate.urlopen")
-    def test_rejects_invalid_utf8(self, mock_urlopen: object) -> None:
-        mock_urlopen.return_value = FakeResponse(b"\xff")
-
-        with self.assertRaisesRegex(DistillateError, "UTF-8"):
-            fetch_text("https://example.com/list.txt", attempts=1)
+    def test_rejects_malformed_payloads(self, mock_urlopen: object) -> None:
+        for payload, message, kwargs in (
+            (b"", "empty", {}),
+            (b"a" * 17, "exceeds", {"max_bytes": 16}),
+            (b"\xff", "UTF-8", {}),
+        ):
+            with self.subTest(message=message):
+                mock_urlopen.return_value = FakeResponse(payload)
+                with self.assertRaisesRegex(DistillateError, message):
+                    fetch_text("https://example.com/list.txt", attempts=1, **kwargs)
 
 
 if __name__ == "__main__":

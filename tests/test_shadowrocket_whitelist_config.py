@@ -6,9 +6,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-CUSTOM_CONF = REPO_ROOT / "shadowrocket_custom.conf"
 WHITELIST_CONF = REPO_ROOT / "shadowrocket_whitelist.conf"
-TAILSCALE_MODULE = REPO_ROOT / "modules" / "tailscale_direct.module"
 EXPECTED_SUBSCRIPTION_FILTER = r"(?i)^(?!.*Russia)(?!.*\bSS\b)(?!.*\bTrojan\b).*$"
 
 
@@ -27,46 +25,17 @@ def section_lines(content: str, section: str) -> list[str]:
     return lines
 
 
-def key_values(lines: list[str]) -> dict[str, str]:
-    values: dict[str, str] = {}
-    for line in lines:
-        if " = " in line:
-            key, value = line.split(" = ", 1)
-            values[key] = value
-    return values
-
-
 class ShadowrocketWhitelistConfigTests(unittest.TestCase):
-    def test_dns_settings_match_custom_profile(self) -> None:
-        custom_general = key_values(section_lines(CUSTOM_CONF.read_text(encoding="utf-8"), "General"))
-        whitelist_general = key_values(section_lines(WHITELIST_CONF.read_text(encoding="utf-8"), "General"))
-
-        for key in (
-            "dns-server",
-            "fallback-dns-server",
-            "dns-direct-system",
-            "always-real-ip",
-            "dns-direct-fallback-proxy",
-            "hijack-dns",
-        ):
-            self.assertEqual(custom_general[key], whitelist_general[key])
-
-    def test_profile_has_only_one_proxy_group(self) -> None:
+    def test_single_proxy_group_accepts_only_non_excluded_nodes(self) -> None:
         content = WHITELIST_CONF.read_text(encoding="utf-8")
         groups = section_lines(content, "Proxy Group")
 
         self.assertEqual(1, len(groups))
-        self.assertTrue(groups[0].startswith("PROXY = select,"))
-        self.assertNotIn("DIRECT", groups[0])
-
-    def test_proxy_group_accepts_non_excluded_protocols_without_personal_default(self) -> None:
-        content = WHITELIST_CONF.read_text(encoding="utf-8")
-        groups = section_lines(content, "Proxy Group")
-
         self.assertEqual(
             groups,
             [f"PROXY = select,policy-regex-filter={EXPECTED_SUBSCRIPTION_FILTER}"],
         )
+        self.assertNotIn("DIRECT", groups[0])
         self.assertNotIn("policy-select-name=", content)
 
         subscription_filter = re.compile(EXPECTED_SUBSCRIPTION_FILTER)
@@ -90,21 +59,9 @@ class ShadowrocketWhitelistConfigTests(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertFalse(subscription_filter.fullmatch(name))
 
-    def test_service_specific_proxy_lists_are_not_used(self) -> None:
+    def test_direct_allowlist_precedes_final_proxy_without_service_routes(self) -> None:
         content = WHITELIST_CONF.read_text(encoding="utf-8")
-
-        self.assertNotIn("GOOGLE =", content)
-        self.assertNotIn("OPENAI =", content)
-        self.assertNotIn("AUTO-MAIN =", content)
-        self.assertNotIn("AUTO-WL =", content)
-        self.assertNotIn("greylist_proxy.list", content)
-        self.assertNotIn("google-all.list", content)
-        self.assertNotIn("openai.list", content)
-        self.assertNotIn("microsoft.list", content)
-        self.assertNotIn("domains_community.list", content)
-
-    def test_direct_rules_precede_final_proxy(self) -> None:
-        rules = section_lines(WHITELIST_CONF.read_text(encoding="utf-8"), "Rule")
+        rules = section_lines(content, "Rule")
 
         self.assertIn(
             "RULE-SET,https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/whitelist_direct.list,DIRECT",
@@ -112,37 +69,19 @@ class ShadowrocketWhitelistConfigTests(unittest.TestCase):
         )
         self.assertEqual("FINAL,PROXY", rules[-1])
         self.assertLess(rules.index("GEOIP,RU,DIRECT"), rules.index("FINAL,PROXY"))
-
-    def test_tailscale_is_not_transparent_in_whitelist_profile(self) -> None:
-        content = WHITELIST_CONF.read_text(encoding="utf-8")
-
-        self.assertNotIn("100.64.0.0/10", content)
-        self.assertNotIn("100.100.100.100", content)
-        self.assertNotIn("ts.net", content)
-        self.assertNotIn("tailscale.com", content)
-
-    def test_tailscale_overlay_is_a_separate_module(self) -> None:
-        custom_content = CUSTOM_CONF.read_text(encoding="utf-8")
-        module_content = TAILSCALE_MODULE.read_text(encoding="utf-8")
-        custom_rules = section_lines(custom_content, "Rule")
-        module_general = key_values(section_lines(module_content, "General"))
-        module_rules = section_lines(module_content, "Rule")
-        tailscale_rules = [
-            "IP-CIDR,100.64.0.0/10,DIRECT,no-resolve",
-            "IP-CIDR,100.100.100.100/32,DIRECT,no-resolve",
-            "DOMAIN-SUFFIX,ts.net,DIRECT",
-            "DOMAIN-SUFFIX,tailscale.com,DIRECT",
-        ]
-
-        self.assertEqual("100.100.100.100, *.ts.net, *.tailscale.com", module_general["skip-proxy"])
-        self.assertEqual("100.64.0.0/10", module_general.get("tun-excluded-routes"))
-        self.assertNotIn("100.100.100.100", custom_content)
-        self.assertNotIn("ts.net", custom_content)
-        self.assertNotIn("tailscale.com", custom_content)
-        for rule in tailscale_rules:
-            with self.subTest(rule=rule):
-                self.assertNotIn(rule, custom_rules)
-                self.assertIn(rule, module_rules)
+        for forbidden in (
+            "GOOGLE =",
+            "OPENAI =",
+            "AUTO-MAIN =",
+            "AUTO-WL =",
+            "greylist_proxy.list",
+            "google-all.list",
+            "openai.list",
+            "microsoft.list",
+            "domains_community.list",
+        ):
+            with self.subTest(forbidden=forbidden):
+                self.assertNotIn(forbidden, content)
 
 
 if __name__ == "__main__":

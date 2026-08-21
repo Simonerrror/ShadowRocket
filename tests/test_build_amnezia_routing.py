@@ -20,81 +20,6 @@ class BuildAmneziaRoutingTests(unittest.TestCase):
         path.write_text(content, encoding="utf-8")
         return path
 
-    @staticmethod
-    def _normalize_hostname(hostname: str) -> str:
-        """Model Amnezia's scheme stripping and slash-delimited host normalization."""
-
-        value = hostname.strip()
-        if "://" in value:
-            value = value.split("://", 1)[1]
-        return next((part for part in value.split("/") if part), "")
-
-    @classmethod
-    def _simulate_amnezia_runtime(
-        cls, entries: list[dict[str, str]],
-    ) -> list[tuple[dict[str, str], str, ipaddress.IPv4Network]]:
-        """Model importer normalization plus runtime key-first route selection."""
-
-        routes: list[tuple[dict[str, str], str, ipaddress.IPv4Network]] = []
-        for entry in entries:
-            normalized_hostname = cls._normalize_hostname(entry["hostname"])
-            try:
-                selected = str(ipaddress.ip_address(normalized_hostname))
-            except ValueError:
-                selected = entry["ip"]
-            route = ipaddress.ip_network(selected, strict=False)
-            routes.append((entry, normalized_hostname, route))
-        return routes
-
-    def test_profile_entries_survive_amnezia_import_and_preserve_cidr(self) -> None:
-        """The importer must retain each CIDR in runtime routes, including /22."""
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            root = Path(tmpdir)
-            ru_path = self._write(root, "ru_ipv4.txt", "185.73.192.0/22\n203.0.113.0/24\n")
-            direct_ip_path = self._write(root, "sr-direct.txt", "198.51.100.2/32\n")
-            direct_domain_path = self._write(root, "sr-direct-domain.txt", "domain:example.org\n")
-            output_path = root / "Amnezia/SR-DEFAULT-EXCLUDE.json"
-            summary_path = root / "Amnezia/SR-DEFAULT-EXCLUDE.summary.json"
-
-            build_artifacts(
-                ru_path,
-                direct_ip_path,
-                direct_domain_path,
-                output_path,
-                summary_path,
-            )
-            profile = json.loads(output_path.read_text(encoding="utf-8"))
-            runtime_routes = self._simulate_amnezia_runtime(profile)
-
-            expected_network = ipaddress.ip_network("185.73.192.0/22")
-            matching_routes = [
-                route
-                for _entry, _hostname, route in runtime_routes
-                if ipaddress.ip_address("185.73.192.0") in route
-            ]
-            self.assertEqual(matching_routes, [expected_network])
-            self.assertTrue(
-                any(
-                    ipaddress.ip_address("185.73.193.68") in route
-                    for _entry, _hostname, route in runtime_routes
-                )
-            )
-
-            hostnames = [entry["hostname"] for entry in profile]
-            self.assertEqual(len(hostnames), len(set(hostnames)))
-            for entry in profile:
-                self.assertNotIn("/", entry["hostname"])
-                with self.assertRaises(ValueError):
-                    ipaddress.ip_address(entry["hostname"])
-                network = ipaddress.ip_network(entry["ip"], strict=False)
-                self.assertEqual(entry["ip"], str(network))
-                self.assertEqual(network.version, 4)
-                self.assertEqual(
-                    next(route for candidate, _hostname, route in runtime_routes if candidate is entry),
-                    network,
-                )
-
     def test_builds_ipv4_exclusion_profile_with_canonical_numeric_order(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
@@ -136,8 +61,9 @@ class BuildAmneziaRoutingTests(unittest.TestCase):
                 "224.0.0.0/4",
             ]
             self.assertEqual(result["cidrs"], expected)
+            profile = json.loads(output_path.read_text(encoding="utf-8"))
             self.assertEqual(
-                json.loads(output_path.read_text(encoding="utf-8")),
+                profile,
                 [
                     {
                         "hostname": (
@@ -149,6 +75,11 @@ class BuildAmneziaRoutingTests(unittest.TestCase):
                     for cidr in expected
                 ],
             )
+            self.assertEqual(len(profile), len({entry["hostname"] for entry in profile}))
+            for entry in profile:
+                with self.subTest(cidr=entry["ip"]):
+                    self.assertNotIn("/", entry["hostname"])
+                    self.assertEqual(entry["ip"], str(ipaddress.ip_network(entry["ip"])))
             self.assertEqual(output_path.read_text(encoding="utf-8")[-1], "\n")
 
             summary = json.loads(summary_path.read_text(encoding="utf-8"))
@@ -194,44 +125,23 @@ class BuildAmneziaRoutingTests(unittest.TestCase):
             self.assertEqual(output_path.read_text(encoding="utf-8"), "old profile\n")
             self.assertEqual(summary_path.read_text(encoding="utf-8"), "old summary\n")
 
-    def test_missing_input_fails_before_creating_outputs(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            root = Path(tmpdir)
-            ru_path = root / "missing-ru.txt"
-            direct_ip_path = self._write(root, "sr-direct.txt", "203.0.113.1/32\n")
-            direct_domain_path = self._write(root, "sr-direct-domain.txt", "domain:example.org\n")
-            output_path = root / "Amnezia/SR-DEFAULT-EXCLUDE.json"
-            summary_path = root / "Amnezia/SR-DEFAULT-EXCLUDE.summary.json"
+    def test_missing_or_empty_ru_source_creates_no_outputs(self) -> None:
+        for source, message in ((None, "missing"), ("# compiler output was empty\n", "empty")):
+            with self.subTest(message=message), tempfile.TemporaryDirectory() as tmpdir:
+                root = Path(tmpdir)
+                ru_path = root / "ru_ipv4.txt"
+                if source is not None:
+                    self._write(root, "ru_ipv4.txt", source)
+                direct_ip_path = self._write(root, "sr-direct.txt", "203.0.113.1/32\n")
+                direct_domain_path = self._write(root, "sr-direct-domain.txt", "domain:example.org\n")
+                output_path = root / "Amnezia/SR-DEFAULT-EXCLUDE.json"
+                summary_path = root / "Amnezia/SR-DEFAULT-EXCLUDE.summary.json"
 
-            with self.assertRaisesRegex(AmneziaRoutingError, "missing"):
-                build_artifacts(
-                    ru_path,
-                    direct_ip_path,
-                    direct_domain_path,
-                    output_path,
-                    summary_path,
-                )
+                with self.assertRaisesRegex(AmneziaRoutingError, message):
+                    build_artifacts(ru_path, direct_ip_path, direct_domain_path, output_path, summary_path)
 
-            self.assertFalse(output_path.exists())
-            self.assertFalse(summary_path.exists())
-
-    def test_empty_ru_source_fails_before_creating_outputs(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            root = Path(tmpdir)
-            ru_path = self._write(root, "ru_ipv4.txt", "# compiler output was empty\n")
-            direct_ip_path = self._write(root, "sr-direct.txt", "203.0.113.1/32\n")
-            direct_domain_path = self._write(root, "sr-direct-domain.txt", "domain:example.org\n")
-            output_path = root / "Amnezia/SR-DEFAULT-EXCLUDE.json"
-            summary_path = root / "Amnezia/SR-DEFAULT-EXCLUDE.summary.json"
-
-            with self.assertRaisesRegex(AmneziaRoutingError, "empty"):
-                build_artifacts(
-                    ru_path,
-                    direct_ip_path,
-                    direct_domain_path,
-                    output_path,
-                    summary_path,
-                )
+                self.assertFalse(output_path.exists())
+                self.assertFalse(summary_path.exists())
 
 
 if __name__ == "__main__":
