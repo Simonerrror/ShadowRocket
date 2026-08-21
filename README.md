@@ -38,15 +38,15 @@ consumer-списков в `rules/`. Проект поддерживает ав�
    ```
    > В конфиге указан `update-url`, поэтому он будет обновляться автоматически.
 2. **Добавьте подписку** на сервера в Shadowrocket (URL от вашего провайдера).
-   Общие группы `MANUAL-PROXY`, `AUTO-SPEED`, `AUTO-STABILITY` и `GOOGLE` используют negative-фильтр: принимают узлы любого протокола (включая `VLESS`, `Hysteria` и `Hysteria2`), кроме имён с `Russia` (без учёта регистра) и standalone-токенами `SS`, `Trojan` или `WL`; узлы с standalone `WL` доступны в отдельной группе `WL` независимо от протокола.
+   Группы используют разные фильтры: ручная группа принимает всю подписку без `WL`, автоматические группы принимают только `VLESS` вне RU/BY/UA и без `WL`, а `GOOGLE` дополнительно исключает `SS` и `Trojan`.
 3. **Проверьте группы прокси**:
-   - `MANUAL-PROXY` — ручной выбор любого протокола подписки вне РФ и без standalone `SS`, `Trojan` или `WL`.
-   - `AUTO-SPEED` — `url-test`: выбирает самый быстрый живой узел любого протокола вне РФ и без standalone `SS`, `Trojan` или `WL`.
-   - `AUTO-STABILITY` — `fallback`: берёт первый живой узел любого протокола вне РФ и без standalone `SS`, `Trojan` или `WL`, в порядке подписки.
-   - `GOOGLE` — `url-test` для Google/Gemini/YouTube с тем же negative-фильтром; проверка использует URL `https://abs.twimg.com/favicon.ico`, интервал `180`, tolerance `100`, timeout `7`.
+   - `MANUAL-PROXY` — ручной выбор всей подписки без standalone `WL`.
+   - `AUTO-SPEED` — `url-test`: выбирает самый быстрый `VLESS`-узел без `Russia`, `Belarus`, `Ukraine` и standalone `WL`.
+   - `AUTO-STABILITY` — `fallback`: берёт первый живой `VLESS`-узел без `Russia`, `Belarus`, `Ukraine` и standalone `WL`, в порядке подписки.
+   - `GOOGLE` — `url-test` без `Russia`, `Belarus`, `Ukraine` и standalone `SS`, `Trojan`, `WL`. Отдельный проверенный allowlist пока не применяется.
    - `WL` — отдельная `select`-группа для узлов любого протокола со standalone `WL` (`policy-regex-filter=(?i)\bWL\b`), включая `WL-lte`.
-   - `\bSS\b`, `\bTrojan\b` и `\bWL\b` — standalone-токены: они не задевают имена вроде `SS2022`, `Trojan2`, `BASS` или `WLAN`.
-   - `PROXY` — главный переключатель (Select): по умолчанию выбран `AUTO-STABILITY`; вручную можно переключаться между `MANUAL-PROXY`, `AUTO-SPEED`, `AUTO-STABILITY`, `WL` и `DIRECT`.
+   - `\bWL\b` — standalone-токен: он не задевает имена вроде `WLAN` или `BOWL`.
+   - `PROXY` — главный переключатель (Select): по умолчанию выбран `AUTO-STABILITY`; доступны `MANUAL-PROXY`, `AUTO-SPEED`, `AUTO-STABILITY` и `WL`. Группа `GOOGLE` и `DIRECT` в этот переключатель не входят.
 
 Кастомный профиль для GFN/NVIDIA (с `always-real-ip`, тем же DNS-набором, что и основной профиль, и `dns-direct-system = false`):
 ```
@@ -149,7 +149,7 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/Amnezia/SR-DEFAU
 - вручную редактируются `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_custom_private_dns.conf`, `shadowrocket_whitelist.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `rules/adobe_telemetry_custom.list`, `rules/russia_extended.list`, `rules/voice_ports.list`, `modules/GFN-AM.module`, `modules/tailscale_direct.module`, `modules/wechat_direct.module`;
 - generated-артефакты (`clash_config.yaml`, `HAPP/DEFAULT.*`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/upstream/v2fly/ru_ipv4.txt`, `distillate/summary.json`, `Amnezia/SR-DEFAULT-EXCLUDE*.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/openai.list`, `rules/telegram.list`, `rules/whitelist_direct.list`, `rules/greylist_proxy.list`, `rules/anti_advertising.list`, `rules/anti_advertising*.[0-9][0-9].list`) не поддерживаются вручную;
 - `modules/anti_advertising.module` и `modules/anti_advertising_custom.module` semi-generated: ручной заголовок сохраняется, а ссылки на anti-ad chunks переписываются сборкой.
-- Tailscale DIRECT вынесен из custom-профиля в отдельный модуль `modules/tailscale_direct.module`; `tun-excluded-routes = 100.64.0.0/10` не даёт Shadowrocket перехватить системный маршрут Tailscale.
+- Tailscale DIRECT вынесен из общих профилей в отдельный модуль `modules/tailscale_direct.module`. Диапазон `100.64.0.0/10` задаётся только модулем через `tun-excluded-routes` и DIRECT-правило.
 
 ### WeChat напрямую
 
@@ -175,14 +175,14 @@ CDN; весь Tencent/QQ он не обходит.
 - `update-url` указывает на конфиг в репозитории.
 
 ### [Proxy Group]
-- **MANUAL-PROXY** — ручной выбор узлов любого протокола подписки вне РФ и без standalone `SS`, `Trojan` или `WL`; все общие профили используют negative `policy-regex-filter=(?i)^(?!.*Russia)(?!.*\bSS\b)(?!.*\bTrojan\b)(?!.*\bWL\b).*$`.
+- **MANUAL-PROXY** — ручной выбор всей подписки без standalone `WL`.
 - **AUTO-SPEED** — `url-test`-группа для выбора самого быстрого живого узла из подписки:
-  negative-фильтр исключает `Russia` и standalone `SS`/`Trojan`/`WL`; `url=https://abs.twimg.com/favicon.ico`, `interval=180`, `tolerance=100`, `timeout=7`.
+  фильтр принимает только standalone `VLESS` и исключает `Russia`, `Belarus`, `Ukraine` и standalone `WL`; `url=https://abs.twimg.com/favicon.ico`, `interval=180`, `tolerance=100`, `timeout=7`.
 - **AUTO-STABILITY** — `fallback`-группа для выбора первого живого узла в порядке подписки:
-  negative-фильтр исключает `Russia` и standalone `SS`/`Trojan`/`WL`; `url=https://abs.twimg.com/favicon.ico`, `interval=780`, `timeout=7`.
-- **GOOGLE** — `url-test`-группа для Google/Gemini/YouTube с тем же negative-фильтром; `url=https://abs.twimg.com/favicon.ico`, `interval=180`, `tolerance=100`, `timeout=7`.
+  фильтр принимает только standalone `VLESS` и исключает `Russia`, `Belarus`, `Ukraine` и standalone `WL`; `url=https://abs.twimg.com/favicon.ico`, `interval=780`, `timeout=7`.
+- **GOOGLE** — временная `url-test`-группа без `Russia`, `Belarus`, `Ukraine` и standalone `SS`, `Trojan`, `WL`; `url=https://abs.twimg.com/favicon.ico`, `interval=180`, `tolerance=100`, `timeout=7`.
 - **WL** — отдельная `select`-группа для узлов любого протокола со standalone `WL` (включая `WL-lte`), фильтр `(?i)\bWL\b`.
-- **PROXY** — Select-группа; по умолчанию выбран `AUTO-STABILITY`, вручную можно переключаться между `MANUAL-PROXY`/`AUTO-SPEED`/`AUTO-STABILITY`/`WL`/`DIRECT`.
+- **PROXY** — Select-группа; по умолчанию выбран `AUTO-STABILITY`, доступны `MANUAL-PROXY`/`AUTO-SPEED`/`AUTO-STABILITY`/`WL`.
   В `AUTO-STABILITY` первичным считается первый живой узел в порядке уже фильтрованной подписки.
 
 ### [Rule]

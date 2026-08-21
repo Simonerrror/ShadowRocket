@@ -11,9 +11,14 @@ from scripts.build_clash_config import (
 )
 
 
-EXPECTED_AUTO_FILTER = r"(?i)^(?!.*Russia)(?!.*\bSS\b)(?!.*\bTrojan\b)(?!.*\bWL\b).*$"
+EXPECTED_MANUAL_FILTER = r"(?i)^(?!.*\bWL\b).*$"
+EXPECTED_AUTO_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\bVLESS\b.*$"
+EXPECTED_GOOGLE_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bSS\b)(?!.*\bTrojan\b)(?!.*\bWL\b).*$"
 EXPECTED_WL_FILTER = r"(?i)\bWL\b"
-EXPECTED_MIHOMO_AUTO_EXCLUDE_FILTER = r"(?i)Russia|\bSS\b|\bTrojan\b|\bWL\b"
+EXPECTED_MIHOMO_MANUAL_EXCLUDE_FILTER = r"(?i)\bWL\b"
+EXPECTED_MIHOMO_AUTO_FILTER = r"(?i)\bVLESS\b"
+EXPECTED_MIHOMO_AUTO_EXCLUDE_FILTER = r"(?i)Russia|Belarus|Ukraine|\bWL\b"
+EXPECTED_MIHOMO_GOOGLE_EXCLUDE_FILTER = r"(?i)Russia|Belarus|Ukraine|\bSS\b|\bTrojan\b|\bWL\b"
 EXPECTED_MIHOMO_WL_FILTER = r"(?i)\bWL\b"
 
 
@@ -37,7 +42,7 @@ class BuildClashConfigTests(unittest.TestCase):
         google_group = content.split("  - name: GOOGLE", 1)[1].split("  - name:", 1)[0]
         self.assertIn("    type: url-test", google_group)
         self.assertIn("    use:\n      - Main-Sub", google_group)
-        self.assertIn(f"    exclude-filter: {yaml_quote(EXPECTED_MIHOMO_AUTO_EXCLUDE_FILTER)}", google_group)
+        self.assertIn(f"    exclude-filter: {yaml_quote(EXPECTED_MIHOMO_GOOGLE_EXCLUDE_FILTER)}", google_group)
         self.assertNotIn("    filter:", google_group)
         self.assertIn('    url: "https://abs.twimg.com/favicon.ico"', google_group)
         self.assertIn("    interval: 180", google_group)
@@ -54,10 +59,10 @@ class BuildClashConfigTests(unittest.TestCase):
         groups = {group.name: group for group in parse_proxy_groups(DEFAULT_CONF)}
 
         expected_filters = {
-            "MANUAL-PROXY": EXPECTED_AUTO_FILTER,
+            "MANUAL-PROXY": EXPECTED_MANUAL_FILTER,
             "AUTO-SPEED": EXPECTED_AUTO_FILTER,
             "AUTO-STABILITY": EXPECTED_AUTO_FILTER,
-            "GOOGLE": EXPECTED_AUTO_FILTER,
+            "GOOGLE": EXPECTED_GOOGLE_FILTER,
             "WL": EXPECTED_WL_FILTER,
         }
         for name, expected_filter in expected_filters.items():
@@ -71,7 +76,7 @@ class BuildClashConfigTests(unittest.TestCase):
         manual_group = content.split("  - name: MANUAL-PROXY", 1)[1].split("  - name:", 1)[0]
 
         self.assertIn("    use:\n      - Main-Sub", manual_group)
-        self.assertIn(f"    exclude-filter: {yaml_quote(EXPECTED_MIHOMO_AUTO_EXCLUDE_FILTER)}", manual_group)
+        self.assertIn(f"    exclude-filter: {yaml_quote(EXPECTED_MIHOMO_MANUAL_EXCLUDE_FILTER)}", manual_group)
         self.assertNotIn("    filter:", manual_group)
         self.assertNotIn("unsupported proxy-group option use=true", "\n".join(warnings))
 
@@ -89,12 +94,14 @@ class BuildClashConfigTests(unittest.TestCase):
         self.assertIn("    interval: 180", speed_group)
         self.assertIn("    tolerance: 100", speed_group)
         for group in (speed_group, stability_group):
+            self.assertIn(f"    filter: {yaml_quote(EXPECTED_MIHOMO_AUTO_FILTER)}", group)
             self.assertIn(f"    exclude-filter: {yaml_quote(EXPECTED_MIHOMO_AUTO_EXCLUDE_FILTER)}", group)
-            self.assertNotIn("    filter:", group)
         self.assertIn("      - MANUAL-PROXY", proxy_group)
         self.assertIn("      - AUTO-SPEED", proxy_group)
         self.assertIn("      - AUTO-STABILITY", proxy_group)
         self.assertIn("      - WL", proxy_group)
+        self.assertNotIn("      - GOOGLE", proxy_group)
+        self.assertNotIn("      - DIRECT", proxy_group)
 
         wl_group = content.split("  - name: WL", 1)[1].split("  - name:", 1)[0]
         self.assertIn("    type: select", wl_group)
