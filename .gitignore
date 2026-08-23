@@ -3,6 +3,7 @@
 __pycache__/
 cloudflare/potato-link/node_modules/
 .wrangler/
+private/
 XKeen/sub/*.txt
 XKeen/local/*.json
 XKeen/singles/*/*.json
