@@ -12,7 +12,7 @@
   "DomesticDNSIP": "77.88.8.8",
   "Geoipurl": "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/distillate/dat/geoip.dat",
   "Geositeurl": "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/distillate/dat/geosite.dat",
-  "LastUpdated": "1786855667",
+  "LastUpdated": "1787460581",
   "DnsHosts": {},
   "RouteOrder": "block-proxy-direct",
   "DirectSites": [],
