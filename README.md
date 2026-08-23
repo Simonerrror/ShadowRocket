@@ -26,6 +26,7 @@ consumer-списков в `rules/`. Проект поддерживает ав�
 - `HAPP/RU-VPN.*` — дополнительный HAPP-профиль: российские домены/IP через proxy, остальное напрямую.
 - `INCY/DEFAULT.*` и `INCY/RU-VPN.*` — те же routing-профили для INCY с `incy://` deeplink.
 - `Amnezia/SR-DEFAULT-EXCLUDE.json` — shared-профиль исключений IPv4 для AmneziaVPN на iOS/Premium.
+- `cloudflare/potato-box/` и `scripts/build_private_awg_subscriptions.py` — приватные пятиузловые AWG2-подписки для двух владельцев; конфиги, ключи и bearer URL хранятся только в ignored `private/`.
 - `modules/tailscale_direct.module` — отдельный модуль DIRECT для Tailscale tailnet (`100.64.0.0/10`, `100.100.100.100`, `ts.net`, `tailscale.com`), исключающий tailnet из TUN Shadowrocket, чтобы системный маршрут оставался за Tailscale.
 - `modules/wechat_direct.module` — отдельный custom-only модуль DIRECT для WeChat и его CDN без широкого обхода всего Tencent/QQ.
 - Источники истины разделены: `shadowrocket.conf` отвечает за порядок routing-правил и proxy-groups базового профиля, а `distillate/manifest.json` вместе с `distillate/overlays/*` и `distillate/filters/*` отвечает за состав и сборку большинства consumer-списков.
@@ -38,11 +39,11 @@ consumer-списков в `rules/`. Проект поддерживает ав�
    ```
    > В конфиге указан `update-url`, поэтому он будет обновляться автоматически.
 2. **Добавьте подписку** на сервера в Shadowrocket (URL от вашего провайдера).
-   Группы используют разные фильтры: ручная группа принимает всю подписку без `WL`, автоматические группы принимают `VLESS`, `TT` и `Naive` вне RU/BY/UA и без `WL`, а `GOOGLE` дополнительно исключает `SS` и `Trojan`.
+   Группы используют разные фильтры: ручная группа принимает всю подписку без `WL`, автоматические группы принимают `VLESS`, `TT`, `Naive` и `AWG2` вне RU/BY/UA и без `WL`, а `GOOGLE` дополнительно исключает `SS` и `Trojan`.
 3. **Проверьте группы прокси**:
    - `MANUAL-PROXY` — ручной выбор всей подписки без standalone `WL`.
-   - `AUTO-SPEED` — `url-test`: выбирает самый быстрый `VLESS`-, `TT`- или `Naive`-узел без `Russia`, `Belarus`, `Ukraine` и standalone `WL`.
-   - `AUTO-STABILITY` — `fallback`: берёт первый живой `VLESS`-, `TT`- или `Naive`-узел без `Russia`, `Belarus`, `Ukraine` и standalone `WL`, в порядке подписки.
+   - `AUTO-SPEED` — `url-test`: выбирает самый быстрый узел `VLESS`, `TT`, `Naive` или `AWG2` без `Russia`, `Belarus`, `Ukraine` и standalone `WL`.
+   - `AUTO-STABILITY` — `fallback`: берёт первый живой узел `VLESS`, `TT`, `Naive` или `AWG2` без `Russia`, `Belarus`, `Ukraine` и standalone `WL`, в порядке подписки.
    - `GOOGLE` — `url-test` без `Russia`, `Belarus`, `Ukraine` и standalone `SS`, `Trojan`, `WL`. Отдельный проверенный allowlist пока не применяется.
    - `WL` — отдельная `select`-группа для узлов любого протокола со standalone `WL` (`policy-regex-filter=(?i)\bWL\b`), включая `WL-lte`.
    - `\bWL\b` — standalone-токен: он не задевает имена вроде `WLAN` или `BOWL`.
@@ -141,6 +142,7 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/Amnezia/SR-DEFAU
 | `distillate/` | Канонический manifest, overlays и generated артефакты |
 | `Amnezia/SR-DEFAULT-EXCLUDE.json` | Generated IPv4 список исключений AmneziaVPN |
 | `Amnezia/SR-DEFAULT-EXCLUDE.summary.json` | Generated отчёт о составе списка и непредставленных domain DIRECT правилах |
+| `cloudflare/potato-box/` | Отдельный Worker для двух приватных AWG2-подписок по непредсказуемым bearer-путям |
 | `rules/` | Вручную поддерживаемые и generated consumer-списки |
 | `modules/` | Готовые модули для Shadowrocket |
 | `scripts/` | Вспомогательные скрипты |
@@ -178,9 +180,9 @@ CDN; весь Tencent/QQ он не обходит.
 ### [Proxy Group]
 - **MANUAL-PROXY** — ручной выбор всей подписки без standalone `WL`.
 - **AUTO-SPEED** — `url-test`-группа для выбора самого быстрого живого узла из подписки:
-  фильтр принимает standalone `VLESS`, `TT` и `Naive` и исключает `Russia`, `Belarus`, `Ukraine` и standalone `WL`; `url=https://abs.twimg.com/favicon.ico`, `interval=180`, `tolerance=100`, `timeout=7`.
+  фильтр принимает standalone `VLESS`, `TT`, `Naive` и `AWG2` и исключает `Russia`, `Belarus`, `Ukraine` и standalone `WL`; `url=https://abs.twimg.com/favicon.ico`, `interval=180`, `tolerance=100`, `timeout=7`.
 - **AUTO-STABILITY** — `fallback`-группа для выбора первого живого узла в порядке подписки:
-  фильтр принимает standalone `VLESS`, `TT` и `Naive` и исключает `Russia`, `Belarus`, `Ukraine` и standalone `WL`; `url=https://abs.twimg.com/favicon.ico`, `interval=780`, `timeout=7`.
+  фильтр принимает standalone `VLESS`, `TT`, `Naive` и `AWG2` и исключает `Russia`, `Belarus`, `Ukraine` и standalone `WL`; `url=https://abs.twimg.com/favicon.ico`, `interval=780`, `timeout=7`.
 - **GOOGLE** — временная `url-test`-группа без `Russia`, `Belarus`, `Ukraine` и standalone `SS`, `Trojan`, `WL`; `url=https://abs.twimg.com/favicon.ico`, `interval=180`, `tolerance=100`, `timeout=7`.
 - **WL** — отдельная `select`-группа для узлов любого протокола со standalone `WL` (включая `WL-lte`), фильтр `(?i)\bWL\b`.
 - **PROXY** — Select-группа; по умолчанию выбран `AUTO-STABILITY`, доступны `MANUAL-PROXY`/`AUTO-SPEED`/`AUTO-STABILITY`/`WL`.
@@ -223,6 +225,7 @@ CDN; весь Tencent/QQ он не обходит.
   Он переносит все поддерживаемые rule/group mapping'и, а неподдерживаемые для Clash детали (`force-remote-dns`, `policy-select-name`, `timeout`) оставляет в предупреждениях сборки.
 - `scripts/build_happ_routing.py` не ходит в BM7: он берет агрегаты `sr-direct`/`sr-proxy` и `motivato_block` из `distillate/text/*`, затем собирает `HAPP/DEFAULT.*` (`роут-MotivatoPotato`) с детерминированным `LastUpdated`.
 - `scripts/build_incy_routing.py` использует те же агрегаты и семантические профили, адаптирует только поле `useChunkFiles: false` и собирает `INCY/DEFAULT.*` и `INCY/RU-VPN.*` с тем же `LastUpdated`.
+- `scripts/build_private_awg_subscriptions.py` локально собирает два набора по пять AWG2 `.conf` в Cloudflare Worker secrets; generated payload и URL записываются только под ignored `private/` с правами `0600`. Подробный порядок первого запуска и ротации одного владельца описан в `cloudflare/potato-box/README.md`.
 - Антирекламный список собирается в том же distillate-пайплайне из OISD + HaGeZi, но публикуется чанками `rules/anti_advertising.01.list`, `.02.list`, `.03.list` и далее по мере необходимости. Количество чанков выбирается автоматически так, чтобы вес каждого был не больше примерно 7 МБ. Он не включается в compiled `geosite.dat` и не используется в HAPP. Для него предполагается отдельный модуль Shadowrocket.
 - На этапе сборки из `anti_advertising` дополнительно вычищаются домены, содержащие `nvidia`/`geforce`/`geforcenow`/`nvidiagrid`, чтобы anti-ad модуль не ломал GeForce NOW и связанные NVIDIA API.
 - Там же вычищаются official suffix'ы Discord (`discord.com`, `discord.gg`, `discordapp.com`, `discordapp.net` и смежные), чтобы upstream anti-ad не зацепил клиентские API, gateway и служебные поддомены Discord.
@@ -257,7 +260,7 @@ GitHub Actions:
 - HAPP и INCY-профили относятся к shared routing-артефактам; при изменении входов оба генератора и Worker-пакет пересобираются вместе.
 
 Политика изменений:
-- Изменение групп `MANUAL-PROXY`, `WL`, auto-фильтра и `GOOGLE` — **shared**: синхронизировано в `shadowrocket.conf`, `shadowrocket_custom.conf` и `shadowrocket_custom_private_dns.conf`; custom-only поля `[General]` сохранены. `MANUAL-PROXY` принимает всю подписку без standalone `WL`; `AUTO-SPEED`/`AUTO-STABILITY` принимают `VLESS`, `TT` и `Naive` вне RU/BY/UA и без standalone `WL`; `GOOGLE` использует отдельный allowlist; `WL` принимает любой протокол со standalone `WL`.
+- Изменение групп `MANUAL-PROXY`, `WL`, auto-фильтра и `GOOGLE` — **shared**: синхронизировано в `shadowrocket.conf`, `shadowrocket_custom.conf` и `shadowrocket_custom_private_dns.conf`; custom-only поля `[General]` сохранены. `MANUAL-PROXY` принимает всю подписку без standalone `WL`; `AUTO-SPEED`/`AUTO-STABILITY` принимают `VLESS`, `TT`, `Naive` и `AWG2` вне RU/BY/UA и без standalone `WL`; `GOOGLE` использует отдельный allowlist; `WL` принимает любой протокол со standalone `WL`.
 - `shadowrocket_custom.conf`, `shadowrocket_custom_private_dns.conf`, `shadowrocket_whitelist.conf` и `modules/anti_advertising_custom.module` считаются `custom-only` и содержат single-user/GFN логику.
 - Если улучшение полезно всем, его нужно переносить и в основной конфиг, и в кастомные файлы.
 - При изменении generated `rules/*.list` меняйте `distillate/manifest.json`, `distillate/overlays/*` или `distillate/filters/*`, а не итоговые generated-файлы.

@@ -10,6 +10,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SYNC_WORKFLOW = REPO_ROOT / ".github/workflows/sync-lists.yml"
 VERIFY_WORKFLOW = REPO_ROOT / ".github/workflows/build-happ-routing.yml"
 DEPLOY_WORKFLOW = REPO_ROOT / ".github/workflows/deploy-potato-link.yml"
+POTATO_BOX_WORKFLOW = REPO_ROOT / ".github/workflows/deploy-potato-box.yml"
 
 ACTION_PINS = (
     "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
@@ -100,6 +101,33 @@ class WorkflowHardeningTests(unittest.TestCase):
             "CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}",
             deploy,
         )
+
+    def test_private_subscription_worker_deploys_code_without_feed_secrets(self) -> None:
+        content = POTATO_BOX_WORKFLOW.read_text(encoding="utf-8")
+        verify = content.split("  verify:", 1)[1].split("  deploy:", 1)[0]
+        deploy = content.split("  deploy:", 1)[1]
+
+        self.assertIn("permissions:\n  contents: read", content)
+        self.assertIn("persist-credentials: false", content)
+        self.assertIn("actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5", content)
+        self.assertIn("actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e", content)
+        self.assertIn('node-version: "22.17.1"', content)
+        self.assertIn("npm ci --ignore-scripts --prefix cloudflare/potato-box", verify)
+        self.assertIn("npm test --prefix cloudflare/potato-box", verify)
+        self.assertIn("npm run deploy:dry --prefix cloudflare/potato-box", verify)
+        self.assertNotIn("CLOUDFLARE_API_TOKEN", verify)
+        self.assertIn("needs: verify", deploy)
+        self.assertIn("ref: ${{ github.sha }}", deploy)
+        self.assertNotIn("ref: main", deploy)
+        self.assertIn("npm run deploy --prefix cloudflare/potato-box", deploy)
+        secret_names = ["PRIMARY_PATH", "SECONDARY_PATH"] + [
+            f"{owner}_LINK_{index}"
+            for owner in ("PRIMARY", "SECONDARY")
+            for index in range(1, 6)
+        ]
+        for secret_name in secret_names:
+            with self.subTest(secret_name=secret_name):
+                self.assertNotIn(secret_name, content)
 
     def test_release_workflows_rebuild_and_cover_published_routing_artifacts(self) -> None:
         sync = SYNC_WORKFLOW.read_text(encoding="utf-8")

@@ -1,0 +1,9 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "potato-box",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-08-23",
+  "workers_dev": true,
+  "send_metrics": false,
+  "keep_vars": true
+}

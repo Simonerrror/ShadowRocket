@@ -15,11 +15,11 @@ WHITELIST_CONF = REPO_ROOT / "shadowrocket_whitelist.conf"
 TAILSCALE_MODULE = REPO_ROOT / "modules" / "tailscale_direct.module"
 WECHAT_MODULE = REPO_ROOT / "modules" / "wechat_direct.module"
 EXPECTED_MANUAL_FILTER = r"(?i)^(?!.*\bWL\b).*$"
-EXPECTED_AUTO_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\b(?:VLESS|TT|Naive)\b.*$"
+EXPECTED_AUTO_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\b(?:VLESS|TT|Naive|AWG2)\b.*$"
 EXPECTED_GOOGLE_FILTER = SHADOWROCKET_GOOGLE_SUBSCRIPTION_FILTER
 EXPECTED_WL_FILTER = r"(?i)\bWL\b"
 EXPECTED_PROVENANCE = [
-    "# Config-Version: 2026.08.22.1",
+    "# Config-Version: 2026.08.23.1",
     "# Maintainer: Simonerrror; contact: https://t.me/AIDHDaily",
     "# README: https://github.com/Simonerrror/ShadowRocket#readme",
 ]
@@ -107,7 +107,15 @@ class ShadowrocketProfilesTests(unittest.TestCase):
             (
                 "auto",
                 EXPECTED_AUTO_FILTER,
-                ("🇺🇸 United States Vless", "BOWL relay VLESS", "WLAN Germany VLESS", "🇭🇰 Hong Kong TT", "🇩🇪 Germany Naive"),
+                (
+                    "🇺🇸 United States Vless",
+                    "BOWL relay VLESS",
+                    "WLAN Germany VLESS",
+                    "🇭🇰 Hong Kong TT",
+                    "🇩🇪 Germany Naive",
+                    "🇵🇱 Польша AWG2",
+                    "🇬🇷 Греция AWG2",
+                ),
                 ("🇷🇺 Russia Vless", "🇧🇾 Belarus(M) TT", "🇺🇦 Ukraine Naive", "🇫🇷 France WL Mobile Vless", "Germany SS", "USA Trojan"),
             ),
         )
