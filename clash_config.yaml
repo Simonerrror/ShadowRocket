@@ -117,7 +117,7 @@ proxy-groups:
     type: url-test
     use:
       - Main-Sub
-    filter: "(?i)\\b(?:VLESS|TT|Naive|AWG2)\\b"
+    filter: "(?i)\\b(?:VLESS|TT|Naive|NV|MR|AWG2)\\b"
     exclude-filter: "(?i)Russia|Belarus|Ukraine|\\bWL\\b"
     url: "https://abs.twimg.com/favicon.ico"
     interval: 180
@@ -127,7 +127,7 @@ proxy-groups:
     type: fallback
     use:
       - Main-Sub
-    filter: "(?i)\\b(?:VLESS|TT|Naive|AWG2)\\b"
+    filter: "(?i)\\b(?:VLESS|TT|Naive|NV|MR|AWG2)\\b"
     exclude-filter: "(?i)Russia|Belarus|Ukraine|\\bWL\\b"
     url: "https://abs.twimg.com/favicon.ico"
     interval: 780

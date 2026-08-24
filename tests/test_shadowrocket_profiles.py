@@ -15,7 +15,7 @@ WHITELIST_CONF = REPO_ROOT / "shadowrocket_whitelist.conf"
 TAILSCALE_MODULE = REPO_ROOT / "modules" / "tailscale_direct.module"
 WECHAT_MODULE = REPO_ROOT / "modules" / "wechat_direct.module"
 EXPECTED_MANUAL_FILTER = r"(?i)^(?!.*\bWL\b).*$"
-EXPECTED_AUTO_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\b(?:VLESS|TT|Naive|AWG2)\b.*$"
+EXPECTED_AUTO_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\b(?:VLESS|TT|Naive|NV|MR|AWG2)\b.*$"
 EXPECTED_GOOGLE_FILTER = SHADOWROCKET_GOOGLE_SUBSCRIPTION_FILTER
 EXPECTED_WL_FILTER = r"(?i)\bWL\b"
 EXPECTED_PROVENANCE = [
@@ -102,7 +102,16 @@ class ShadowrocketProfilesTests(unittest.TestCase):
                 "google",
                 EXPECTED_GOOGLE_FILTER,
                 ("🇫🇷 France(LK) Vless", "🇸🇬 Singapore PS Vless", "🇪🇸 Spain(N) Vless"),
-                ("🇦🇲 Armenia(L) Trojan", "🇫🇷 France Vless", "🇸🇬 Singapore PS Trojan", "🇺🇸 USA NY Vless"),
+                (
+                    "🇦🇲 Armenia(L) Trojan",
+                    "🇫🇷 France Vless",
+                    "🇸🇬 Singapore PS Trojan",
+                    "🇺🇸 USA NY Vless",
+                    "🇸🇪 Sweden Mieru",
+                    "🇯🇵 Japan Mierus",
+                    "🇩🇪 Germany NV",
+                    "🇨🇦 Canada MR",
+                ),
             ),
             (
                 "auto",
@@ -115,8 +124,21 @@ class ShadowrocketProfilesTests(unittest.TestCase):
                     "🇩🇪 Germany Naive",
                     "🇵🇱 Польша AWG2",
                     "🇬🇷 Греция AWG2",
+                    "🇩🇪 Germany NV",
+                    "🇨🇦 Canada MR",
                 ),
-                ("🇷🇺 Russia Vless", "🇧🇾 Belarus(M) TT", "🇺🇦 Ukraine Naive", "🇫🇷 France WL Mobile Vless", "Germany SS", "USA Trojan"),
+                (
+                    "🇷🇺 Russia Vless",
+                    "🇧🇾 Belarus(M) TT",
+                    "🇺🇦 Ukraine Naive",
+                    "🇫🇷 France WL Mobile Vless",
+                    "Germany SS",
+                    "USA Trojan",
+                    "🇸🇪 Sweden Mieru",
+                    "🇯🇵 Japan Mierus",
+                    "🇯🇵 Japan NVx",
+                    "🇰🇷 Korea MRoad",
+                ),
             ),
         )
         for group, pattern, accepted, rejected in cases:
