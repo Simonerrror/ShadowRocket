@@ -39,12 +39,12 @@ consumer-списков в `rules/`. Проект поддерживает ав�
    ```
    > В конфиге указан `update-url`, поэтому он будет обновляться автоматически.
 2. **Добавьте подписку** на сервера в Shadowrocket (URL от вашего провайдера).
-   Группы используют разные фильтры: ручная группа принимает всю подписку без `WL`, автоматические группы принимают `VLESS`, `TT`, `Naive`, `NV`, `MR` и `AWG2` вне RU/BY/UA и без `WL`, а `GOOGLE` дополнительно исключает `SS` и `Trojan`.
+   Группы используют разные фильтры: ручная группа принимает всю подписку без `WL`, автоматические группы принимают `VLESS`, `TT`, `Naive`, `NV`, `MR` и `AWG2` вне RU/BY/UA и без `WL`, а `GOOGLE` дополнительно исключает `Trojan`.
 3. **Проверьте группы прокси**:
    - `MANUAL-PROXY` — ручной выбор всей подписки без standalone `WL`.
    - `AUTO-SPEED` — `url-test`: выбирает самый быстрый узел `VLESS`, `TT`, `Naive`, `NV`, `MR` или `AWG2` без `Russia`, `Belarus`, `Ukraine` и standalone `WL`.
    - `AUTO-STABILITY` — `fallback`: берёт первый живой узел `VLESS`, `TT`, `Naive`, `NV`, `MR` или `AWG2` без `Russia`, `Belarus`, `Ukraine` и standalone `WL`, в порядке подписки.
-   - `GOOGLE` — `url-test` без `Russia`, `Belarus`, `Ukraine` и standalone `SS`, `Trojan`, `WL`. Отдельный проверенный allowlist пока не применяется.
+   - `GOOGLE` — `url-test` без `Russia`, `Belarus`, `Ukraine` и standalone `Trojan`, `WL`. Отдельный проверенный allowlist пока не применяется.
    - `WL` — отдельная `select`-группа для узлов любого протокола со standalone `WL` (`policy-regex-filter=(?i)\bWL\b`), включая `WL-lte`.
    - `\bWL\b` — standalone-токен: он не задевает имена вроде `WLAN` или `BOWL`.
    - `PROXY` — главный переключатель (Select): по умолчанию выбран `AUTO-STABILITY`; доступны `MANUAL-PROXY`, `AUTO-SPEED`, `AUTO-STABILITY` и `WL`. Группа `GOOGLE` и `DIRECT` в этот переключатель не входят.
@@ -63,7 +63,7 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_cus
 ```
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_whitelist.conf
 ```
-В нём остаются только локальные исключения, `whitelist_direct.list`, `.ru/.рф/.su` и `GEOIP,RU,DIRECT`; весь Google и любой другой non-direct трафик уходит в `PROXY`. Фильтр `PROXY` принимает любой протокол (включая `VLESS`, `Hysteria` и `Hysteria2`), кроме имён с `Russia` и standalone-токенами `SS` или `Trojan`; standalone `WL` не исключается.
+В нём остаются только локальные исключения, `whitelist_direct.list`, `.ru/.рф/.su` и `GEOIP,RU,DIRECT`; весь Google и любой другой non-direct трафик уходит в `PROXY`. Фильтр `PROXY` принимает любой протокол (включая `VLESS`, `Hysteria` и `Hysteria2`), кроме имён с `Russia` и standalone-токеном `Trojan`; standalone `WL` не исключается.
 
 Дополнительный HAPP-профиль для доступа к российским ресурсам через
 российский VPN-узел:
@@ -183,7 +183,7 @@ CDN; весь Tencent/QQ он не обходит.
   фильтр принимает standalone `VLESS`, `TT`, `Naive`, `NV`, `MR` и `AWG2` и исключает `Russia`, `Belarus`, `Ukraine` и standalone `WL`; `url=https://abs.twimg.com/favicon.ico`, `interval=180`, `tolerance=100`, `timeout=7`.
 - **AUTO-STABILITY** — `fallback`-группа для выбора первого живого узла в порядке подписки:
   фильтр принимает standalone `VLESS`, `TT`, `Naive`, `NV`, `MR` и `AWG2` и исключает `Russia`, `Belarus`, `Ukraine` и standalone `WL`; `url=https://abs.twimg.com/favicon.ico`, `interval=780`, `timeout=7`.
-- **GOOGLE** — временная `url-test`-группа без `Russia`, `Belarus`, `Ukraine` и standalone `SS`, `Trojan`, `WL`; `url=https://abs.twimg.com/favicon.ico`, `interval=180`, `tolerance=100`, `timeout=7`.
+- **GOOGLE** — временная `url-test`-группа без `Russia`, `Belarus`, `Ukraine` и standalone `Trojan`, `WL`; `url=https://abs.twimg.com/favicon.ico`, `interval=180`, `tolerance=100`, `timeout=7`.
 - **WL** — отдельная `select`-группа для узлов любого протокола со standalone `WL` (включая `WL-lte`), фильтр `(?i)\bWL\b`.
 - **PROXY** — Select-группа; по умолчанию выбран `AUTO-STABILITY`, доступны `MANUAL-PROXY`/`AUTO-SPEED`/`AUTO-STABILITY`/`WL`.
   В `AUTO-STABILITY` первичным считается первый живой узел в порядке уже фильтрованной подписки.
