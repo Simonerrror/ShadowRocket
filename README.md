@@ -39,9 +39,9 @@ consumer-списков в `rules/`. Проект поддерживает ав�
    ```
    > В конфиге указан `update-url`, поэтому он будет обновляться автоматически.
 2. **Добавьте подписку** на сервера в Shadowrocket (URL от вашего провайдера).
-   Группы используют разные фильтры: ручная группа принимает всю подписку без `WL`, автоматические группы принимают `VLESS`, `TT`, `Naive`, `NV`, `MR` и `AWG2` вне RU/BY/UA и без `WL`, а `GOOGLE` принимает только узлы из отдельного проверенного Gemini allowlist.
+   Группы используют разные фильтры: ручная группа принимает поддерживаемые узлы подписки без `WL`, автоматические группы принимают `VLESS`, `TT`, `Naive`, `NV`, `MR` и `AWG2` вне RU/BY/UA и без `WL`, а `GOOGLE` принимает только узлы из отдельного проверенного Gemini allowlist.
 3. **Проверьте группы прокси**:
-   - `MANUAL-PROXY` — ручной выбор всей подписки без standalone `WL`.
+   - `MANUAL-PROXY` — ручной выбор поддерживаемых узлов подписки без standalone `WL`.
    - `AUTO-SPEED` — `url-test`: выбирает самый быстрый узел `VLESS`, `TT`, `Naive`, `NV`, `MR` или `AWG2` без `Russia`, `Belarus`, `Ukraine` и standalone `WL`.
    - `AUTO-STABILITY` — `fallback`: берёт первый живой узел `VLESS`, `TT`, `Naive`, `NV`, `MR` или `AWG2` без `Russia`, `Belarus`, `Ukraine` и standalone `WL`, в порядке подписки.
    - `GOOGLE` — `url-test` только для узлов из отдельного проверенного Gemini allowlist.
@@ -178,7 +178,7 @@ CDN; весь Tencent/QQ он не обходит.
 - Каждый публикуемый Shadowrocket-профиль содержит `Config-Version` сразу после `[General]`. Формат версии: `YYYY.MM.DD.N`, где `N` — номер ревизии за день.
 
 ### [Proxy Group]
-- **MANUAL-PROXY** — ручной выбор всей подписки без standalone `WL`.
+- **MANUAL-PROXY** — ручной выбор поддерживаемых узлов подписки без standalone `WL`.
 - **AUTO-SPEED** — `url-test`-группа для выбора самого быстрого живого узла из подписки:
   фильтр принимает standalone `VLESS`, `TT`, `Naive`, `NV`, `MR` и `AWG2` и исключает `Russia`, `Belarus`, `Ukraine` и standalone `WL`; `url=https://abs.twimg.com/favicon.ico`, `interval=180`, `tolerance=100`, `timeout=7`.
 - **AUTO-STABILITY** — `fallback`-группа для выбора первого живого узла в порядке подписки:
@@ -260,7 +260,7 @@ GitHub Actions:
 - HAPP и INCY-профили относятся к shared routing-артефактам; при изменении входов оба генератора и Worker-пакет пересобираются вместе.
 
 Политика изменений:
-- Изменение групп `MANUAL-PROXY`, `WL`, auto-фильтра и `GOOGLE` — **shared**: синхронизировано в `shadowrocket.conf`, `shadowrocket_custom.conf` и `shadowrocket_custom_private_dns.conf`; custom-only поля `[General]` сохранены. `MANUAL-PROXY` принимает всю подписку без standalone `WL`; `AUTO-SPEED`/`AUTO-STABILITY` принимают `VLESS`, `TT`, `Naive`, `NV`, `MR` и `AWG2` вне RU/BY/UA и без standalone `WL`; `GOOGLE` использует отдельный allowlist; `WL` принимает любой протокол со standalone `WL`.
+- Изменение групп `MANUAL-PROXY`, `WL`, auto-фильтра и `GOOGLE` — **shared**: синхронизировано в `shadowrocket.conf`, `shadowrocket_custom.conf` и `shadowrocket_custom_private_dns.conf`; custom-only поля `[General]` сохранены. `MANUAL-PROXY` принимает поддерживаемые узлы подписки без standalone `WL`; `AUTO-SPEED`/`AUTO-STABILITY` принимают `VLESS`, `TT`, `Naive`, `NV`, `MR` и `AWG2` вне RU/BY/UA и без standalone `WL`; `GOOGLE` использует отдельный allowlist; `WL` принимает любой протокол со standalone `WL`.
 - `shadowrocket_custom.conf`, `shadowrocket_custom_private_dns.conf`, `shadowrocket_whitelist.conf` и `modules/anti_advertising_custom.module` считаются `custom-only` и содержат single-user/GFN логику.
 - Если улучшение полезно всем, его нужно переносить и в основной конфиг, и в кастомные файлы.
 - При изменении generated `rules/*.list` меняйте `distillate/manifest.json`, `distillate/overlays/*` или `distillate/filters/*`, а не итоговые generated-файлы.

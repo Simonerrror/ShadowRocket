@@ -12,7 +12,7 @@ from scripts.build_clash_config import (
 
 
 EXPECTED_GOOGLE_FILTER = SHADOWROCKET_GOOGLE_SUBSCRIPTION_FILTER
-EXPECTED_MIHOMO_MANUAL_EXCLUDE_FILTER = r"(?i)\bWL\b"
+EXPECTED_MIHOMO_MANUAL_EXCLUDE_FILTER = r"(?i)\b(?:WL|SS)\b"
 EXPECTED_MIHOMO_AUTO_FILTER = r"(?i)\b(?:VLESS|TT|Naive|NV|MR|AWG2)\b"
 EXPECTED_MIHOMO_AUTO_EXCLUDE_FILTER = r"(?i)Russia|Belarus|Ukraine|\bWL\b"
 EXPECTED_MIHOMO_WL_FILTER = r"(?i)\bWL\b"
@@ -40,7 +40,7 @@ class BuildClashConfigTests(unittest.TestCase):
         self.assertIn("    interval: 180", google_group)
         self.assertIn("    tolerance: 100", google_group)
 
-    def test_manual_proxy_uses_the_unfiltered_subscription_with_wl_excluded(self) -> None:
+    def test_manual_proxy_excludes_wl_and_ss_from_the_subscription(self) -> None:
         content, warnings = build_config(DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL)
         provider = content.split("  Main-Sub:", 1)[1].split("# 4. RULE PROVIDERS", 1)[0]
         self.assertNotIn("    filter:", provider)

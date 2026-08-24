@@ -111,7 +111,7 @@ proxy-groups:
     type: select
     use:
       - Main-Sub
-    exclude-filter: "(?i)\\bWL\\b"
+    exclude-filter: "(?i)\\b(?:WL|SS)\\b"
 
   - name: AUTO-SPEED
     type: url-test

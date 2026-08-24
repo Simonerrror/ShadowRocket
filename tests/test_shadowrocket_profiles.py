@@ -14,7 +14,7 @@ PRIVATE_DNS_CONF = REPO_ROOT / "shadowrocket_custom_private_dns.conf"
 WHITELIST_CONF = REPO_ROOT / "shadowrocket_whitelist.conf"
 TAILSCALE_MODULE = REPO_ROOT / "modules" / "tailscale_direct.module"
 WECHAT_MODULE = REPO_ROOT / "modules" / "wechat_direct.module"
-EXPECTED_MANUAL_FILTER = r"(?i)^(?!.*\bWL\b).*$"
+EXPECTED_MANUAL_FILTER = r"(?i)^(?!.*\bWL\b)(?!.*\bSS\b).*$"
 EXPECTED_AUTO_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\b(?:VLESS|TT|Naive|NV|MR|AWG2)\b.*$"
 EXPECTED_GOOGLE_FILTER = SHADOWROCKET_GOOGLE_SUBSCRIPTION_FILTER
 EXPECTED_WL_FILTER = r"(?i)\bWL\b"
@@ -89,8 +89,8 @@ class ShadowrocketProfilesTests(unittest.TestCase):
             (
                 "manual",
                 EXPECTED_MANUAL_FILTER,
-                ("🇺🇸 United States Vless", "🇷🇺 Russia Vless", "🇧🇾 Belarus SS", "Japan VMess"),
-                ("WL-lte VLESS", "VLESS WL"),
+                ("🇺🇸 United States Vless", "🇷🇺 Russia Vless", "Japan VMess", "MASS relay", "SSS relay"),
+                ("WL-lte VLESS", "VLESS WL", "🇧🇾 Belarus SS", "Japan SS-lte"),
             ),
             (
                 "wl",
