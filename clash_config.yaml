@@ -136,7 +136,7 @@ proxy-groups:
     type: url-test
     use:
       - Main-Sub
-    filter: "(?i)^(?:🇫🇷\\ France\\(LK\\)\\ Vless|🇸🇬\\ Singapore\\ Vless|🇸🇬\\ Singapore\\ PS\\ Vless|🇪🇸\\ Spain\\(N\\)\\ Vless|🇦🇪\\ UAE\\(MO\\)\\ Vless|🇺🇸\\ USA\\ NY\\ Vless\\ Global)$"
+    filter: "(?i)^(?:🇦🇲\\ Armenia\\(L\\)\\ Vless\\ Global|🇦🇲\\ Armenia\\(L\\)\\ XH\\ Vless\\ Global|🇫🇷\\ France\\(LK\\)\\ Vless|🇫🇷\\ France\\(LK\\)\\ XH\\ Vless|🇸🇬\\ Singapore\\ PS\\ Vless|🇪🇸\\ Spain\\(N\\)\\ Vless|🇪🇸\\ Spain\\(N\\)\\ XH\\ Vless|🇦🇪\\ UAE\\(MO\\)\\ Vless)$"
     url: "https://abs.twimg.com/favicon.ico"
     interval: 180
     tolerance: 100
