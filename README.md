@@ -23,6 +23,7 @@ consumer-списков в `rules/`. Проект поддерживает ав�
 - `shadowrocket_whitelist.conf` — custom-only аварийный whitelist-профиль: direct allowlist/RU напрямую, всё остальное в один выбранный `PROXY`.
 - `distillate/` — канонический manifest, локальные overlays и собранные text/`dat`.
 - `rules/` — вручную поддерживаемые rule-list'ы и generated consumer-списки.
+- `motivato_torrent` — общий список torrent tracker/DHT-доменов: во всех профилях они входят в `whitelist_direct` и маршрутизируются напрямую.
 - `HAPP/RU-VPN.*` — дополнительный HAPP-профиль: российские домены/IP через proxy, остальное напрямую.
 - `INCY/DEFAULT.*` и `INCY/RU-VPN.*` — те же routing-профили для INCY с `incy://` deeplink.
 - `Amnezia/SR-DEFAULT-EXCLUDE.json` — shared-профиль исключений IPv4 для AmneziaVPN на iOS/Premium.
@@ -63,7 +64,9 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_cus
 ```
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_whitelist.conf
 ```
-В нём остаются только локальные исключения, `whitelist_direct.list`, `.ru/.рф/.su` и `GEOIP,RU,DIRECT`; весь Google и любой другой non-direct трафик уходит в `PROXY`. Фильтр `PROXY` принимает любой протокол (включая `VLESS`, `Hysteria` и `Hysteria2`), кроме имён с `Russia` и standalone-токеном `Trojan`; standalone `WL` не исключается.
+В нём остаются только локальные исключения, `whitelist_direct.list` с torrent tracker/DHT-доменами, `.ru/.рф/.su` и `GEOIP,RU,DIRECT`; весь Google и любой другой non-direct трафик уходит в `PROXY`. Фильтр `PROXY` принимает любой протокол (включая `VLESS`, `Hysteria` и `Hysteria2`), кроме имён с `Russia` и standalone-токеном `Trojan`; standalone `WL` не исключается.
+
+Torrent-правила покрывают домены трекеров и DHT bootstrap-узлов. Они не гарантируют DIRECT для каждого peer-соединения по произвольному IP: Shadowrocket и Mihomo не имеют общего надёжного правила распознавания всего зашифрованного/обфусцированного BitTorrent-трафика.
 
 Дополнительный HAPP-профиль для доступа к российским ресурсам через
 российский VPN-узел:

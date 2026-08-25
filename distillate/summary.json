@@ -189,7 +189,7 @@
       "name": "motivato_block",
       "bucket": "block",
       "legacy_rule_path": null,
-      "domains": 462,
+      "domains": 31,
       "ip_cidrs": 0,
       "ip_asns": 0,
       "dropped": {}
@@ -303,7 +303,7 @@
       "name": "whitelist_direct",
       "bucket": "direct",
       "legacy_rule_path": "rules/whitelist_direct.list",
-      "domains": 24,
+      "domains": 455,
       "ip_cidrs": 2,
       "ip_asns": 0,
       "dropped": {}
@@ -330,12 +330,12 @@
   "aggregates": [
     {
       "name": "sr-block",
-      "domains": 462,
+      "domains": 31,
       "ip_cidrs": 0
     },
     {
       "name": "sr-direct",
-      "domains": 27,
+      "domains": 458,
       "ip_cidrs": 2
     },
     {
