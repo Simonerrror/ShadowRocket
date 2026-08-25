@@ -12,6 +12,9 @@ BASE_CONF = REPO_ROOT / "shadowrocket.conf"
 CUSTOM_CONF = REPO_ROOT / "shadowrocket_custom.conf"
 PRIVATE_DNS_CONF = REPO_ROOT / "shadowrocket_custom_private_dns.conf"
 WHITELIST_CONF = REPO_ROOT / "shadowrocket_whitelist.conf"
+TORRENT_DOMAINS = REPO_ROOT / "distillate" / "text" / "domain" / "motivato_torrent.txt"
+SR_DIRECT_DOMAINS = REPO_ROOT / "distillate" / "text" / "domain" / "sr-direct.txt"
+SR_BLOCK_DOMAINS = REPO_ROOT / "distillate" / "text" / "domain" / "sr-block.txt"
 TAILSCALE_MODULE = REPO_ROOT / "modules" / "tailscale_direct.module"
 WECHAT_MODULE = REPO_ROOT / "modules" / "wechat_direct.module"
 EXPECTED_MANUAL_FILTER = r"(?i)^(?!.*\bWL\b)(?!.*\bSS\b).*$"
@@ -50,6 +53,21 @@ def key_values(path: Path, section: str) -> dict[str, str]:
 
 
 class ShadowrocketProfilesTests(unittest.TestCase):
+    def test_torrent_domains_are_direct_in_every_profile(self) -> None:
+        torrent_domains = set(TORRENT_DOMAINS.read_text(encoding="utf-8").splitlines())
+        direct_domains = set(SR_DIRECT_DOMAINS.read_text(encoding="utf-8").splitlines())
+        block_domains = set(SR_BLOCK_DOMAINS.read_text(encoding="utf-8").splitlines())
+
+        self.assertTrue(torrent_domains)
+        self.assertLessEqual(torrent_domains, direct_domains)
+        self.assertTrue(torrent_domains.isdisjoint(block_domains))
+        for path in (BASE_CONF, CUSTOM_CONF, PRIVATE_DNS_CONF, WHITELIST_CONF):
+            with self.subTest(path=path.name):
+                self.assertIn(
+                    "RULE-SET,https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/whitelist_direct.list,DIRECT",
+                    section_lines(path, "Rule"),
+                )
+
     def test_published_profiles_show_version_maintainer_and_readme(self) -> None:
         for path in (BASE_CONF, CUSTOM_CONF, PRIVATE_DNS_CONF, WHITELIST_CONF):
             lines = path.read_text(encoding="utf-8").splitlines()
