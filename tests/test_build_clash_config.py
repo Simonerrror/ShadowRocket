@@ -5,13 +5,11 @@ import unittest
 from scripts.build_clash_config import (
     DEFAULT_CONF,
     DEFAULT_SUBSCRIPTION_URL,
-    SHADOWROCKET_GOOGLE_SUBSCRIPTION_FILTER,
     build_config,
     yaml_quote,
 )
 
 
-EXPECTED_GOOGLE_FILTER = SHADOWROCKET_GOOGLE_SUBSCRIPTION_FILTER
 EXPECTED_MIHOMO_MANUAL_EXCLUDE_FILTER = r"(?i)\b(?:WL|SS)\b"
 EXPECTED_MIHOMO_AUTO_FILTER = r"(?i)\b(?:VLESS|TT|Naive|NV|MR|AWG2)\b"
 EXPECTED_MIHOMO_AUTO_EXCLUDE_FILTER = r"(?i)Russia|Belarus|Ukraine|\bWL\b"
@@ -19,7 +17,7 @@ EXPECTED_MIHOMO_WL_FILTER = r"(?i)\bWL\b"
 
 
 class BuildClashConfigTests(unittest.TestCase):
-    def test_generated_service_routes_keep_google_and_remove_openai(self) -> None:
+    def test_generated_service_routes_leave_google_and_openai_to_optional_overlays(self) -> None:
         content, warnings = build_config(DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL)
 
         self.assertNotIn("  openai:", content)
@@ -27,18 +25,10 @@ class BuildClashConfigTests(unittest.TestCase):
         self.assertNotIn("RULE-SET,openai", content)
         self.assertNotIn("  - name: OPENAI", content)
         self.assertNotIn("OPENAI: unsupported", "\n".join(warnings))
-        self.assertIn("  google_all:", content)
-        self.assertIn("rules/google-all.list", content)
-        self.assertIn("  - RULE-SET,google_all,GOOGLE", content)
-        self.assertIn("  - name: GOOGLE", content)
-        google_group = content.split("  - name: GOOGLE", 1)[1].split("  - name:", 1)[0]
-        self.assertIn("    type: url-test", google_group)
-        self.assertIn("    use:\n      - Main-Sub", google_group)
-        self.assertIn(f"    filter: {yaml_quote(EXPECTED_GOOGLE_FILTER)}", google_group)
-        self.assertNotIn("    exclude-filter:", google_group)
-        self.assertIn('    url: "https://abs.twimg.com/favicon.ico"', google_group)
-        self.assertIn("    interval: 180", google_group)
-        self.assertIn("    tolerance: 100", google_group)
+        self.assertNotIn("  google_all:", content)
+        self.assertNotIn("rules/google-all.list", content)
+        self.assertNotIn("RULE-SET,google_all", content)
+        self.assertNotIn("  - name: GOOGLE", content)
 
     def test_manual_proxy_excludes_wl_and_ss_from_the_subscription(self) -> None:
         content, warnings = build_config(DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL)
