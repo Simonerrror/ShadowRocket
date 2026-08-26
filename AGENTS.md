@@ -53,7 +53,7 @@
 - `clash_config.yaml`: generated-артефакт от `shadowrocket.conf` и Clash/Mihomo template-настроек; при изменении логики сборки обновляйте его вместе с кодом.
 
 ## Ownership файлов
-- Редактируются вручную: `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_whitelist.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `rules/adobe_telemetry_custom.list`, `rules/russia_extended.list`, `rules/voice_ports.list`, `modules/GFN-AM.module`, `modules/tailscale_direct.module`, `modules/wechat_direct.module`, `modules/google_personal_outbound.module`.
+- Редактируются вручную: `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_whitelist.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `rules/adobe_telemetry_custom.list`, `rules/russia_extended.list`, `rules/voice_ports.list`, `modules/GFN-AM.module`, `modules/tailscale_tailnet.module`, `modules/wechat_direct.module`, `modules/gemini_personal_outbound.module`.
 - Generated, не редактировать вручную: `clash_config.yaml`, `HAPP/DEFAULT.*`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/summary.json`, `distillate/upstream/v2fly/ru_ipv4.txt`, `Amnezia/SR-DEFAULT-EXCLUDE.json`, `Amnezia/SR-DEFAULT-EXCLUDE.summary.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/openai.list`, `rules/telegram.list`, `rules/whitelist_direct.list`, `rules/greylist_proxy.list`, `rules/anti_advertising*.list`.
 - Semi-generated: `modules/anti_advertising.module` и `modules/anti_advertising_custom.module` хранят ручные заголовки и локальные исключения, но `RULE-SET` на anti-ad chunks переписываются сборкой.
 

@@ -1,0 +1,11 @@
+#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/gemini_personal_outbound.module
+#!name=Gemini Personal Outbound
+#!desc=Keep Gemini and its Google session dependencies on the personal outbound selected in module arguments.
+#!arguments=Ваш персональный outbound:
+#!arguments-desc=Укажите точное имя существующего узла или группы Shadowrocket. Пустое значение нужно заполнить перед включением модуля.
+
+[General]
+udp-policy-not-supported-behaviour = REJECT
+
+[Rule]
+RULE-SET,https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/google-all.list,{{{Ваш персональный outbound}}}
