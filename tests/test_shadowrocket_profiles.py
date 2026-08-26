@@ -4,25 +4,21 @@ import re
 import unittest
 from pathlib import Path
 
-from scripts.build_clash_config import SHADOWROCKET_GOOGLE_SUBSCRIPTION_FILTER
-
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 BASE_CONF = REPO_ROOT / "shadowrocket.conf"
 CUSTOM_CONF = REPO_ROOT / "shadowrocket_custom.conf"
-PRIVATE_DNS_CONF = REPO_ROOT / "shadowrocket_custom_private_dns.conf"
 WHITELIST_CONF = REPO_ROOT / "shadowrocket_whitelist.conf"
 TORRENT_DOMAINS = REPO_ROOT / "distillate" / "text" / "domain" / "motivato_torrent.txt"
 SR_DIRECT_DOMAINS = REPO_ROOT / "distillate" / "text" / "domain" / "sr-direct.txt"
 SR_BLOCK_DOMAINS = REPO_ROOT / "distillate" / "text" / "domain" / "sr-block.txt"
 TAILSCALE_MODULE = REPO_ROOT / "modules" / "tailscale_direct.module"
 WECHAT_MODULE = REPO_ROOT / "modules" / "wechat_direct.module"
+GOOGLE_OUTBOUND_MODULE = REPO_ROOT / "modules" / "google_personal_outbound.module"
 EXPECTED_MANUAL_FILTER = r"(?i)^(?!.*\bWL\b)(?!.*\bSS\b).*$"
 EXPECTED_AUTO_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\b(?:VLESS|TT|Naive|NV|MR|AWG2)\b.*$"
-EXPECTED_GOOGLE_FILTER = SHADOWROCKET_GOOGLE_SUBSCRIPTION_FILTER
 EXPECTED_WL_FILTER = r"(?i)\bWL\b"
 EXPECTED_PROVENANCE = [
-    "# Config-Version: 2026.08.23.1",
+    "# Config-Version: 2026.08.26.1",
     "# Maintainer: Simonerrror; contact: https://t.me/AIDHDaily",
     "# README: https://github.com/Simonerrror/ShadowRocket#readme",
 ]
@@ -61,7 +57,7 @@ class ShadowrocketProfilesTests(unittest.TestCase):
         self.assertTrue(torrent_domains)
         self.assertLessEqual(torrent_domains, direct_domains)
         self.assertTrue(torrent_domains.isdisjoint(block_domains))
-        for path in (BASE_CONF, CUSTOM_CONF, PRIVATE_DNS_CONF, WHITELIST_CONF):
+        for path in (BASE_CONF, CUSTOM_CONF, WHITELIST_CONF):
             with self.subTest(path=path.name):
                 self.assertIn(
                     "RULE-SET,https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/whitelist_direct.list,DIRECT",
@@ -69,17 +65,14 @@ class ShadowrocketProfilesTests(unittest.TestCase):
                 )
 
     def test_published_profiles_show_version_maintainer_and_readme(self) -> None:
-        for path in (BASE_CONF, CUSTOM_CONF, PRIVATE_DNS_CONF, WHITELIST_CONF):
+        for path in (BASE_CONF, CUSTOM_CONF, WHITELIST_CONF):
             lines = path.read_text(encoding="utf-8").splitlines()
             general_index = lines.index("[General]")
             with self.subTest(path=path.name):
                 self.assertEqual(EXPECTED_PROVENANCE, lines[general_index + 1 : general_index + 4])
 
-    def test_custom_proxy_groups_match_each_other(self) -> None:
-        self.assertEqual(section_lines(CUSTOM_CONF, "Proxy Group"), section_lines(PRIVATE_DNS_CONF, "Proxy Group"))
-
     def test_proxy_groups_apply_each_subscription_scope(self) -> None:
-        profiles = (BASE_CONF, CUSTOM_CONF, PRIVATE_DNS_CONF)
+        profiles = (BASE_CONF, CUSTOM_CONF)
 
         for path in profiles:
             groups = key_values(path, "Proxy Group")
@@ -87,15 +80,13 @@ class ShadowrocketProfilesTests(unittest.TestCase):
                 ("MANUAL-PROXY", EXPECTED_MANUAL_FILTER),
                 ("AUTO-SPEED", EXPECTED_AUTO_FILTER),
                 ("AUTO-STABILITY", EXPECTED_AUTO_FILTER),
-                ("GOOGLE", EXPECTED_GOOGLE_FILTER),
                 ("WL", EXPECTED_WL_FILTER),
             ):
                 with self.subTest(path=path.name, key=key):
                     actual_filter = groups[key].partition("policy-regex-filter=")[2].split(",", 1)[0]
                     self.assertEqual(expected_filter, actual_filter)
 
-            self.assertTrue(groups["GOOGLE"].startswith("url-test,"))
-            self.assertIn(",interval=180,tolerance=100,url=https://abs.twimg.com/favicon.ico,timeout=7", groups["GOOGLE"])
+            self.assertNotIn("GOOGLE", groups)
             self.assertTrue(groups["WL"].startswith("select,"))
             self.assertEqual(
                 ["select", "MANUAL-PROXY", "AUTO-SPEED", "AUTO-STABILITY", "WL", "policy-select-name=AUTO-STABILITY"],
@@ -115,21 +106,6 @@ class ShadowrocketProfilesTests(unittest.TestCase):
                 EXPECTED_WL_FILTER,
                 ("WL Vless", "WL-lte VLESS", "VLESS WL", "WL Trojan", "WL SS"),
                 ("VLESS Germany", "WLAN VLESS", "BOWL relay Trojan"),
-            ),
-            (
-                "google",
-                EXPECTED_GOOGLE_FILTER,
-                ("🇫🇷 France(LK) Vless", "🇸🇬 Singapore PS Vless", "🇪🇸 Spain(N) Vless"),
-                (
-                    "🇦🇲 Armenia(L) Trojan",
-                    "🇫🇷 France Vless",
-                    "🇸🇬 Singapore PS Trojan",
-                    "🇺🇸 USA NY Vless",
-                    "🇸🇪 Sweden Mieru",
-                    "🇯🇵 Japan Mierus",
-                    "🇩🇪 Germany NV",
-                    "🇨🇦 Canada MR",
-                ),
             ),
             (
                 "auto",
@@ -168,10 +144,9 @@ class ShadowrocketProfilesTests(unittest.TestCase):
                 with self.subTest(group=group, name=name, expected="reject"):
                     self.assertIsNone(compiled.search(name) if group == "wl" else compiled.fullmatch(name))
 
-    def test_profiles_keep_shared_and_private_dns_contracts(self) -> None:
+    def test_profiles_keep_shared_dns_contracts(self) -> None:
         base_general = key_values(BASE_CONF, "General")
         custom_general = key_values(CUSTOM_CONF, "General")
-        private_general = key_values(PRIVATE_DNS_CONF, "General")
         whitelist_general = key_values(WHITELIST_CONF, "General")
 
         self.assertEqual("9.9.9.9, 149.112.112.112, 77.88.8.8", base_general["dns-server"])
@@ -187,11 +162,6 @@ class ShadowrocketProfilesTests(unittest.TestCase):
         ):
             with self.subTest(profile="whitelist", key=key):
                 self.assertEqual(custom_general[key], whitelist_general[key])
-        self.assertEqual(
-            "https://dns.mullvad.net/dns-query, https://dns.quad9.net/dns-query",
-            private_general["dns-server"],
-        )
-        self.assertEqual("tls://dns.mullvad.net, tls://dns.quad9.net", private_general["fallback-dns-server"])
 
     def test_base_keeps_custom_only_gfn_exceptions_out(self) -> None:
         base_general = key_values(BASE_CONF, "General")
@@ -204,17 +174,13 @@ class ShadowrocketProfilesTests(unittest.TestCase):
     def test_shared_local_bypass_ranges_match(self) -> None:
         base_general = key_values(BASE_CONF, "General")
         custom_general = key_values(CUSTOM_CONF, "General")
-        private_dns_general = key_values(PRIVATE_DNS_CONF, "General")
-
         self.assertEqual(base_general["skip-proxy"], custom_general["skip-proxy"])
-        self.assertEqual(base_general["skip-proxy"], private_dns_general["skip-proxy"])
         self.assertEqual(base_general["bypass-tun"], custom_general["bypass-tun"])
-        self.assertEqual(base_general["bypass-tun"], private_dns_general["bypass-tun"])
 
     def test_tailscale_specific_rules_stay_in_module(self) -> None:
         profile_contents = "\n".join(
             path.read_text(encoding="utf-8")
-            for path in (BASE_CONF, CUSTOM_CONF, PRIVATE_DNS_CONF, WHITELIST_CONF)
+            for path in (BASE_CONF, CUSTOM_CONF, WHITELIST_CONF)
         )
         module_content = TAILSCALE_MODULE.read_text(encoding="utf-8")
         module_general = key_values(TAILSCALE_MODULE, "General")
@@ -237,6 +203,23 @@ class ShadowrocketProfilesTests(unittest.TestCase):
         ):
             with self.subTest(rule=rule):
                 self.assertIn(rule, module_rules)
+
+    def test_google_personal_outbound_stays_in_parameterized_modules(self) -> None:
+        profile_contents = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in (BASE_CONF, CUSTOM_CONF)
+        )
+        template = GOOGLE_OUTBOUND_MODULE.read_text(encoding="utf-8")
+        rule = (
+            "RULE-SET,https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/"
+            "rules/google-all.list,{{{Ваш персональный outbound}}},force-remote-dns"
+        )
+
+        self.assertNotIn("GOOGLE =", profile_contents)
+        self.assertNotIn("rules/google-all.list", profile_contents)
+        self.assertIn("#!arguments=Ваш персональный outbound:", template)
+        self.assertNotIn("#!arguments=Ваш персональный outbound:WARP-GEMINI", template)
+        self.assertEqual([rule], section_lines(GOOGLE_OUTBOUND_MODULE, "Rule"))
 
     def test_wechat_direct_module_has_approved_rules(self) -> None:
         content = WECHAT_MODULE.read_text(encoding="utf-8")

@@ -1,0 +1,8 @@
+#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/google_personal_outbound.module
+#!name=Google Personal Outbound
+#!desc=Route Google, Gemini and YouTube through the personal outbound selected in module arguments.
+#!arguments=Ваш персональный outbound:
+#!arguments-desc=Укажите точное имя существующего узла или группы Shadowrocket. Пустое значение нужно заполнить перед включением модуля.
+
+[Rule]
+RULE-SET,https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/google-all.list,{{{Ваш персональный outbound}}},force-remote-dns

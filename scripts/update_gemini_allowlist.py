@@ -13,7 +13,6 @@ DEFAULT_ALLOWLIST = REPO_ROOT / "gemini_node_allowlist.txt"
 PROFILE_PATHS = (
     REPO_ROOT / "shadowrocket.conf",
     REPO_ROOT / "shadowrocket_custom.conf",
-    REPO_ROOT / "shadowrocket_custom_private_dns.conf",
 )
 GOOGLE_LINE_RE = re.compile(
     r"^(GOOGLE = url-test,policy-regex-filter=).*?(,interval=180,tolerance=100,url=https://abs\.twimg\.com/favicon\.ico,timeout=7)$",
@@ -53,7 +52,8 @@ def main() -> int:
     args = parse_args()
     regex_filter = build_filter(load_names(args.allowlist))
     for path in PROFILE_PATHS:
-        update_profile(path, regex_filter)
+        if "GOOGLE = url-test" in path.read_text(encoding="utf-8"):
+            update_profile(path, regex_filter)
     return 0
 
 
