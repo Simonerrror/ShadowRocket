@@ -1,0 +1,8 @@
+#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/tailscale_tailnet.module
+#!name=Tailscale Tailnet
+#!desc=Route tailnet addresses through Shadowrocket's built-in Tailscale tunnel.
+
+[Rule]
+IP-CIDR,100.64.0.0/10,TAILSCALE,no-resolve
+IP-CIDR6,fd7a:115c:a1e0::/48,TAILSCALE,no-resolve
+DOMAIN-SUFFIX,ts.net,TAILSCALE

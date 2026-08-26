@@ -11,9 +11,9 @@ WHITELIST_CONF = REPO_ROOT / "shadowrocket_whitelist.conf"
 TORRENT_DOMAINS = REPO_ROOT / "distillate" / "text" / "domain" / "motivato_torrent.txt"
 SR_DIRECT_DOMAINS = REPO_ROOT / "distillate" / "text" / "domain" / "sr-direct.txt"
 SR_BLOCK_DOMAINS = REPO_ROOT / "distillate" / "text" / "domain" / "sr-block.txt"
-TAILSCALE_MODULE = REPO_ROOT / "modules" / "tailscale_direct.module"
+TAILSCALE_MODULE = REPO_ROOT / "modules" / "tailscale_tailnet.module"
 WECHAT_MODULE = REPO_ROOT / "modules" / "wechat_direct.module"
-GOOGLE_OUTBOUND_MODULE = REPO_ROOT / "modules" / "google_personal_outbound.module"
+GEMINI_OUTBOUND_MODULE = REPO_ROOT / "modules" / "gemini_personal_outbound.module"
 EXPECTED_MANUAL_FILTER = r"(?i)^(?!.*\bWL\b)(?!.*\bSS\b).*$"
 EXPECTED_AUTO_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\b(?:VLESS|TT|Naive|NV|MR|AWG2)\b.*$"
 EXPECTED_WL_FILTER = r"(?i)\bWL\b"
@@ -183,43 +183,43 @@ class ShadowrocketProfilesTests(unittest.TestCase):
             for path in (BASE_CONF, CUSTOM_CONF, WHITELIST_CONF)
         )
         module_content = TAILSCALE_MODULE.read_text(encoding="utf-8")
-        module_general = key_values(TAILSCALE_MODULE, "General")
         module_rules = section_lines(TAILSCALE_MODULE, "Rule")
 
         self.assertNotIn("100.64.0.0/10", profile_contents)
         self.assertNotIn("100.100.100.100", profile_contents)
         self.assertNotIn("ts.net", profile_contents)
         self.assertNotIn("tailscale.com", profile_contents)
-        self.assertIn("100.100.100.100", module_content)
-        self.assertIn("DOMAIN-SUFFIX,ts.net,DIRECT", module_content)
-        self.assertIn("DOMAIN-SUFFIX,tailscale.com,DIRECT", module_content)
-        self.assertEqual("100.100.100.100, *.ts.net, *.tailscale.com", module_general["skip-proxy"])
-        self.assertEqual("100.64.0.0/10", module_general["tun-excluded-routes"])
+        self.assertNotIn("DIRECT", module_content)
+        self.assertNotIn("tun-excluded-routes", module_content)
+        self.assertNotIn("bypass-tun", module_content)
+        self.assertNotIn("skip-proxy", module_content)
         for rule in (
-            "IP-CIDR,100.64.0.0/10,DIRECT,no-resolve",
-            "IP-CIDR,100.100.100.100/32,DIRECT,no-resolve",
-            "DOMAIN-SUFFIX,ts.net,DIRECT",
-            "DOMAIN-SUFFIX,tailscale.com,DIRECT",
+            "IP-CIDR,100.64.0.0/10,TAILSCALE,no-resolve",
+            "IP-CIDR6,fd7a:115c:a1e0::/48,TAILSCALE,no-resolve",
+            "DOMAIN-SUFFIX,ts.net,TAILSCALE",
         ):
             with self.subTest(rule=rule):
                 self.assertIn(rule, module_rules)
 
-    def test_google_personal_outbound_stays_in_parameterized_modules(self) -> None:
+    def test_gemini_personal_outbound_keeps_google_session_on_one_outbound(self) -> None:
         profile_contents = "\n".join(
             path.read_text(encoding="utf-8")
             for path in (BASE_CONF, CUSTOM_CONF)
         )
-        template = GOOGLE_OUTBOUND_MODULE.read_text(encoding="utf-8")
+        template = GEMINI_OUTBOUND_MODULE.read_text(encoding="utf-8")
+        module_general = key_values(GEMINI_OUTBOUND_MODULE, "General")
         rule = (
             "RULE-SET,https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/"
-            "rules/google-all.list,{{{Ваш персональный outbound}}},force-remote-dns"
+            "rules/google-all.list,{{{Ваш персональный outbound}}}"
         )
 
         self.assertNotIn("GOOGLE =", profile_contents)
         self.assertNotIn("rules/google-all.list", profile_contents)
         self.assertIn("#!arguments=Ваш персональный outbound:", template)
         self.assertNotIn("#!arguments=Ваш персональный outbound:WARP-GEMINI", template)
-        self.assertEqual([rule], section_lines(GOOGLE_OUTBOUND_MODULE, "Rule"))
+        self.assertEqual([rule], section_lines(GEMINI_OUTBOUND_MODULE, "Rule"))
+        self.assertNotIn("force-remote-dns", template)
+        self.assertEqual("REJECT", module_general["udp-policy-not-supported-behaviour"])
 
     def test_wechat_direct_module_has_approved_rules(self) -> None:
         content = WECHAT_MODULE.read_text(encoding="utf-8")
