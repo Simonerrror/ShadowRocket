@@ -7,6 +7,10 @@ import unittest
 from pathlib import Path
 
 from scripts.build_happ_routing import (
+    DEFAULT_REMOTE_DNS_DOMAIN,
+    DEFAULT_REMOTE_DNS_IP,
+    DEFAULT_RU_REMOTE_DNS_DOMAIN,
+    DEFAULT_RU_REMOTE_DNS_IP,
     RU_PROFILE_NAME,
     BuildData,
     Bucket,
@@ -15,6 +19,17 @@ from scripts.build_happ_routing import (
     profile_to_deeplink,
     resolve_build_stamp,
 )
+
+
+class HappDnsDefaultsTests(unittest.TestCase):
+    def test_remote_dns_defaults_to_adguard_non_filtering(self) -> None:
+        self.assertEqual(DEFAULT_REMOTE_DNS_IP, "94.140.14.140")
+        self.assertEqual(
+            DEFAULT_REMOTE_DNS_DOMAIN,
+            "https://unfiltered.adguard-dns.com/dns-query",
+        )
+        self.assertEqual(DEFAULT_RU_REMOTE_DNS_IP, "8.8.8.8")
+        self.assertEqual(DEFAULT_RU_REMOTE_DNS_DOMAIN, "https://8.8.8.8/dns-query")
 
 
 class HappBuildStampTests(unittest.TestCase):
