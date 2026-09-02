@@ -29,8 +29,10 @@ OBSOLETE_HAPP_FILES = (
     "bonus_geosite.dat",
     "REPORT.md",
 )
-DEFAULT_REMOTE_DNS_IP = "8.8.8.8"
-DEFAULT_REMOTE_DNS_DOMAIN = "https://8.8.8.8/dns-query"
+DEFAULT_REMOTE_DNS_IP = "94.140.14.140"
+DEFAULT_REMOTE_DNS_DOMAIN = "https://unfiltered.adguard-dns.com/dns-query"
+DEFAULT_RU_REMOTE_DNS_IP = "8.8.8.8"
+DEFAULT_RU_REMOTE_DNS_DOMAIN = "https://8.8.8.8/dns-query"
 DEFAULT_DOMESTIC_DNS_IP = "77.88.8.8"
 DEFAULT_DOMESTIC_DNS_DOMAIN = "https://77.88.8.8/dns-query"
 DEFAULT_DNS_HOSTS: dict[str, str] = {}
@@ -125,6 +127,16 @@ def parse_args() -> argparse.Namespace:
         "--remote-dns-domain",
         default=DEFAULT_REMOTE_DNS_DOMAIN,
         help="Remote DNS domain or URL (used for DoH)",
+    )
+    parser.add_argument(
+        "--ru-remote-dns-ip",
+        default=DEFAULT_RU_REMOTE_DNS_IP,
+        help="RU-VPN remote DNS IP",
+    )
+    parser.add_argument(
+        "--ru-remote-dns-domain",
+        default=DEFAULT_RU_REMOTE_DNS_DOMAIN,
+        help="RU-VPN remote DNS domain or URL (used for DoH)",
     )
     parser.add_argument(
         "--domestic-dns-type",
@@ -385,8 +397,8 @@ def main() -> int:
         geodata_base=geodata_base,
         last_updated=build_stamp,
         route_order=args.route_order,
-        remote_dns_ip=remote_dns_ip,
-        remote_dns_domain=args.remote_dns_domain,
+        remote_dns_ip=args.ru_remote_dns_ip,
+        remote_dns_domain=args.ru_remote_dns_domain,
         domestic_dns_ip=args.domestic_dns_ip,
         remote_dns_type=args.remote_dns_type,
         domestic_dns_type=args.domestic_dns_type,
