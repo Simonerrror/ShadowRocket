@@ -40,11 +40,11 @@ consumer-списков в `rules/`. Проект поддерживает ав�
    ```
    > В конфиге указан `update-url`, поэтому он будет обновляться автоматически.
 2. **Добавьте подписку** на сервера в Shadowrocket (URL от вашего провайдера).
-   Группы используют разные фильтры: ручная группа принимает поддерживаемые узлы подписки без `WL`, а автоматические группы принимают `VLESS`, `TT`, `Naive`, `NV`, `MR` и `AWG2` вне RU/BY/UA и без `WL`.
+   Группы используют разные фильтры: ручная группа принимает поддерживаемые узлы подписки без `WL`, а автоматические группы принимают `VLESS`, `TT`, `Naive`, `NV`, `MR`, `AWG`, `AWG2` и `AWG3.1` вне RU/BY/UA и без `WL`.
 3. **Проверьте группы прокси**:
    - `MANUAL-PROXY` — ручной выбор поддерживаемых узлов подписки без standalone `WL`.
-   - `AUTO-SPEED` — `url-test`: выбирает самый быстрый узел `VLESS`, `TT`, `Naive`, `NV`, `MR` или `AWG2` без `Russia`, `Belarus`, `Ukraine` и standalone `WL`.
-   - `AUTO-STABILITY` — `fallback`: берёт первый живой узел `VLESS`, `TT`, `Naive`, `NV`, `MR` или `AWG2` без `Russia`, `Belarus`, `Ukraine` и standalone `WL`, в порядке подписки.
+   - `AUTO-SPEED` — `url-test`: выбирает самый быстрый узел `VLESS`, `TT`, `Naive`, `NV`, `MR`, `AWG`, `AWG2` или `AWG3.1` без `Russia`, `Belarus`, `Ukraine` и standalone `WL`.
+   - `AUTO-STABILITY` — `fallback`: берёт первый живой узел `VLESS`, `TT`, `Naive`, `NV`, `MR`, `AWG`, `AWG2` или `AWG3.1` без `Russia`, `Belarus`, `Ukraine` и standalone `WL`, в порядке подписки.
    - `WL` — отдельная `select`-группа для узлов любого протокола со standalone `WL` (`policy-regex-filter=(?i)\bWL\b`), включая `WL-lte`.
    - `\bWL\b` — standalone-токен: он не задевает имена вроде `WLAN` или `BOWL`.
    - `PROXY` — главный переключатель (Select): по умолчанию выбран `AUTO-STABILITY`; доступны `MANUAL-PROXY`, `AUTO-SPEED`, `AUTO-STABILITY` и `WL`. `DIRECT` в этот переключатель не входит.
@@ -201,9 +201,9 @@ CDN; весь Tencent/QQ он не обходит.
 ### [Proxy Group]
 - **MANUAL-PROXY** — ручной выбор поддерживаемых узлов подписки без standalone `WL`.
 - **AUTO-SPEED** — `url-test`-группа для выбора самого быстрого живого узла из подписки:
-  фильтр принимает standalone `VLESS`, `TT`, `Naive`, `NV`, `MR` и `AWG2` и исключает `Russia`, `Belarus`, `Ukraine` и standalone `WL`; `url=https://abs.twimg.com/favicon.ico`, `interval=180`, `tolerance=100`, `timeout=7`.
+  фильтр принимает standalone `VLESS`, `TT`, `Naive`, `NV`, `MR`, `AWG`, `AWG2` и `AWG3.1` и исключает `Russia`, `Belarus`, `Ukraine` и standalone `WL`; `url=https://abs.twimg.com/favicon.ico`, `interval=180`, `tolerance=100`, `timeout=7`.
 - **AUTO-STABILITY** — `fallback`-группа для выбора первого живого узла в порядке подписки:
-  фильтр принимает standalone `VLESS`, `TT`, `Naive`, `NV`, `MR` и `AWG2` и исключает `Russia`, `Belarus`, `Ukraine` и standalone `WL`; `url=https://abs.twimg.com/favicon.ico`, `interval=780`, `timeout=7`.
+  фильтр принимает standalone `VLESS`, `TT`, `Naive`, `NV`, `MR`, `AWG`, `AWG2` и `AWG3.1` и исключает `Russia`, `Belarus`, `Ukraine` и standalone `WL`; `url=https://abs.twimg.com/favicon.ico`, `interval=780`, `timeout=7`.
 - **WL** — отдельная `select`-группа для узлов любого протокола со standalone `WL` (включая `WL-lte`), фильтр `(?i)\bWL\b`.
 - **PROXY** — Select-группа; по умолчанию выбран `AUTO-STABILITY`, доступны `MANUAL-PROXY`/`AUTO-SPEED`/`AUTO-STABILITY`/`WL`.
   В `AUTO-STABILITY` первичным считается первый живой узел в порядке уже фильтрованной подписки.

@@ -15,7 +15,7 @@ TAILSCALE_MODULE = REPO_ROOT / "modules" / "tailscale_tailnet.module"
 WECHAT_MODULE = REPO_ROOT / "modules" / "wechat_direct.module"
 GEMINI_OUTBOUND_MODULE = REPO_ROOT / "modules" / "gemini_personal_outbound.module"
 EXPECTED_MANUAL_FILTER = r"(?i)^(?!.*\bWL\b)(?!.*\bSS\b).*$"
-EXPECTED_AUTO_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\b(?:VLESS|TT|Naive|NV|MR|AWG2)\b.*$"
+EXPECTED_AUTO_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\b(?:VLESS|TT|Naive|NV|MR|AWG(?:2|3\.1)?)\b.*$"
 EXPECTED_WL_FILTER = r"(?i)\bWL\b"
 EXPECTED_PROVENANCE = [
     "# Config-Version: 2026.08.26.1",
@@ -116,8 +116,10 @@ class ShadowrocketProfilesTests(unittest.TestCase):
                     "WLAN Germany VLESS",
                     "🇭🇰 Hong Kong TT",
                     "🇩🇪 Germany Naive",
+                    "🇩🇪 Germany AWG",
                     "🇵🇱 Польша AWG2",
                     "🇬🇷 Греция AWG2",
+                    "🇩🇪 Германия AWG3.1",
                     "🇩🇪 Germany NV",
                     "🇨🇦 Canada MR",
                 ),
@@ -125,6 +127,13 @@ class ShadowrocketProfilesTests(unittest.TestCase):
                     "🇷🇺 Russia Vless",
                     "🇧🇾 Belarus(M) TT",
                     "🇺🇦 Ukraine Naive",
+                    "🇷🇺 Russia AWG",
+                    "🇧🇾 Belarus AWG2",
+                    "🇺🇦 Ukraine AWG3.1",
+                    "Germany AWG3.1 WL",
+                    "Germany AWG20",
+                    "Germany DRAWG",
+                    "Germany AWG3.10",
                     "🇫🇷 France WL Mobile Vless",
                     "Germany SS",
                     "USA Trojan",
@@ -135,7 +144,12 @@ class ShadowrocketProfilesTests(unittest.TestCase):
                 ),
             ),
         )
+        actual_auto_filter = key_values(BASE_CONF, "Proxy Group")["AUTO-SPEED"].partition(
+            "policy-regex-filter="
+        )[2].split(",", 1)[0]
         for group, pattern, accepted, rejected in cases:
+            if group == "auto":
+                pattern = actual_auto_filter
             compiled = re.compile(pattern)
             for name in accepted:
                 with self.subTest(group=group, name=name, expected="accept"):

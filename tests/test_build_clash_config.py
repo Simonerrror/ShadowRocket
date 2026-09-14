@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import re
 import unittest
 
 from scripts.build_clash_config import (
@@ -11,7 +13,7 @@ from scripts.build_clash_config import (
 
 
 EXPECTED_MIHOMO_MANUAL_EXCLUDE_FILTER = r"(?i)\b(?:WL|SS)\b"
-EXPECTED_MIHOMO_AUTO_FILTER = r"(?i)\b(?:VLESS|TT|Naive|NV|MR|AWG2)\b"
+EXPECTED_MIHOMO_AUTO_FILTER = r"(?i)\b(?:VLESS|TT|Naive|NV|MR|AWG(?:2|3\.1)?)\b"
 EXPECTED_MIHOMO_AUTO_EXCLUDE_FILTER = r"(?i)Russia|Belarus|Ukraine|\bWL\b"
 EXPECTED_MIHOMO_WL_FILTER = r"(?i)\bWL\b"
 
@@ -64,6 +66,25 @@ class BuildClashConfigTests(unittest.TestCase):
         self.assertIn("      - WL", proxy_group)
         self.assertNotIn("      - GOOGLE", proxy_group)
         self.assertNotIn("      - DIRECT", proxy_group)
+
+        accepted = ("Germany AWG", "Poland AWG2", "🇩🇪 Германия AWG3.1")
+        rejected = (
+            "Russia AWG",
+            "Belarus AWG2",
+            "Ukraine AWG3.1",
+            "Germany AWG3.1 WL",
+            "Germany AWG20",
+            "Germany DRAWG",
+            "Germany AWG3.10",
+        )
+        for group in (speed_group, stability_group):
+            filter_line = next(line for line in group.splitlines() if line.startswith("    filter: "))
+            exclude_line = next(line for line in group.splitlines() if line.startswith("    exclude-filter: "))
+            generated_filter = re.compile(json.loads(filter_line.split(": ", 1)[1]))
+            generated_exclude_filter = re.compile(json.loads(exclude_line.split(": ", 1)[1]))
+            selected = lambda name: generated_filter.search(name) and not generated_exclude_filter.search(name)
+            self.assertTrue(all(selected(name) for name in accepted))
+            self.assertTrue(all(not selected(name) for name in rejected))
 
         wl_group = content.split("  - name: WL", 1)[1].split("  - name:", 1)[0]
         self.assertIn("    type: select", wl_group)
