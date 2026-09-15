@@ -1,0 +1,8 @@
+#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/twitch_video_direct.module
+#!name=20_04 · Twitch Video Direct
+#!desc=Пускает видеосерверы Twitch напрямую. Сайт и API следуют правилам основного конфига.
+
+[Rule]
+DOMAIN-SUFFIX,hls.ttvnw.net,DIRECT
+DOMAIN-SUFFIX,live-video.net,DIRECT
+DOMAIN-KEYWORD,video-weaver,DIRECT
