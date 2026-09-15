@@ -9,3 +9,4 @@ XKeen/local/*.json
 XKeen/singles/*/*.json
 XKeen/diagnostics/*/*.json
 AGENTS.local.md
+/docs/superpowers/
