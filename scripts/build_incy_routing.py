@@ -184,7 +184,6 @@ def main(argv: list[str] | None = None) -> int:
     conf_path = (repo_root / args.conf).resolve()
     distillate_dir = (repo_root / args.distillate_dir).resolve()
     out_dir = (repo_root / args.out_dir).resolve()
-    out_dir.mkdir(parents=True, exist_ok=True)
 
     if not conf_path.exists():
         raise FileNotFoundError(f"Config not found: {conf_path}")
@@ -195,8 +194,7 @@ def main(argv: list[str] | None = None) -> int:
             "distillate dat artifacts are missing; run scripts/build_distillate.py before build_incy_routing.py"
         )
 
-    remove_obsolete_incy_files(out_dir)
-    write_geodata_checksums(distillate_dir / "dat")
+    happ.validate_distillate_inputs(distillate_dir)
     data = happ.load_build_data_from_distillate(distillate_dir)
     general_direct_ips = happ.dedupe_preserve(
         happ.extract_skip_proxy_ips(conf_path) + happ.extract_bypass_tun_ips(conf_path)
@@ -208,6 +206,9 @@ def main(argv: list[str] | None = None) -> int:
         else None
     )
     build_stamp = resolve_build_stamp(repo_root, args.build_stamp, out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    remove_obsolete_incy_files(out_dir)
+    write_geodata_checksums(distillate_dir / "dat")
 
     common = {
         "data": data,

@@ -1,5 +1,7 @@
 # INCY Routing
 
+**Пользователям HAPP настоятельно рекомендуем перейти на INCY: поддержка HAPP в этом репозитории сворачивается.**
+
 Готовые routing-профили для INCY. Профили используют те же distillate-агрегаты,
 что и HAPP, но сериализуются по официальному INCY-контракту:
 `useChunkFiles` — boolean `false`, без HAPP-only поля `UseChunkFiles`.
@@ -27,8 +29,9 @@ Deeplink имеет вид `incy://routing/onadd/<standard-base64-compact-json>`
 через выбранный proxy, а несовпавший трафик — напрямую. Перед активацией
 выберите сервер с проверенным российским выходным IP.
 
-Оба профиля используют `RouteOrder: block-proxy-direct`, одинаковые URL
-`distillate/dat/geoip.dat` и `distillate/dat/geosite.dat`, а также общий
+Оба профиля используют `RouteOrder: block-proxy-direct`, геоданные из
+[release incy-geodata](https://github.com/Simonerrror/ShadowRocket/releases/tag/incy-geodata)
+(`geoip.dat` и `geosite.dat`), а также общий
 `LastUpdated` с HAPP. При наличии `.sha256` рядом с geo-файлами INCY сможет
 пропускать скачивание неизменившихся файлов.
 

@@ -1,5 +1,10 @@
 # HAPP Routing: DEFAULT
 
+> **Настоятельно просим перейти на [INCY](../INCY/README.md): поддержка HAPP в этом репозитории сворачивается.**
+> Используйте [INCY DEFAULT](https://potato-link.motivato-potato.workers.dev/incy) или
+> [INCY RU-VPN](https://potato-link.motivato-potato.workers.dev/incy/ru).
+> HAPP-файлы, URL и сборка пока сохраняются для перехода.
+
 ## Быстрые ссылки
 
 - DEFAULT (`роут-MotivatoPotato`), открыть сразу в HAPP:
@@ -64,9 +69,14 @@
 
 ## Ручная проверка
 
+Запускайте из корня репозитория с существующими `.dat`. Для полной сборки
+геоданных используйте [порядок в README](../README.md#обновление).
+
 ```bash
-python3 scripts/build_distillate.py
-python3 scripts/build_happ_routing.py --build-stamp "$(git log -1 --format=%ct)"
+python3 scripts/build_distillate.py --skip-compiled
+python3 scripts/build_happ_routing.py
+python3 scripts/build_incy_routing.py
+python3 scripts/build_potato_link_worker.py
 ```
 
 ```bash
@@ -90,7 +100,7 @@ from pathlib import Path
 
 profile = json.loads(Path("HAPP/RU-VPN.JSON").read_text(encoding="utf-8"))
 deeplink = Path("HAPP/RU-VPN.DEEPLINK").read_text(encoding="utf-8").strip()
-decoded = json.loads(base64.b64decode(deeplink.rsplit("/", 1)[1]))
+decoded = json.loads(base64.b64decode(deeplink.removeprefix("happ://routing/onadd/")))
 assert decoded == profile
 assert profile["GlobalProxy"] == "false"
 assert profile["ProxySites"] == ["geosite:category-ru"]
@@ -101,7 +111,7 @@ PY
 
 ## CI
 
-- `/.github/workflows/sync-lists.yml` обновляет vendored upstream, distillate, XKeen и HAPP.
+- `/.github/workflows/sync-lists.yml` обновляет vendored upstream, distillate, Amnezia, Clash, HAPP и INCY.
 - `/.github/workflows/build-happ-routing.yml` пересобирает оба профиля при изменениях в конфиге или сборочных входах.
 - `/.github/workflows/deploy-potato-link.yml` проверяет и публикует оба
   кликабельных редиректа после изменения deeplink.

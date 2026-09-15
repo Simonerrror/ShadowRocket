@@ -59,5 +59,15 @@ class PotatoLinkBuildTests(unittest.TestCase):
                     validate_deeplink(value, Path("bad"), scheme=scheme)
 
 
+    def test_validation_rejects_malformed_base64_lengths_and_padding(self) -> None:
+        for payload in ("A", "AB=", "AB==", "ABC==", "AAAA="):
+            with self.subTest(payload=payload):
+                with self.assertRaisesRegex(ValueError, "base64"):
+                    validate_deeplink(
+                        f"happ://routing/onadd/{payload}",
+                        Path("bad"),
+                    )
+
+
 if __name__ == "__main__":
     unittest.main()

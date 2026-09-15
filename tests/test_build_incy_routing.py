@@ -23,6 +23,52 @@ from scripts.build_incy_routing import (
 )
 
 
+class IncyInputValidationTests(unittest.TestCase):
+    def test_missing_aggregate_preserves_outputs_and_checksums(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / "shadowrocket.conf").write_text("[General]\n", encoding="utf-8")
+            dat_dir = root / "distillate" / "dat"
+            dat_dir.mkdir(parents=True)
+            (dat_dir / "geoip.dat").write_bytes(b"geoip")
+            (dat_dir / "geosite.dat").write_bytes(b"geosite")
+            checksum = dat_dir / "geoip.dat.sha256"
+            checksum.write_text("old checksum\n", encoding="utf-8")
+            for kind in ("domain", "ip"):
+                directory = root / "distillate" / "text" / kind
+                directory.mkdir(parents=True)
+                for bucket in ("direct", "proxy", "block"):
+                    path = directory / f"sr-{bucket}.txt"
+                    if path != root / "distillate" / "text" / "domain" / "sr-direct.txt":
+                        path.write_text("", encoding="utf-8")
+            (root / "distillate" / "text" / "domain" / "motivato_block.txt").write_text(
+                "domain:block.example\n",
+                encoding="utf-8",
+            )
+            out_dir = root / "INCY"
+            out_dir.mkdir()
+            output = out_dir / "DEFAULT.JSON"
+            obsolete = out_dir / "REPORT.md"
+            output.write_text("old profile\n", encoding="utf-8")
+            obsolete.write_text("old report\n", encoding="utf-8")
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(Path(__file__).parents[1] / "scripts" / "build_incy_routing.py"),
+                ],
+                cwd=root,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("sr-direct.txt", result.stderr + result.stdout)
+            self.assertEqual(output.read_text(encoding="utf-8"), "old profile\n")
+            self.assertEqual(obsolete.read_text(encoding="utf-8"), "old report\n")
+            self.assertEqual(checksum.read_text(encoding="utf-8"), "old checksum\n")
+
+
 class IncyProfileContractTests(unittest.TestCase):
     def _profile_kwargs(self) -> dict[str, object]:
         data = BuildData(

@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import base64
+import binascii
 import json
 import re
 from pathlib import Path
@@ -45,6 +47,12 @@ def validate_deeplink(raw: str, path: Path, scheme: str = "happ") -> str:
         raise ValueError(f"{path}: unexpected deeplink prefix")
     payload = value.removeprefix(prefix)
     if BASE64_RE.fullmatch(payload) is None:
+        raise ValueError(f"{path}: invalid base64 payload")
+    try:
+        decoded = base64.b64decode(payload, validate=True)
+    except (binascii.Error, ValueError) as exc:
+        raise ValueError(f"{path}: invalid base64 payload") from exc
+    if base64.b64encode(decoded).decode("ascii") != payload:
         raise ValueError(f"{path}: invalid base64 payload")
     return value
 

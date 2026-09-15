@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import base64
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -32,6 +34,49 @@ class HappBuildStampTests(unittest.TestCase):
             self.assertEqual(resolve_build_stamp(root, "9876543210", out_dir), "9876543210")
             (out_dir / "DEFAULT.JSON").write_text("not json", encoding="utf-8")
             self.assertIsNone(existing_build_stamp(out_dir))
+
+
+class HappInputValidationTests(unittest.TestCase):
+    def test_missing_aggregate_preserves_existing_outputs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            (root / "shadowrocket.conf").write_text("[General]\n", encoding="utf-8")
+            dat_dir = root / "distillate" / "dat"
+            dat_dir.mkdir(parents=True)
+            (dat_dir / "geoip.dat").write_bytes(b"geoip")
+            (dat_dir / "geosite.dat").write_bytes(b"geosite")
+            for kind in ("domain", "ip"):
+                directory = root / "distillate" / "text" / kind
+                directory.mkdir(parents=True)
+                for bucket in ("direct", "proxy", "block"):
+                    path = directory / f"sr-{bucket}.txt"
+                    if path != root / "distillate" / "text" / "domain" / "sr-direct.txt":
+                        path.write_text("", encoding="utf-8")
+            (root / "distillate" / "text" / "domain" / "motivato_block.txt").write_text(
+                "domain:block.example\n",
+                encoding="utf-8",
+            )
+            out_dir = root / "HAPP"
+            out_dir.mkdir()
+            output = out_dir / "DEFAULT.JSON"
+            obsolete = out_dir / "REPORT.md"
+            output.write_text("old profile\n", encoding="utf-8")
+            obsolete.write_text("old report\n", encoding="utf-8")
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(Path(__file__).parents[1] / "scripts" / "build_happ_routing.py"),
+                ],
+                cwd=root,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("sr-direct.txt", result.stderr + result.stdout)
+            self.assertEqual(output.read_text(encoding="utf-8"), "old profile\n")
+            self.assertEqual(obsolete.read_text(encoding="utf-8"), "old report\n")
 
 
 class HappRuVpnProfileTests(unittest.TestCase):

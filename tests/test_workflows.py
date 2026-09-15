@@ -89,7 +89,15 @@ class WorkflowHardeningTests(unittest.TestCase):
             with self.subTest(required=required):
                 self.assertIn(required, content)
         self.assertNotIn("CLOUDFLARE_API_TOKEN", verify)
+        self.assertIn(
+            "verified_sha: ${{ steps.capture_verified_sha.outputs.verified_sha }}",
+            verify,
+        )
+        self.assertIn("id: capture_verified_sha", verify)
+        self.assertIn("git rev-parse HEAD", verify)
         self.assertIn("needs: verify", deploy)
+        self.assertIn("ref: ${{ needs.verify.outputs.verified_sha }}", deploy)
+        self.assertNotIn("ref: main", deploy)
         self.assertIn("github.event.workflow_run.conclusion == 'success'", deploy)
         self.assertIn("github.ref == 'refs/heads/main'", deploy)
         self.assertIn(

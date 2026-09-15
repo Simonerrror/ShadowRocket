@@ -5,8 +5,19 @@
 consumer-списков в `rules/`. Проект поддерживает автообновление по URL, общую
 маршрутизацию Microsoft и curated community/AI bundles и отдельные модули для персональных правил.
 
+## Переход с HAPP на INCY
+
+**Настоятельно просим пользователей HAPP перейти на INCY: поддержка HAPP в этом репозитории сворачивается.**
+Для перехода используйте [INCY DEFAULT](https://potato-link.motivato-potato.workers.dev/incy)
+или [INCY RU-VPN](https://potato-link.motivato-potato.workers.dev/incy/ru).
+Инструкции и JSON-профили приведены в [INCY/README.md](INCY/README.md).
+
+Существующие HAPP-файлы, ссылки и сборка пока сохраняются для перехода.
+Это статус поддержки профилей в данном проекте; он не описывает статус разработки самого приложения HAPP.
+
 ## Содержание
 
+- [Переход с HAPP на INCY](#переход-с-happ-на-incy)
 - [Что внутри](#что-внутри)
 - [Быстрый старт (Shadowrocket)](#быстрый-старт-shadowrocket)
 - [Clash Verge Rev (Windows)](#clash-verge-rev-windows)
@@ -14,6 +25,7 @@ consumer-списков в `rules/`. Проект поддерживает ав�
 - [Логика `shadowrocket.conf`](#логика-shadowrocketconf)
 - [Обновление](#обновление)
 - [Расширение правил](#расширение-правил)
+- [Неизвестное поведение Shadowrocket](#неизвестное-поведение-shadowrocket)
 
 ## Что внутри
 
@@ -147,6 +159,10 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/Amnezia/SR-DEFAU
 - `modules/anti_advertising.module` и `modules/anti_advertising_custom.module` semi-generated: ручной заголовок сохраняется, а ссылки на anti-ad chunks переписываются сборкой.
 - Tailscale вынесен из общих профилей в отдельный модуль `modules/tailscale_tailnet.module`. Модуль использует встроенную политику `TAILSCALE`; `100.64.0.0/10` не добавляется в `tun-excluded-routes`.
 
+Основной и custom-профиль остаются отдельными ручными исходниками. Shared-изменения
+вносятся в оба файла с сохранением custom-only настроек. `distillate/`, полный
+anti-ad-список и его чанки в `rules/` сохраняются как входы сборки и публикуемые артефакты.
+
 ### Персональный outbound для Gemini
 
 Общие профили не содержат группу `GOOGLE` и отдельное правило `google-all.list`.
@@ -233,8 +249,8 @@ CDN; весь Tencent/QQ он не обходит.
 
 - Конфиг обновляется автоматически через `update-url`.
 - Канонические источники истины разделены: `shadowrocket.conf` задаёт routing order и базовые proxy-groups, `distillate/manifest.json` задаёт состав категорий и generation rule-list'ов.
-- `scripts/sync_lists.py` раз в неделю подтягивает upstream-листы в `distillate/upstream/*`, затем обновляет `distillate/text/*`, `distillate/summary.json`, `rules/*.list`, anti-ad module refs и публикуемые артефакты.
-- `scripts/build_distillate.py` работает только с уже закешированными файлами из `distillate/upstream/*` и собирает `distillate/text/*` плюс `distillate/dat/geosite.dat` и `distillate/dat/geoip.dat`.
+- Weekly workflow запускает `scripts/sync_lists.py --no-pull`: скрипт подтягивает upstream-листы в `distillate/upstream/*`, затем обновляет `distillate/text/*`, `distillate/summary.json`, `rules/*.list`, anti-ad module refs. Остальные артефакты собираются следующими шагами workflow.
+- `scripts/build_distillate.py --skip-compiled` пересобирает текстовые артефакты из кэша `distillate/upstream/*` без сетевого обновления. Без `--skip-compiled` скрипт также загружает закреплённые исходники Go-компиляторов и их зависимости для сборки `geosite.dat` и `geoip.dat`.
 - `scripts/build_amnezia_routing.py` собирает `Amnezia/SR-DEFAULT-EXCLUDE.json` из cached RU IPv4 (`distillate/upstream/v2fly/ru_ipv4.txt`), `sr-direct` и фиксированных локальных/служебных сетей; domain DIRECT правила только перечисляются в summary.
 - `scripts/build_clash_config.py` читает `[General]`, `[Proxy Group]` и `[Rule]` из базового `shadowrocket.conf` и пересобирает `clash_config.yaml` для Mihomo.
   Он переносит все поддерживаемые rule/group mapping'и, а неподдерживаемые для Clash детали (`force-remote-dns`, `policy-select-name`, `timeout`) оставляет в предупреждениях сборки.
@@ -251,13 +267,17 @@ Fallback policy:
 
 Правило безопасного локального запуска:
 - не запускайте `scripts/sync_lists.py` без необходимости refresh vendored upstream: по умолчанию он делает `git pull --rebase`;
-- для обычной локальной пересборки используйте `python3 scripts/build_distillate.py` на уже закешированных `distillate/upstream/*`;
+- для локальной пересборки без загрузки компиляторов используйте `python3 scripts/build_distillate.py --skip-compiled` на уже закешированных `distillate/upstream/*`;
 - если нужен локальный sync без обновления ветки, используйте `python3 scripts/sync_lists.py --no-pull`.
 
-Локальная последовательность сборки:
+### Кэшированная пересборка
+
+Запускайте из корня репозитория. Команды используют существующие `distillate/dat/*`
+и не перекомпилируют геоданные. Для изменившихся правил полная публикация требует
+пересборки `.dat` в release workflow.
+
 ```bash
-python3 scripts/sync_lists.py --no-pull
-python3 scripts/build_distillate.py
+python3 scripts/build_distillate.py --skip-compiled
 python3 scripts/build_amnezia_routing.py
 python3 scripts/build_clash_config.py
 python3 scripts/build_happ_routing.py
@@ -265,7 +285,21 @@ python3 scripts/build_incy_routing.py
 python3 scripts/build_potato_link_worker.py
 ```
 
-GitHub Actions:
+После пересборки выполните `python3 -m unittest discover -s tests -v` и
+`python3 -m compileall -q scripts tests`, затем проверьте diff.
+Генераторы HAPP/INCY должны остановиться при отсутствии обязательных текстовых входов;
+не заменяйте отсутствующие файлы пустыми ради прохождения сборки.
+
+### Обновление источников и полная сборка
+
+Для явного обновления upstream сначала запустите `python3 scripts/sync_lists.py --no-pull`.
+Затем выполните `python3 scripts/build_distillate.py` и остальные команды кэшированной
+последовательности, начиная с `build_amnezia_routing.py`. Полная сборка требует Git,
+Go и сетевого доступа; новые зависимости проверяются по правилам проекта.
+Обновление источников, сборка и публикация — отдельные операции.
+
+### GitHub Actions
+
 - `.github/workflows/sync-lists.yml` запускается по weekly cron или вручную через **Run workflow**. Read-only job получает плавающие публичные данные BM7/OISD/HaGeZi, собирает их закреплёнными версиями компиляторов, проверяет тесты и допустимый размер diff; отдельная write-job публикует только generated allowlist.
 - Для проверенного резкого изменения количества правил ручной запуск поддерживает `allow_large_diff`; пустые обязательные категории, неверный формат и запрещённые пути этот флаг не разрешает.
 - При ошибке или аномалии workflow создаёт GitHub issue со ссылкой на run, поэтому уведомление приходит через стандартные GitHub notifications/email.
@@ -295,11 +329,11 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_adv
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_advertising_custom.module
 ```
 В кастомный модуль также отдельно добавлен Adobe telemetry blocklist из `a-dove-is-dumb`; он применяется только там и не затрагивает основной anti-ad модуль.
-Модуль подключает все доступные anti-ad чанки репозитория; список `RULE-SET` подставляется автоматически по фактически собранным файлам:
+Модуль подключает все собранные anti-ad чанки; ссылки `RULE-SET` обновляет генератор.
+Подключайте модуль целиком: число чанков меняется при обновлении источников. Примеры имён:
 ``` 
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.01.list
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.02.list
-https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.03.list
 ```
 Как добавить модуль в Shadowrocket:
 1. Откройте **Config → Modules**.
@@ -308,3 +342,16 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_adver
 4. Нажмите на загруженный модуль, чтобы активировать его.
 
 Модуль работает в дополнение к любому активному конфигу и не заменяет его.
+
+## Неизвестное поведение Shadowrocket
+
+Если непонятны параметры, порядок правил, DNS, модули или поддержка протокола,
+сначала проверьте [репозиторий руководства LOWERTOP/Shadowrocket](https://github.com/LOWERTOP/Shadowrocket)
+и [официальный новостной канал Shadowrocket News](https://t.me/ShadowrocketNews).
+Руководство поддерживает сообщество; это не исходный код приложения.
+Дополнительный источник — [Shadowrocket/manual](https://github.com/Shadowrocket/manual).
+
+Сопоставьте описание с установленной версией и номером сборки: изменения TestFlight
+не доказывают наличие функции в стабильном выпуске. Если источники не дают ответа,
+зафиксируйте неопределённость и проверьте поведение на минимальном примере в приложении.
+Не переносите семантику Clash, HAPP или INCY на Shadowrocket без проверки.

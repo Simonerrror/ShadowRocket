@@ -34,6 +34,11 @@ DEFAULT_REMOTE_DNS_DOMAIN = "https://8.8.8.8/dns-query"
 DEFAULT_DOMESTIC_DNS_IP = "77.88.8.8"
 DEFAULT_DOMESTIC_DNS_DOMAIN = "https://77.88.8.8/dns-query"
 DEFAULT_DNS_HOSTS: dict[str, str] = {}
+REQUIRED_DISTILLATE_FILES = tuple(
+    Path("text") / kind / f"sr-{bucket}.txt"
+    for bucket in ("direct", "proxy", "block")
+    for kind in ("domain", "ip")
+) + (Path("text") / "domain" / "motivato_block.txt",)
 
 
 @dataclass
@@ -209,6 +214,17 @@ def read_text_lines(path: Path) -> list[str]:
     return [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
+def validate_distillate_inputs(distillate_dir: Path) -> None:
+    missing = [
+        relative_path
+        for relative_path in REQUIRED_DISTILLATE_FILES
+        if not (distillate_dir / relative_path).is_file()
+    ]
+    if missing:
+        details = ", ".join(str(path) for path in missing)
+        raise FileNotFoundError(f"Required distillate routing inputs are missing: {details}")
+
+
 def load_build_data_from_distillate(distillate_dir: Path) -> BuildData:
     data = BuildData()
     for bucket_name in ("direct", "proxy", "block"):
@@ -341,7 +357,6 @@ def main() -> int:
     conf_path = (repo_root / args.conf).resolve()
     distillate_dir = (repo_root / args.distillate_dir).resolve()
     out_dir = (repo_root / args.out_dir).resolve()
-    out_dir.mkdir(parents=True, exist_ok=True)
 
     if not conf_path.exists():
         raise FileNotFoundError(f"Config not found: {conf_path}")
@@ -352,7 +367,7 @@ def main() -> int:
             "distillate dat artifacts are missing; run scripts/build_distillate.py before build_happ_routing.py"
         )
 
-    remove_obsolete_happ_files(out_dir)
+    validate_distillate_inputs(distillate_dir)
 
     remote_dns_ip = args.remote_dns_ip
     general_direct_ips = dedupe_preserve(extract_skip_proxy_ips(conf_path) + extract_bypass_tun_ips(conf_path))
@@ -362,6 +377,8 @@ def main() -> int:
     geodata_base = f"https://raw.githubusercontent.com/{slug}/main/{args.distillate_dir.strip('/')}/dat"
     block_site_tag = "motivato-block" if read_text_lines(distillate_dir / "text" / "domain" / "motivato_block.txt") else None
     build_stamp = resolve_build_stamp(repo_root, args.build_stamp, out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    remove_obsolete_happ_files(out_dir)
     default_profile = build_profile(
         data=data,
         geodata_base=geodata_base,
