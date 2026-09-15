@@ -37,6 +37,38 @@ class HappBuildStampTests(unittest.TestCase):
 
 
 class HappInputValidationTests(unittest.TestCase):
+    def test_domestic_dns_rejects_non_yandex_override(self) -> None:
+        for script_name in ("build_happ_routing.py", "build_incy_routing.py"):
+            with self.subTest(script_name=script_name):
+                result = subprocess.run(
+                    [
+                        sys.executable,
+                        str(Path(__file__).parents[1] / "scripts" / script_name),
+                        "--domestic-dns-ip",
+                        "1.1.1.1",
+                    ],
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("invalid choice", result.stderr)
+
+        with self.assertRaisesRegex(ValueError, "Domestic DNS IP"):
+            build_profile(
+                data=BuildData(),
+                geodata_base="https://example.test/dat",
+                last_updated="123",
+                route_order="block-proxy-direct",
+                remote_dns_ip="8.8.8.8",
+                remote_dns_domain="https://8.8.8.8/dns-query",
+                domestic_dns_ip="1.1.1.1",
+                remote_dns_type="DoH",
+                domestic_dns_type="DoH",
+                general_direct_ips=[],
+                profile_name="test",
+                block_geosite_tag=None,
+            )
+
     def test_missing_aggregate_preserves_existing_outputs(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
@@ -109,6 +141,9 @@ class HappRuVpnProfileTests(unittest.TestCase):
 
         self.assertEqual(profile["Name"], "RU-VPN")
         self.assertEqual(profile["GlobalProxy"], "false")
+        self.assertEqual(profile["DomesticDns"], "77.88.8.8")
+        self.assertEqual(profile["DomesticDNSIP"], "77.88.8.8")
+        self.assertEqual(profile["DomesticDNSDomain"], "https://77.88.8.8/dns-query")
         self.assertEqual(profile["DirectSites"], [])
         self.assertEqual(profile["DirectIp"], ["127.0.0.1"])
         self.assertEqual(profile["ProxySites"], ["geosite:category-ru"])

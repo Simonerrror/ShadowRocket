@@ -132,7 +132,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="RouteOrder value for INCY profile",
     )
     parser.add_argument("--remote-dns-ip", default=happ.DEFAULT_REMOTE_DNS_IP, help="Remote DNS IP")
-    parser.add_argument("--domestic-dns-ip", default=happ.DEFAULT_DOMESTIC_DNS_IP, help="Domestic DNS IP")
+    parser.add_argument(
+        "--domestic-dns-ip",
+        default=happ.DEFAULT_DOMESTIC_DNS_IP,
+        choices=[happ.DEFAULT_DOMESTIC_DNS_IP],
+        help="Domestic DNS IP (Yandex)",
+    )
     parser.add_argument(
         "--remote-dns-type",
         default="DoH",

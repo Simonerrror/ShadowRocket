@@ -119,7 +119,12 @@ def parse_args() -> argparse.Namespace:
         help="RouteOrder value for HAPP profile",
     )
     parser.add_argument("--remote-dns-ip", default=DEFAULT_REMOTE_DNS_IP, help="Remote DNS IP")
-    parser.add_argument("--domestic-dns-ip", default=DEFAULT_DOMESTIC_DNS_IP, help="Domestic DNS IP")
+    parser.add_argument(
+        "--domestic-dns-ip",
+        default=DEFAULT_DOMESTIC_DNS_IP,
+        choices=[DEFAULT_DOMESTIC_DNS_IP],
+        help="Domestic DNS IP (Yandex)",
+    )
     parser.add_argument(
         "--remote-dns-type",
         default="DoH",
@@ -296,6 +301,11 @@ def build_profile(
     proxy_geosite_tag: str | None = "sr-proxy",
     proxy_geoip_tag: str | None = "sr-proxy",
 ) -> dict[str, object]:
+    if domestic_dns_ip != DEFAULT_DOMESTIC_DNS_IP:
+        raise ValueError(
+            f"Domestic DNS IP must be {DEFAULT_DOMESTIC_DNS_IP} for the Yandex DNS pair"
+        )
+
     def route_tag(prefix: str, tag: str | None, source_available: bool) -> list[str]:
         if tag is None or (tag.startswith("sr-") and not source_available):
             return []
