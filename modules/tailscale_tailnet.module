@@ -1,6 +1,6 @@
 #!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/tailscale_tailnet.module
-#!name=Tailscale Tailnet
-#!desc=Route tailnet addresses through Shadowrocket's built-in Tailscale tunnel.
+#!name=10_02 · Tailscale Tailnet
+#!desc=Use the built-in Tailscale tunnel. Enable either this module or Tailscale Direct, never both.
 
 [Rule]
 IP-CIDR,100.64.0.0/10,TAILSCALE,no-resolve

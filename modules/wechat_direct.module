@@ -1,5 +1,5 @@
 #!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/wechat_direct.module
-#!name=WeChat Direct
+#!name=20_02 · WeChat Direct
 #!desc=Route WeChat and its required content CDN hosts directly.
 
 [Rule]

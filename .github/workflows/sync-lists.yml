@@ -102,7 +102,6 @@ jobs:
             Amnezia/SR-DEFAULT-EXCLUDE.summary.json
             rules
             modules/anti_advertising.module
-            modules/anti_advertising_custom.module
             clash_config.yaml
             HAPP/DEFAULT.JSON
             HAPP/DEFAULT.DEEPLINK
@@ -146,7 +145,6 @@ jobs:
               shutil.copytree(artifact / relative, root / relative, dirs_exist_ok=True)
           for relative in (
               "modules/anti_advertising.module",
-              "modules/anti_advertising_custom.module",
               "distillate/summary.json",
               "Amnezia/SR-DEFAULT-EXCLUDE.json",
               "Amnezia/SR-DEFAULT-EXCLUDE.summary.json",

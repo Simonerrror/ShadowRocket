@@ -20,7 +20,6 @@ GENERATED_RULES = {
 }
 GENERATED_MODULES = {
     "modules/anti_advertising.module",
-    "modules/anti_advertising_custom.module",
 }
 GENERATED_FILES = {
     "clash_config.yaml",

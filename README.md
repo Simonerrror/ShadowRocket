@@ -42,7 +42,6 @@ consumer-списков в `rules/`. Проект поддерживает ав�
 - `Amnezia/SR-DEFAULT-EXCLUDE.json` — shared-профиль исключений IPv4 для AmneziaVPN на iOS/Premium.
 - `modules/tailscale_tailnet.module` — отдельный модуль для встроенного Tailscale Shadowrocket: tailnet IPv4/IPv6 и `ts.net` направляются в политику `TAILSCALE` без исключения маршрутов из TUN.
 - `modules/wechat_direct.module` — отдельный custom-only модуль DIRECT для WeChat и его CDN без широкого обхода всего Tencent/QQ.
-- `modules/gemini_personal_outbound.module` — шаблон Gemini-модуля с редактируемым персональным outbound; связанные Google-сервисы остаются на том же маршруте, чтобы сессия не меняла IP.
 - Источники истины разделены: `shadowrocket.conf` отвечает за порядок routing-правил и proxy-groups базового профиля, а `distillate/manifest.json` вместе с `distillate/overlays/*` и `distillate/filters/*` отвечает за состав и сборку большинства consumer-списков.
 
 ## Быстрый старт (Shadowrocket)
@@ -155,40 +154,14 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/Amnezia/SR-DEFAU
 | `scripts/` | Вспомогательные скрипты |
 
 Практическое правило сопровождения:
-- вручную редактируются `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_whitelist.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `rules/adobe_telemetry_custom.list`, `rules/russia_extended.list`, `rules/voice_ports.list`, `modules/GFN-AM.module`, `modules/tailscale_tailnet.module`, `modules/wechat_direct.module`, `modules/gemini_personal_outbound.module`;
+- вручную редактируются `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_whitelist.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `rules/adobe_telemetry_custom.list`, `rules/russia_extended.list`, `rules/voice_ports.list`, `modules/GFN-AM.module`, `modules/tailscale_tailnet.module`, `modules/wechat_direct.module`, `modules/tailscale_direct.module`;
 - generated-артефакты (`clash_config.yaml`, `HAPP/DEFAULT.*`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/upstream/v2fly/ru_ipv4.txt`, `distillate/summary.json`, `Amnezia/SR-DEFAULT-EXCLUDE*.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/openai.list`, `rules/telegram.list`, `rules/whitelist_direct.list`, `rules/greylist_proxy.list`, `rules/anti_advertising.list`, `rules/anti_advertising*.[0-9][0-9].list`) не поддерживаются вручную;
-- `modules/anti_advertising.module` и `modules/anti_advertising_custom.module` semi-generated: ручной заголовок сохраняется, а ссылки на anti-ad chunks переписываются сборкой.
+- `modules/anti_advertising.module` semi-generated: ручной заголовок сохраняется, а ссылки на anti-ad chunks переписываются сборкой.
 - Tailscale вынесен из общих профилей в отдельный модуль `modules/tailscale_tailnet.module`. Модуль использует встроенную политику `TAILSCALE`; `100.64.0.0/10` не добавляется в `tun-excluded-routes`.
 
 Основной и custom-профиль остаются отдельными ручными исходниками. Shared-изменения
 вносятся в оба файла с сохранением custom-only настроек. `distillate/`, полный
 anti-ad-список и его чанки в `rules/` сохраняются как входы сборки и публикуемые артефакты.
-
-### Персональный outbound для Gemini
-
-Общие профили не содержат группу `GOOGLE` и отдельное правило `google-all.list`.
-Без дополнительного модуля этот трафик обрабатывает обычная цепочка правил и `PROXY`.
-
-Добавьте шаблонный модуль:
-
-```text
-https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/gemini_personal_outbound.module
-```
-
-Откройте **Config → Modules → Gemini Personal Outbound → Edit Arguments** и
-укажите точное имя существующего узла или группы Shadowrocket. Пустой шаблон не
-включайте. Модуль направляет `google-all.list` в один outbound: Gemini, вход в
-Google, статические ресурсы, API и YouTube не должны менять исходящий IP внутри
-одной сессии. Правило не навязывает `force-remote-dns`; SOCKS-шлюз при этом
-может разрешать имена на своей стороне, поэтому его DNS должен возвращать
-реальные адреса, а не локальные fake-IP другого прокси-клиента. UDP, который
-выбранный outbound не поддерживает, отклоняется без fallback в DIRECT.
-
-Не создавайте второй узел с тем же именем в конфигурации или списке серверов:
-Shadowrocket может выбрать устаревший дубликат вместо узла из приватного
-модуля. Cloudflare WARP также не гарантирует страну выхода; сам факт
-`warp=on` подтверждает цепь, но не доступность регионально ограниченного
-сервиса.
 
 ### WeChat напрямую
 
@@ -310,7 +283,7 @@ Go и сетевого доступа; новые зависимости про�
 
 Политика изменений:
 - Изменение групп `MANUAL-PROXY`, `WL` и auto-фильтра — **shared**: синхронизировано в `shadowrocket.conf` и `shadowrocket_custom.conf`; custom-only поля `[General]` сохранены.
-- `shadowrocket_custom.conf`, `shadowrocket_whitelist.conf` и `modules/anti_advertising_custom.module` считаются `custom-only`.
+- `shadowrocket_custom.conf`, `shadowrocket_whitelist.conf` считаются `custom-only`.
 - Если улучшение полезно всем, его нужно переносить и в основной конфиг, и в кастомные файлы.
 - При изменении generated `rules/*.list` меняйте `distillate/manifest.json`, `distillate/overlays/*` или `distillate/filters/*`, а не итоговые generated-файлы.
 - При изменении `shadowrocket.conf` пересобирайте `clash_config.yaml`, `HAPP/DEFAULT.*` и `INCY/*`.
@@ -325,11 +298,6 @@ Go и сетевого доступа; новые зависимости про�
 ```
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_advertising.module
 ```
-Или кастомный модуль с локальными исключениями для GFN/NVIDIA:
-```
-https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_advertising_custom.module
-```
-В кастомный модуль также отдельно добавлен Adobe telemetry blocklist из `a-dove-is-dumb`; он применяется только там и не затрагивает основной anti-ad модуль.
 Модуль подключает все собранные anti-ad чанки; ссылки `RULE-SET` обновляет генератор.
 Подключайте модуль целиком: число чанков меняется при обновлении источников. Примеры имён:
 ``` 
@@ -356,3 +324,29 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_adver
 не доказывают наличие функции в стабильном выпуске. Если источники не дают ответа,
 зафиксируйте неопределённость и проверьте поведение на минимальном примере в приложении.
 Не переносите семантику Clash, HAPP или INCY на Shadowrocket без проверки.
+
+## Порядок модулей
+
+Префиксы в `#!name` обозначают уровень и порядок внутри уровня. Выставьте этот
+порядок в Config → Modules; проверьте итоговые правила после компиляции.
+
+| Имя | Файл | Назначение |
+|---|---|---|
+| 10_01 · Tailscale Direct | `modules/tailscale_direct.module` | Официальный клиент Tailscale |
+| 10_02 · Tailscale Tailnet | `modules/tailscale_tailnet.module` | Встроенный Tailscale Shadowrocket |
+| 20_01 · GFN Direct | `modules/GFN-AM.module` | NVIDIA/GFN и связанные исключения DIRECT |
+| 20_02 · WeChat Direct | `modules/wechat_direct.module` | WeChat и его CDN через DIRECT |
+| 90 · Anti-Advertising | `modules/anti_advertising.module` | Общая блокировка после сервисных исключений |
+
+Включайте только один модуль уровня 10. Сервисные исключения уровня 20 имеют
+приоритет перед анти-рекламой, включая разрешённую ими телеметрию.
+Префикс 20_03 зарезервирован для будущего решения Google/Gemini.
+
+При переходе удалите ранее установленные Anti-Advertising Custom и оба модуля
+Gemini из приложения: удаление файлов из репозитория не удаляет загруженные копии.
+Обновите оставшиеся модули и добавьте Tailscale Direct, если используете официальный клиент.
+GFN уже покрывает NVIDIA/GFN-исключения удалённого Custom через существующие
+DOMAIN-KEYWORD, DOMAIN-SUFFIX и IP-CIDR правила. Остальные правила Custom
+не включены в новый набор.
+
+Изменение набора и нумерации модулей — shared; правила GFN и WeChat остаются custom-only.

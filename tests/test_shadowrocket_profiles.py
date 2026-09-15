@@ -11,9 +11,9 @@ WHITELIST_CONF = REPO_ROOT / "shadowrocket_whitelist.conf"
 TORRENT_DOMAINS = REPO_ROOT / "distillate" / "text" / "domain" / "motivato_torrent.txt"
 SR_DIRECT_DOMAINS = REPO_ROOT / "distillate" / "text" / "domain" / "sr-direct.txt"
 SR_BLOCK_DOMAINS = REPO_ROOT / "distillate" / "text" / "domain" / "sr-block.txt"
+TAILSCALE_DIRECT_MODULE = REPO_ROOT / "modules" / "tailscale_direct.module"
 TAILSCALE_MODULE = REPO_ROOT / "modules" / "tailscale_tailnet.module"
 WECHAT_MODULE = REPO_ROOT / "modules" / "wechat_direct.module"
-GEMINI_OUTBOUND_MODULE = REPO_ROOT / "modules" / "gemini_personal_outbound.module"
 EXPECTED_MANUAL_FILTER = r"(?i)^(?!.*\bWL\b)(?!.*\bSS\b).*$"
 EXPECTED_AUTO_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\b(?:VLESS|TT|Naive|NV|MR|AWG(?:2|3\.1)?)\b.*$"
 EXPECTED_WL_FILTER = r"(?i)\bWL\b"
@@ -215,25 +215,38 @@ class ShadowrocketProfilesTests(unittest.TestCase):
             with self.subTest(rule=rule):
                 self.assertIn(rule, module_rules)
 
-    def test_gemini_personal_outbound_keeps_google_session_on_one_outbound(self) -> None:
+    def test_tailscale_direct_module_matches_official_client_contract(self) -> None:
+        content = TAILSCALE_DIRECT_MODULE.read_text(encoding="utf-8")
+
+        self.assertIn("#!name=10_01 · Tailscale Direct", content)
+        self.assertIn(
+            "#!desc=Use with the official Tailscale client. Enable either this module or "
+            "Tailscale Tailnet, never both.",
+            content,
+        )
+        self.assertEqual(
+            "100.100.100.100, *.ts.net, *.tailscale.com",
+            key_values(TAILSCALE_DIRECT_MODULE, "General")["skip-proxy"],
+        )
+        self.assertEqual(
+            [
+                "IP-CIDR,100.64.0.0/10,DIRECT,no-resolve",
+                "IP-CIDR6,fd7a:115c:a1e0::/48,DIRECT,no-resolve",
+                "IP-CIDR,100.100.100.100/32,DIRECT,no-resolve",
+                "DOMAIN-SUFFIX,ts.net,DIRECT",
+                "DOMAIN-SUFFIX,tailscale.com,DIRECT",
+            ],
+            section_lines(TAILSCALE_DIRECT_MODULE, "Rule"),
+        )
+
+    def test_profiles_keep_gemini_routing_out(self) -> None:
         profile_contents = "\n".join(
             path.read_text(encoding="utf-8")
             for path in (BASE_CONF, CUSTOM_CONF)
         )
-        template = GEMINI_OUTBOUND_MODULE.read_text(encoding="utf-8")
-        module_general = key_values(GEMINI_OUTBOUND_MODULE, "General")
-        rule = (
-            "RULE-SET,https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/"
-            "rules/google-all.list,{{{Ваш персональный outbound}}}"
-        )
 
         self.assertNotIn("GOOGLE =", profile_contents)
         self.assertNotIn("rules/google-all.list", profile_contents)
-        self.assertIn("#!arguments=Ваш персональный outbound:", template)
-        self.assertNotIn("#!arguments=Ваш персональный outbound:WARP-GEMINI", template)
-        self.assertEqual([rule], section_lines(GEMINI_OUTBOUND_MODULE, "Rule"))
-        self.assertNotIn("force-remote-dns", template)
-        self.assertEqual("REJECT", module_general["udp-policy-not-supported-behaviour"])
 
     def test_wechat_direct_module_has_approved_rules(self) -> None:
         content = WECHAT_MODULE.read_text(encoding="utf-8")
@@ -254,7 +267,7 @@ class ShadowrocketProfilesTests(unittest.TestCase):
             "DOMAIN,res.wx.qq.com,DIRECT",
         ]
 
-        self.assertIn("#!name=WeChat Direct", content)
+        self.assertIn("#!name=20_02 · WeChat Direct", content)
         self.assertIn("[Rule]", content)
         self.assertEqual(expected_rules, rules)
 

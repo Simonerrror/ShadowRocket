@@ -1,4 +1,4 @@
-#!name=GFN-AM (DIRECT)
+#!name=20_01 · GFN Direct
 #!desc=Правила GFN/AM для прямого доступа (DIRECT).
 
 [Rule]
@@ -6,7 +6,6 @@
 IP-CIDR,37.186.111.0/24,DIRECT,no-resolve
 IP-CIDR,17.253.150.10/32,DIRECT
 
-# Системная телеметрия (чтобы не палить регион через Google/MS)
 DOMAIN,optimizationguide-pa.googleapis.com,DIRECT
 DOMAIN,signaler-pa.clients6.google.com,DIRECT
 DOMAIN-SUFFIX,events.data.microsoft.com,DIRECT

@@ -1,0 +1,13 @@
+#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/tailscale_direct.module
+#!name=10_01 · Tailscale Direct
+#!desc=Use with the official Tailscale client. Enable either this module or Tailscale Tailnet, never both.
+
+[General]
+skip-proxy = 100.100.100.100, *.ts.net, *.tailscale.com
+
+[Rule]
+IP-CIDR,100.64.0.0/10,DIRECT,no-resolve
+IP-CIDR6,fd7a:115c:a1e0::/48,DIRECT,no-resolve
+IP-CIDR,100.100.100.100/32,DIRECT,no-resolve
+DOMAIN-SUFFIX,ts.net,DIRECT
+DOMAIN-SUFFIX,tailscale.com,DIRECT

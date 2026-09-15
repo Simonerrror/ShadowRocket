@@ -726,7 +726,6 @@ def rewrite_module_chunks(module_path: Path, chunk_lines: list[str]) -> None:
 def rewrite_anti_ad_modules(repo_root: Path) -> None:
     chunk_lines = anti_ad_chunk_rule_lines(repo_root)
     rewrite_module_chunks(repo_root / "modules" / "anti_advertising.module", chunk_lines)
-    rewrite_module_chunks(repo_root / "modules" / "anti_advertising_custom.module", chunk_lines)
 
 
 def prepare_output_dirs(repo_root: Path, skip_compiled: bool) -> None:
@@ -1023,7 +1022,6 @@ def generated_output_paths(
     paths.update(
         {
             Path("modules/anti_advertising.module"),
-            Path("modules/anti_advertising_custom.module"),
         }
     )
     for root in (repo_root, staging_root):
