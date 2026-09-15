@@ -1,11 +1,52 @@
 import { DESTINATIONS } from "../dist/destinations.js";
 
 
+const PUBLIC_REPOSITORY = "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main";
+const CONFIG_URL = `${PUBLIC_REPOSITORY}/shadowrocket.conf`;
+const MODULE_URLS = Object.freeze({
+  tailscaleDirect: `${PUBLIC_REPOSITORY}/modules/tailscale_direct.module`,
+  tailscaleTailnet: `${PUBLIC_REPOSITORY}/modules/tailscale_tailnet.module`,
+  gfn: `${PUBLIC_REPOSITORY}/modules/GFN-AM.module`,
+  wechat: `${PUBLIC_REPOSITORY}/modules/wechat_direct.module`,
+  twitch: `${PUBLIC_REPOSITORY}/modules/twitch_video_direct.module`,
+  antiAdvertising: `${PUBLIC_REPOSITORY}/modules/anti_advertising.module`,
+});
+
+const SHADOWROCKET_IMPORTS = new Map([
+  ["/sr/config", `shadowrocket://config/add/${CONFIG_URL}`],
+  [
+    "/sr/modules/tailscale-direct",
+    `shadowrocket://install?module=${encodeURIComponent(MODULE_URLS.tailscaleDirect)}`,
+  ],
+  [
+    "/sr/modules/tailscale-tailnet",
+    `shadowrocket://install?module=${encodeURIComponent(MODULE_URLS.tailscaleTailnet)}`,
+  ],
+  [
+    "/sr/modules/gfn",
+    `shadowrocket://install?module=${encodeURIComponent(MODULE_URLS.gfn)}`,
+  ],
+  [
+    "/sr/modules/wechat",
+    `shadowrocket://install?module=${encodeURIComponent(MODULE_URLS.wechat)}`,
+  ],
+  [
+    "/sr/modules/twitch",
+    `shadowrocket://install?module=${encodeURIComponent(MODULE_URLS.twitch)}`,
+  ],
+  [
+    "/sr/modules/anti-advertising",
+    `shadowrocket://install?module=${encodeURIComponent(MODULE_URLS.antiAdvertising)}`,
+  ],
+]);
+
+
 const PATHS = new Map([
   ["/", DESTINATIONS.default],
   ["/ru", DESTINATIONS.ru],
   ["/incy", DESTINATIONS.incyDefault],
   ["/incy/ru", DESTINATIONS.incyRu],
+  ...SHADOWROCKET_IMPORTS,
 ]);
 
 const TEXT_HEADERS = {

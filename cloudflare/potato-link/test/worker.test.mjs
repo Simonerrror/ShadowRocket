@@ -5,6 +5,20 @@ import { DESTINATIONS } from "../dist/destinations.js";
 import worker from "../src/worker.js";
 
 
+const PUBLIC_REPOSITORY = "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main";
+const SHADOWROCKET_MODULES = [
+  ["/sr/modules/tailscale-direct", `${PUBLIC_REPOSITORY}/modules/tailscale_direct.module`],
+  ["/sr/modules/tailscale-tailnet", `${PUBLIC_REPOSITORY}/modules/tailscale_tailnet.module`],
+  ["/sr/modules/gfn", `${PUBLIC_REPOSITORY}/modules/GFN-AM.module`],
+  ["/sr/modules/wechat", `${PUBLIC_REPOSITORY}/modules/wechat_direct.module`],
+  ["/sr/modules/twitch", `${PUBLIC_REPOSITORY}/modules/twitch_video_direct.module`],
+  [
+    "/sr/modules/anti-advertising",
+    `${PUBLIC_REPOSITORY}/modules/anti_advertising.module`,
+  ],
+];
+
+
 async function request(path, method = "GET") {
   return worker.fetch(
     new Request(`https://potato-link.example${path}`, { method }),
@@ -49,6 +63,60 @@ test("HEAD redirects without a body", async () => {
 
   assert.equal(response.status, 302);
   assert.equal(await response.text(), "");
+});
+
+test("Shadowrocket config and module paths redirect to fixed imports", async () => {
+  const configResponse = await request("/sr/config");
+
+  assert.equal(configResponse.status, 302);
+  assert.equal(
+    configResponse.headers.get("location"),
+    `shadowrocket://config/add/${PUBLIC_REPOSITORY}/shadowrocket.conf`,
+  );
+
+  for (const [path, moduleUrl] of SHADOWROCKET_MODULES) {
+    const response = await request(path);
+
+    assert.equal(response.status, 302, path);
+    assert.equal(
+      response.headers.get("location"),
+      `shadowrocket://install?module=${encodeURIComponent(moduleUrl)}`,
+      path,
+    );
+  }
+});
+
+test("Shadowrocket imports accept HEAD and ignore user-controlled query values", async () => {
+  const configResponse = await request(
+    "/sr/config?destination=https%3A%2F%2Fevil.example%2Fconfig",
+    "HEAD",
+  );
+
+  assert.equal(configResponse.status, 302);
+  assert.equal(await configResponse.text(), "");
+  assert.equal(
+    configResponse.headers.get("location"),
+    `shadowrocket://config/add/${PUBLIC_REPOSITORY}/shadowrocket.conf`,
+  );
+
+  const moduleResponse = await request(
+    "/sr/modules/gfn?module=https%3A%2F%2Fevil.example%2Fmodule",
+  );
+
+  assert.equal(moduleResponse.status, 302);
+  assert.equal(
+    moduleResponse.headers.get("location"),
+    `shadowrocket://install?module=${encodeURIComponent(
+      `${PUBLIC_REPOSITORY}/modules/GFN-AM.module`,
+    )}`,
+  );
+});
+
+test("unknown Shadowrocket imports return 404", async () => {
+  const response = await request("/sr/modules/unknown");
+
+  assert.equal(response.status, 404);
+  assert.doesNotMatch(await response.text(), /shadowrocket:/);
 });
 
 test("redirects disable caching and referrers", async () => {

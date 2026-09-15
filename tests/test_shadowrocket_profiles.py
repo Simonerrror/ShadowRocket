@@ -170,12 +170,25 @@ class ShadowrocketProfilesTests(unittest.TestCase):
             "dns-server",
             "fallback-dns-server",
             "dns-direct-system",
-            "always-real-ip",
             "dns-direct-fallback-proxy",
             "hijack-dns",
         ):
             with self.subTest(profile="whitelist", key=key):
                 self.assertEqual(custom_general[key], whitelist_general[key])
+
+    def test_gfn_real_ip_is_owned_by_module(self) -> None:
+        module = REPO_ROOT / "modules" / "GFN-AM.module"
+        self.assertEqual(
+            "*.nvidiagrid.net,*.geforcenow.com,*.nvidia.com",
+            key_values(module, "General")["always-real-ip"],
+        )
+        base = key_values(BASE_CONF, "General")
+        custom = key_values(CUSTOM_CONF, "General")
+        self.assertNotIn("always-real-ip", custom)
+        self.assertEqual(
+            {k: v for k, v in base.items() if k != "update-url"},
+            {k: v for k, v in custom.items() if k != "update-url"},
+        )
 
     def test_base_keeps_custom_only_gfn_exceptions_out(self) -> None:
         base_general = key_values(BASE_CONF, "General")

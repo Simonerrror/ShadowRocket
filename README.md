@@ -31,7 +31,7 @@ consumer-списков в `rules/`. Проект поддерживает ав�
 ## Что внутри
 
 - `shadowrocket.conf` — основной конфиг для Shadowrocket с автообновлением.
-- `shadowrocket_custom.conf` — кастомный конфиг для GFN/NVIDIA (отдельный `update-url`, без изменения основного).
+- `shadowrocket_custom.conf` — прежний адрес профиля, сохранённый для установленных копий. Для новой установки используйте основной конфиг и GFN-модуль.
 - `clash_config.yaml` — generated YAML для Clash Verge Rev (Mihomo), собранный из `shadowrocket.conf`.
 - `shadowrocket_whitelist.conf` — custom-only аварийный whitelist-профиль: direct allowlist/RU напрямую, всё остальное в один выбранный `PROXY`.
 - `distillate/` — канонический manifest, локальные overlays и собранные text/`dat`.
@@ -61,7 +61,7 @@ consumer-списков в `rules/`. Проект поддерживает ав�
    - `\bWL\b` — standalone-токен: он не задевает имена вроде `WLAN` или `BOWL`.
    - `PROXY` — главный переключатель (Select): по умолчанию выбран `AUTO-STABILITY`; доступны `MANUAL-PROXY`, `AUTO-SPEED`, `AUTO-STABILITY` и `WL`. `DIRECT` в этот переключатель не входит.
 
-Кастомный профиль для GFN/NVIDIA (с `always-real-ip`, тем же DNS-набором, что и основной профиль, и `dns-direct-system = false`):
+Для GFN подключите `modules/GFN-AM.module` к основному конфигу. Модуль задаёт DIRECT и `always-real-ip` для NVIDIA/GFN. Прежний адрес custom сохранён для обновления установленных копий:
 ```
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_custom.conf
 ```
@@ -142,7 +142,7 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/Amnezia/SR-DEFAU
 | Путь | Назначение |
 | --- | --- |
 | `shadowrocket.conf` | Основной конфиг для Shadowrocket |
-| `shadowrocket_custom.conf` | Кастомный конфиг Shadowrocket для GFN/NVIDIA |
+| `shadowrocket_custom.conf` | Прежний адрес профиля; новые установки используют основной конфиг |
 | `clash_config.yaml` | Generated-конфиг для Clash Verge Rev |
 | `shadowrocket_whitelist.conf` | Custom-only аварийный whitelist-профиль: direct allowlist/RU напрямую, всё остальное через один `PROXY` |
 | `INCY/DEFAULT.*`, `INCY/RU-VPN.*` | Generated routing-профили и `incy://` deeplink для INCY |
@@ -351,3 +351,21 @@ DOMAIN-KEYWORD, DOMAIN-SUFFIX и IP-CIDR правила. Остальные пр
 не включены в новый набор.
 
 Изменение набора и нумерации модулей — shared; правила GFN и WeChat остаются custom-only.
+
+## Импорт в Shadowrocket
+
+Откройте ссылку на устройстве с установленным Shadowrocket и подтвердите импорт.
+Если встроенный браузер мессенджера не открывает приложение, откройте ссылку в Safari.
+
+| Порядок | Что добавить | Назначение | Импорт |
+|---|---|---|---|
+| 1 | Основной конфиг | Базовые правила; подписка на серверы добавляется отдельно | [Добавить конфиг](https://potato-link.motivato-potato.workers.dev/sr/config) |
+| 10_01 | Tailscale Direct | Официальный клиент Tailscale | [Добавить](https://potato-link.motivato-potato.workers.dev/sr/modules/tailscale-direct) |
+| 10_02 | Tailscale Tailnet | Встроенный Tailscale Shadowrocket | [Добавить](https://potato-link.motivato-potato.workers.dev/sr/modules/tailscale-tailnet) |
+| 20_01 | GFN Direct | NVIDIA/GFN: DIRECT и реальные IP в DNS-ответах TUN | [Добавить](https://potato-link.motivato-potato.workers.dev/sr/modules/gfn) |
+| 20_02 | WeChat Direct | Исключения для WeChat и CDN | [Добавить](https://potato-link.motivato-potato.workers.dev/sr/modules/wechat) |
+| 20_04 | Twitch Video Direct | Видеосерверы Twitch напрямую | [Добавить](https://potato-link.motivato-potato.workers.dev/sr/modules/twitch) |
+| 90 | Anti-Advertising | Блокировка после сервисных исключений | [Добавить](https://potato-link.motivato-potato.workers.dev/sr/modules/anti-advertising) |
+
+Включайте только один вариант Tailscale. После импорта выставьте порядок по номерам.
+Ссылки импортируют элементы по одному и не назначают порядок автоматически.

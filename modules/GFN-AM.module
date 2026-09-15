@@ -2,6 +2,9 @@
 #!name=20_01 · GFN Direct
 #!desc=Правила GFN/AM для прямого доступа (DIRECT).
 
+[General]
+always-real-ip = *.nvidiagrid.net,*.geforcenow.com,*.nvidia.com
+
 [Rule]
 # 1. Стриминговые серверы (IP-CIDR)
 IP-CIDR,37.186.111.0/24,DIRECT,no-resolve
