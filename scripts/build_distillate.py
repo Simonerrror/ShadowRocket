@@ -706,16 +706,32 @@ def anti_ad_chunk_rule_lines(repo_root: Path) -> list[str]:
     return [f"{ANTI_AD_RULE_PREFIX}{path.name},REJECT" for path in chunk_paths]
 
 
+def is_anti_ad_rule_set(line: str) -> bool:
+    fields = line.strip().split(",", 2)
+    if len(fields) < 2 or fields[0].strip().upper() != "RULE-SET":
+        return False
+
+    filename = Path(urlparse(fields[1].strip()).path).name
+    if filename == "anti_advertising.list":
+        return True
+
+    chunk_prefix = "anti_advertising."
+    chunk_suffix = ".list"
+    chunk_number = filename[len(chunk_prefix) : -len(chunk_suffix)]
+    return (
+        filename.startswith(chunk_prefix)
+        and filename.endswith(chunk_suffix)
+        and len(chunk_number) == 2
+        and chunk_number.isdigit()
+    )
+
+
 def rewrite_module_chunks(module_path: Path, chunk_lines: list[str]) -> None:
     if not module_path.exists():
         return
 
     lines = module_path.read_text(encoding="utf-8").splitlines()
-    kept_lines = [
-        line
-        for line in lines
-        if "anti_advertising.list,REJECT" not in line and "anti_advertising." not in line
-    ]
+    kept_lines = [line for line in lines if not is_anti_ad_rule_set(line)]
     if chunk_lines:
         if kept_lines and kept_lines[-1] != "":
             kept_lines.append("")

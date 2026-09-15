@@ -20,11 +20,55 @@ from scripts.build_distillate import (
     compiled_geosite_tags,
     geoip_compiler_inputs,
     publish_staged_outputs,
+    rewrite_module_chunks,
     verify_ru_geoip_source,
 )
 
 
 class BuildDistillateSafetyTests(unittest.TestCase):
+    def test_rewrite_module_chunks_preserves_headers_exceptions_and_is_idempotent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            module_path = Path(tmpdir) / "anti_advertising.module"
+            module_path.write_text(
+                "\n".join(
+                    [
+                        "#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_advertising.module",
+                        "#!name=90 · Anti-Advertising",
+                        "#!desc=Keep this generated module header.",
+                        "",
+                        "[Rule]",
+                        "",
+                        "# manual exception mentions anti_advertising.example",
+                        "DOMAIN-SUFFIX,anti_advertising.example,DIRECT",
+                        "RULE-SET, https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.list,REJECT",
+                        "RULE-SET, https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.99.list,REJECT",
+                        "RULE-SET, https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/other.list,REJECT",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            chunk_lines = [
+                "RULE-SET, https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.01.list,REJECT",
+                "RULE-SET, https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.02.list,REJECT",
+            ]
+
+            rewrite_module_chunks(module_path, chunk_lines)
+            first_result = module_path.read_text(encoding="utf-8")
+            rewrite_module_chunks(module_path, chunk_lines)
+
+            self.assertEqual(first_result, module_path.read_text(encoding="utf-8"))
+            self.assertIn(
+                "#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_advertising.module",
+                first_result,
+            )
+            self.assertIn("# manual exception mentions anti_advertising.example", first_result)
+            self.assertIn("DOMAIN-SUFFIX,anti_advertising.example,DIRECT", first_result)
+            self.assertIn("rules/other.list,REJECT", first_result)
+            self.assertEqual(first_result.count("RULE-SET, https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising."), 2)
+            self.assertNotIn("rules/anti_advertising.list,REJECT", first_result)
+            self.assertNotIn("rules/anti_advertising.99.list,REJECT", first_result)
+
     def test_failed_staged_build_keeps_existing_outputs(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
