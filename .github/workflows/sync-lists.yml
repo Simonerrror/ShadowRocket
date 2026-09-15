@@ -83,6 +83,9 @@ jobs:
           python3 -m unittest discover -s tests -v
           python3 -m compileall -q scripts tests
 
+      - name: Validate generated paths before upload
+        run: python3 scripts/validate_publish_paths.py
+
       - name: Upload generated release candidate
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -98,7 +101,8 @@ jobs:
             Amnezia/SR-DEFAULT-EXCLUDE.json
             Amnezia/SR-DEFAULT-EXCLUDE.summary.json
             rules
-            modules
+            modules/anti_advertising.module
+            modules/anti_advertising_custom.module
             clash_config.yaml
             HAPP/DEFAULT.JSON
             HAPP/DEFAULT.DEEPLINK
@@ -138,9 +142,11 @@ jobs:
 
           root = Path.cwd()
           artifact = root / ".release-artifact"
-          for relative in ("distillate/upstream", "distillate/text", "distillate/dat", "rules", "modules"):
+          for relative in ("distillate/upstream", "distillate/text", "distillate/dat", "rules"):
               shutil.copytree(artifact / relative, root / relative, dirs_exist_ok=True)
           for relative in (
+              "modules/anti_advertising.module",
+              "modules/anti_advertising_custom.module",
               "distillate/summary.json",
               "Amnezia/SR-DEFAULT-EXCLUDE.json",
               "Amnezia/SR-DEFAULT-EXCLUDE.summary.json",

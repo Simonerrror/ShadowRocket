@@ -51,6 +51,18 @@ class WorkflowHardeningTests(unittest.TestCase):
                 self.assertIn(path, content)
         self.assertIn("--clobber", content)
 
+    def test_release_candidate_only_uploads_generated_modules(self) -> None:
+        content = SYNC_WORKFLOW.read_text(encoding="utf-8")
+        upload = content.split("      - name: Upload generated release candidate", 1)[1].split("  publish:", 1)[0]
+        paths = upload.split("          path: |", 1)[1].splitlines()
+        modules = {path.strip() for path in paths if path.strip().startswith("modules")}
+        self.assertEqual(modules, {
+            "modules/anti_advertising.module",
+            "modules/anti_advertising_custom.module",
+        })
+        self.assertLess(content.index("python3 scripts/validate_publish_paths.py"),
+                        content.index("actions/upload-artifact@"))
+
     def test_workflows_pin_every_action_to_reviewed_sha(self) -> None:
         combined = (
             SYNC_WORKFLOW.read_text(encoding="utf-8")
