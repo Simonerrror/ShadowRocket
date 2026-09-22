@@ -73,9 +73,6 @@
       "publish": true,
       "bucket": "direct",
       "legacy_rule_path": "rules/whitelist_direct.list",
-      "sources": [
-        {"type": "category", "name": "motivato_torrent"}
-      ],
       "overlays": {
         "add": "distillate/overlays/whitelist_direct.add.list",
         "remove": "distillate/overlays/whitelist_direct.remove.list"
@@ -119,6 +116,7 @@
     {
       "name": "motivato_torrent",
       "publish": true,
+      "legacy_rule_path": "rules/torrent_block.list",
       "overlays": {
         "add": "distillate/overlays/motivato_torrent.add.list"
       }
@@ -137,7 +135,8 @@
       "sources": [
         {"type": "category", "name": "motivato_telemetry_ru"},
         {"type": "category", "name": "motivato_telemetry_ms"},
-        {"type": "category", "name": "motivato_ads"}
+        {"type": "category", "name": "motivato_ads"},
+        {"type": "category", "name": "motivato_torrent"}
       ]
     },
     {

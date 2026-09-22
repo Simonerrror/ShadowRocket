@@ -1,3 +1,4 @@
+# Generated from distillate/manifest.json
 DOMAIN-SUFFIX,dht.aelitis.com
 DOMAIN-SUFFIX,dht.transmissionbt.com
 DOMAIN-SUFFIX,dht.vuze.com
@@ -310,7 +311,6 @@ DOMAIN-SUFFIX,tracker.vulnix.sh
 DOMAIN-SUFFIX,tracker.ygsub.com
 DOMAIN-SUFFIX,tracker.yoshi210.com
 DOMAIN-SUFFIX,tracker.zemoj.com
-DOMAIN-SUFFIX,tracker.zerobytes.xyz
 DOMAIN-SUFFIX,tracker.zum.bi
 DOMAIN-SUFFIX,tracker0.ufibox.com
 DOMAIN-SUFFIX,tracker01.loveapp.com
@@ -339,10 +339,8 @@ DOMAIN-SUFFIX,w.wwwww.wtf
 DOMAIN-SUFFIX,wareztorrent.com
 DOMAIN-SUFFIX,wassermann.online
 DOMAIN-SUFFIX,worldboxingvideoarchive.com
-DOMAIN-SUFFIX,loushao.net
 DOMAIN-SUFFIX,midea123.z-media.com.cn
 DOMAIN-SUFFIX,torrent.eu.org
-DOMAIN-SUFFIX,wareztorrent.com
 DOMAIN-SUFFIX,xwt-classics.net
 DOMAIN-SUFFIX,xxxtor.com
 DOMAIN-SUFFIX,yuwabits.net
@@ -432,18 +430,7 @@ DOMAIN-SUFFIX,buny.uk
 DOMAIN-SUFFIX,bt1.xxxxbt.cc
 DOMAIN-SUFFIX,bt.poletracker.org
 DOMAIN-SUFFIX,aboutbeautifulgallopinghorsesinthegreenpasture.online
-
-# Tracker endpoints checked 2026-09-23; exact hosts to limit collateral blocking.
-# https://raw.githubusercontent.com/ngosang/trackerslist/master/trackers_all.txt
-# https://raw.githubusercontent.com/XIU2/TrackersListCollection/master/all.txt
 DOMAIN,004430.xyz
-IP-CIDR,107.189.2.131/32
-IP-CIDR,207.241.226.111/32
-IP-CIDR,207.241.231.226/32
-IP-CIDR6,2a03:7220:8083:cd00::1/128
-IP-CIDR6,2a04:ac00:1:3dd8::1:2710/128
-IP-CIDR,52.58.128.163/32
-IP-CIDR,93.158.213.92/32
 DOMAIN,admin.52ywp.com
 DOMAIN,anime-tracker.aruku.kro.kr
 DOMAIN,announce.sktorrent.eu
@@ -495,3 +482,10 @@ DOMAIN,tracker.zhuqiy.dgj055.icu
 DOMAIN,tracker1.520.jp
 DOMAIN,v6.vito-tracker.space
 DOMAIN,yuptracker-eu.gaijinent.com
+IP-CIDR,107.189.2.131/32
+IP-CIDR,207.241.226.111/32
+IP-CIDR,207.241.231.226/32
+IP-CIDR6,2a03:7220:8083:cd00::1/128
+IP-CIDR6,2a04:ac00:1:3dd8::1:2710/128
+IP-CIDR,52.58.128.163/32
+IP-CIDR,93.158.213.92/32

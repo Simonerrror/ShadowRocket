@@ -46,7 +46,9 @@
   "BlockSites": [
     "geosite:motivato-block"
   ],
-  "BlockIp": [],
+  "BlockIp": [
+    "geoip:sr-block"
+  ],
   "DomainStrategy": "IPIfNonMatch",
   "FakeDNS": "false"
 }

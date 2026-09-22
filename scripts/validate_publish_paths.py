@@ -16,6 +16,7 @@ GENERATED_RULES = {
     "rules/microsoft.list",
     "rules/openai.list",
     "rules/telegram.list",
+    "rules/torrent_block.list",
     "rules/whitelist_direct.list",
 }
 GENERATED_MODULES = {

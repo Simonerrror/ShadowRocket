@@ -162,6 +162,7 @@ class WorkflowHardeningTests(unittest.TestCase):
             "distillate/dat/geosite.dat",
             "distillate/summary.json",
             "rules/google-all.list",
+            "rules/torrent_block.list",
             "rules/anti_advertising.04.list",
             "modules/anti_advertising.module",
             "clash_config.yaml",

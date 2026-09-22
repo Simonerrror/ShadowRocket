@@ -49,20 +49,43 @@ def key_values(path: Path, section: str) -> dict[str, str]:
 
 
 class ShadowrocketProfilesTests(unittest.TestCase):
-    def test_torrent_domains_are_direct_in_every_profile(self) -> None:
+    def test_torrent_destinations_are_blocked_before_allow_rules(self) -> None:
         torrent_domains = set(TORRENT_DOMAINS.read_text(encoding="utf-8").splitlines())
         direct_domains = set(SR_DIRECT_DOMAINS.read_text(encoding="utf-8").splitlines())
         block_domains = set(SR_BLOCK_DOMAINS.read_text(encoding="utf-8").splitlines())
 
         self.assertTrue(torrent_domains)
-        self.assertLessEqual(torrent_domains, direct_domains)
-        self.assertTrue(torrent_domains.isdisjoint(block_domains))
+        self.assertLessEqual(torrent_domains, block_domains)
+        self.assertTrue(torrent_domains.isdisjoint(direct_domains))
+        torrent_ips = set((REPO_ROOT / "distillate/text/ip/motivato_torrent.txt").read_text().splitlines())
+        block_ips = set((REPO_ROOT / "distillate/text/ip/sr-block.txt").read_text().splitlines())
+        self.assertTrue(torrent_ips)
+        self.assertLessEqual(torrent_ips, block_ips)
         for path in (BASE_CONF, CUSTOM_CONF, WHITELIST_CONF):
             with self.subTest(path=path.name):
-                self.assertIn(
-                    "RULE-SET,https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/whitelist_direct.list,DIRECT",
-                    section_lines(path, "Rule"),
+                self.assertEqual(
+                    "RULE-SET,https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/torrent_block.list,REJECT",
+                    section_lines(path, "Rule")[0],
                 )
+
+    def test_torrent_rule_set_preserves_domains_and_exact_ip_hosts(self) -> None:
+        import ipaddress
+        from scripts.build_distillate import canonical_domain_to_legacy, cidr_to_legacy
+        expected = {
+            canonical_domain_to_legacy(line)
+            for line in TORRENT_DOMAINS.read_text().splitlines()
+        }
+        ips = (REPO_ROOT / "distillate/text/ip/motivato_torrent.txt").read_text().splitlines()
+        for value in ips:
+            network = ipaddress.ip_network(value)
+            self.assertTrue(network.is_global)
+            self.assertEqual(network.prefixlen, network.max_prefixlen)
+            expected.add(cidr_to_legacy(value))
+        actual = {
+            line for line in (REPO_ROOT / "rules/torrent_block.list").read_text().splitlines()
+            if line and not line.startswith("#")
+        }
+        self.assertEqual(expected, actual)
 
     def test_published_profiles_show_version_maintainer_and_readme(self) -> None:
         for path in (BASE_CONF, CUSTOM_CONF, WHITELIST_CONF):

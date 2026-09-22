@@ -36,7 +36,7 @@ consumer-списков в `rules/`. Проект поддерживает ав�
 - `shadowrocket_whitelist.conf` — custom-only аварийный whitelist-профиль: direct allowlist/RU напрямую, всё остальное в один выбранный `PROXY`.
 - `distillate/` — канонический manifest, локальные overlays и собранные text/`dat`.
 - `rules/` — вручную поддерживаемые rule-list'ы и generated consumer-списки.
-- `motivato_torrent` — общий список torrent tracker/DHT-доменов: во всех профилях они входят в `whitelist_direct` и маршрутизируются напрямую.
+- `motivato_torrent` — список доменов и IP-адресов torrent tracker/DHT-узлов. В Shadowrocket и Clash он блокируется через `rules/torrent_block.list` перед разрешающими правилами; в HAPP/INCY входит в блокирующие геоданные.
 - `HAPP/RU-VPN.*` — дополнительный HAPP-профиль: российские домены/IP через proxy, остальное напрямую.
 - `INCY/DEFAULT.*` и `INCY/RU-VPN.*` — те же routing-профили для INCY с `incy://` deeplink.
 - `Amnezia/SR-DEFAULT-EXCLUDE.json` — shared-профиль исключений IPv4 для AmneziaVPN на iOS/Premium.
@@ -70,9 +70,9 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_cus
 ```
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_whitelist.conf
 ```
-В нём остаются только локальные исключения, `whitelist_direct.list` с torrent tracker/DHT-доменами, `.ru/.рф/.su` и `GEOIP,RU,DIRECT`; весь Google и любой другой non-direct трафик уходит в `PROXY`. Фильтр `PROXY` принимает любой протокол (включая `VLESS`, `Hysteria` и `Hysteria2`), кроме имён с `Russia` и standalone-токеном `Trojan`; standalone `WL` не исключается.
+Сначала применяется `torrent_block.list` с политикой `REJECT`. Затем действуют локальные исключения, `whitelist_direct.list`, `.ru/.рф/.su` и `GEOIP,RU,DIRECT`; весь Google и любой другой non-direct трафик уходит в `PROXY`. Фильтр `PROXY` принимает любой протокол (включая `VLESS`, `Hysteria` и `Hysteria2`), кроме имён с `Russia` и standalone-токеном `Trojan`; standalone `WL` не исключается.
 
-Torrent-правила покрывают домены трекеров и DHT bootstrap-узлов. Они не гарантируют DIRECT для каждого peer-соединения по произвольному IP: Shadowrocket и Mihomo не имеют общего надёжного правила распознавания всего зашифрованного/обфусцированного BitTorrent-трафика.
+Torrent-правила блокируют известные домены и IP-адреса трекеров и DHT bootstrap-узлов. Дополнения взяты из [ngosang/trackerslist](https://github.com/ngosang/trackerslist) и [XIU2/TrackersListCollection](https://github.com/XIU2/TrackersListCollection); новые домены добавляются точными совпадениями. Это не полный запрет BitTorrent: DHT, PEX и сохранённые адреса пиров позволяют соединяться без известных трекеров. После обновления опубликованного конфига обновите его rule-set в клиенте. IPv4-список исключений Amnezia не содержит блокирующих правил.
 
 Дополнительный HAPP-профиль для доступа к российским ресурсам через
 российский VPN-узел:
@@ -155,7 +155,7 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/Amnezia/SR-DEFAU
 
 Практическое правило сопровождения:
 - вручную редактируются `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_whitelist.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `rules/adobe_telemetry_custom.list`, `rules/russia_extended.list`, `rules/voice_ports.list`, `modules/GFN-AM.module`, `modules/tailscale_tailnet.module`, `modules/wechat_direct.module`, `modules/tailscale_direct.module`;
-- generated-артефакты (`clash_config.yaml`, `HAPP/DEFAULT.*`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/upstream/v2fly/ru_ipv4.txt`, `distillate/summary.json`, `Amnezia/SR-DEFAULT-EXCLUDE*.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/openai.list`, `rules/telegram.list`, `rules/whitelist_direct.list`, `rules/greylist_proxy.list`, `rules/anti_advertising.list`, `rules/anti_advertising*.[0-9][0-9].list`) не поддерживаются вручную;
+- generated-артефакты (`clash_config.yaml`, `HAPP/DEFAULT.*`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/upstream/v2fly/ru_ipv4.txt`, `distillate/summary.json`, `Amnezia/SR-DEFAULT-EXCLUDE*.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/openai.list`, `rules/telegram.list`, `rules/whitelist_direct.list`, `rules/torrent_block.list`, `rules/greylist_proxy.list`, `rules/anti_advertising.list`, `rules/anti_advertising*.[0-9][0-9].list`) не поддерживаются вручную;
 - `modules/anti_advertising.module` semi-generated: ручной заголовок сохраняется, а ссылки на anti-ad chunks переписываются сборкой.
 - Tailscale вынесен из общих профилей в отдельный модуль `modules/tailscale_tailnet.module`. Модуль использует встроенную политику `TAILSCALE`; `100.64.0.0/10` не добавляется в `tun-excluded-routes`.
 

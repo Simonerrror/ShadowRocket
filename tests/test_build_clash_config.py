@@ -32,6 +32,13 @@ class BuildClashConfigTests(unittest.TestCase):
         self.assertNotIn("RULE-SET,google_all", content)
         self.assertNotIn("  - name: GOOGLE", content)
 
+    def test_torrent_block_precedes_all_other_generated_rules(self) -> None:
+        content, _warnings = build_config(DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL)
+        rules = content.split("\nrules:\n", 1)[1]
+        first = next(line.strip() for line in rules.splitlines() if line.strip().startswith("- "))
+        self.assertEqual("- RULE-SET,torrent_block,REJECT", first)
+        self.assertIn("rules/torrent_block.list", content)
+
     def test_manual_proxy_excludes_wl_and_ss_from_the_subscription(self) -> None:
         content, warnings = build_config(DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL)
         provider = content.split("  Main-Sub:", 1)[1].split("# 4. RULE PROVIDERS", 1)[0]

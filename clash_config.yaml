@@ -70,6 +70,13 @@ proxy-providers:
 
 # 4. RULE PROVIDERS
 rule-providers:
+  torrent_block:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/torrent_block.list"
+    path: ./rules/torrent_block.yaml
+    interval: 86400
+
   whitelist_direct:
     type: http
     behavior: classical
@@ -141,6 +148,7 @@ proxy-groups:
 
 # 6. RULES
 rules:
+  - RULE-SET,torrent_block,REJECT
   - RULE-SET,whitelist_direct,DIRECT
   - RULE-SET,greylist_proxy,PROXY
   - RULE-SET,microsoft,PROXY

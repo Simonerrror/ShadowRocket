@@ -63,9 +63,9 @@
 
 - `motivato_telemetry_ru` собирается из BM7 `Privacy` + `EasyPrivacy` по локальному exact allowlist.
 - `motivato_telemetry_ms` собирается из тех же BM7 privacy-pack'ов по отдельному allowlist Microsoft telemetry.
-- `motivato_torrent` хранится локально как поддерживаемый overlay и входит в `sr-direct`.
+- `motivato_torrent` хранится локально как поддерживаемый overlay; его домены и IP-адреса входят в `sr-block`.
 - `motivato_ads` содержит только `ad.mail.ru` и `alt-ad.mail.ru`.
-- `motivato_block` агрегирует telemetry и advertising источники и публикуется в `geosite.dat`.
+- `motivato_block` агрегирует telemetry, advertising и torrent источники. Домены публикуются в `geosite.dat`, IP-адреса — в `geoip.dat`.
 
 ## Ручная проверка
 
