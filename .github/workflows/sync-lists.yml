@@ -45,8 +45,6 @@ jobs:
       - name: Build pinned compiled artifacts
         run: python3 scripts/build_distillate.py
 
-      - name: Build Amnezia routing profile
-        run: python3 scripts/build_amnezia_routing.py
 
       - name: Validate rule-count delta
         env:
@@ -66,7 +64,7 @@ jobs:
 
       - name: Build HAPP artifacts
         run: |
-          if git diff --quiet -- distillate rules modules Amnezia clash_config.yaml; then
+          if git diff --quiet -- distillate rules modules clash_config.yaml; then
             python3 scripts/build_happ_routing.py
             python3 scripts/build_incy_routing.py
           else
@@ -94,12 +92,9 @@ jobs:
           retention-days: 7
           path: |
             distillate/upstream
-            distillate/upstream/v2fly/ru_ipv4.txt
             distillate/text
             distillate/dat
             distillate/summary.json
-            Amnezia/SR-DEFAULT-EXCLUDE.json
-            Amnezia/SR-DEFAULT-EXCLUDE.summary.json
             rules
             modules/anti_advertising.module
             clash_config.yaml
@@ -146,8 +141,6 @@ jobs:
           for relative in (
               "modules/anti_advertising.module",
               "distillate/summary.json",
-              "Amnezia/SR-DEFAULT-EXCLUDE.json",
-              "Amnezia/SR-DEFAULT-EXCLUDE.summary.json",
               "clash_config.yaml",
               "HAPP/DEFAULT.JSON",
               "HAPP/DEFAULT.DEEPLINK",
@@ -169,7 +162,6 @@ jobs:
         run: |
           python3 scripts/validate_publish_paths.py
           python3 scripts/build_distillate.py --skip-compiled
-          python3 scripts/build_amnezia_routing.py
           python3 scripts/build_clash_config.py --conf shadowrocket.conf
           python3 scripts/build_happ_routing.py
           python3 scripts/build_incy_routing.py
@@ -182,7 +174,7 @@ jobs:
           if [[ -n "$(git status --porcelain)" ]]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add -A distillate rules HAPP INCY modules Amnezia clash_config.yaml cloudflare/potato-link/dist/destinations.js
+            git add -A distillate rules HAPP INCY modules clash_config.yaml cloudflare/potato-link/dist/destinations.js
             python3 scripts/validate_publish_paths.py
             git commit -m "chore: refresh vendored distillate sources"
             git push

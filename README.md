@@ -1,184 +1,39 @@
-# ShadowRocket: конфиг и правила маршрутизации
+# ShadowRocket
 
-Готовые конфиги для Shadowrocket и Clash Verge Rev (Mihomo),
-построенные на manifest-driven distillate-пайплайне в `distillate/` с публикацией
-consumer-списков в `rules/`. Проект поддерживает автообновление по URL, общую
-маршрутизацию Microsoft и curated community/AI bundles и отдельные модули для персональных правил.
+Основной конфиг Shadowrocket: [shadowrocket.conf](shadowrocket.conf). Он задаёт маршрутизацию и обновляется по URL. Серверы добавляются в Shadowrocket отдельно — через подписку или вручную.
 
-## Переход с HAPP на INCY
+## Подключение
 
-**Настоятельно просим пользователей HAPP перейти на INCY: поддержка HAPP в этом репозитории сворачивается.**
-Для перехода используйте [INCY DEFAULT](https://potato-link.motivato-potato.workers.dev/incy)
-или [INCY RU-VPN](https://potato-link.motivato-potato.workers.dev/incy/ru).
-Инструкции и JSON-профили приведены в [INCY/README.md](INCY/README.md).
+1. Откройте в Shadowrocket **Config → Add Config → URL** и добавьте:
 
-Существующие HAPP-файлы, ссылки и сборка пока сохраняются для перехода.
-
-В сборщиках HAPP/INCY domestic DNS закреплён за Яндексом: IP `77.88.8.8`, DoH `https://77.88.8.8/dns-query`. Параметр `--domestic-dns-ip` принимает только `77.88.8.8`.
-
-## Содержание
-
-- [Переход с HAPP на INCY](#переход-с-happ-на-incy)
-- [Что внутри](#что-внутри)
-- [Быстрый старт (Shadowrocket)](#быстрый-старт-shadowrocket)
-- [Clash Verge Rev (Windows)](#clash-verge-rev-windows)
-- [Структура репозитория](#структура-репозитория)
-- [Логика `shadowrocket.conf`](#логика-shadowrocketconf)
-- [Обновление](#обновление)
-- [Расширение правил](#расширение-правил)
-- [Неизвестное поведение Shadowrocket](#неизвестное-поведение-shadowrocket)
-
-## Что внутри
-
-- `shadowrocket.conf` — основной конфиг для Shadowrocket с автообновлением.
-- `shadowrocket_custom.conf` — прежний адрес профиля, сохранённый для установленных копий. Для новой установки используйте основной конфиг и GFN-модуль.
-- `clash_config.yaml` — generated YAML для Clash Verge Rev (Mihomo), собранный из `shadowrocket.conf`.
-- `shadowrocket_whitelist.conf` — custom-only аварийный whitelist-профиль: direct allowlist/RU напрямую, всё остальное в один выбранный `PROXY`.
-- `distillate/` — канонический manifest, локальные overlays и собранные text/`dat`.
-- `rules/` — вручную поддерживаемые rule-list'ы и generated consumer-списки.
-- `motivato_torrent` — список доменов и IP-адресов torrent tracker/DHT-узлов. В Shadowrocket и Clash он блокируется через `rules/torrent_block.list` перед разрешающими правилами; в HAPP/INCY входит в блокирующие геоданные.
-- `HAPP/RU-VPN.*` — дополнительный HAPP-профиль: российские домены/IP через proxy, остальное напрямую.
-- `INCY/DEFAULT.*` и `INCY/RU-VPN.*` — те же routing-профили для INCY с `incy://` deeplink.
-- `Amnezia/SR-DEFAULT-EXCLUDE.json` — shared-профиль исключений IPv4 для AmneziaVPN на iOS/Premium.
-- `modules/tailscale_tailnet.module` — отдельный модуль для встроенного Tailscale Shadowrocket: tailnet IPv4/IPv6 и `ts.net` направляются в политику `TAILSCALE` без исключения маршрутов из TUN.
-- `modules/wechat_direct.module` — отдельный custom-only модуль DIRECT для WeChat и его CDN без широкого обхода всего Tencent/QQ.
-- Источники истины разделены: `shadowrocket.conf` отвечает за порядок routing-правил и proxy-groups базового профиля, а `distillate/manifest.json` вместе с `distillate/overlays/*` и `distillate/filters/*` отвечает за состав и сборку большинства consumer-списков.
-
-## Быстрый старт (Shadowrocket)
-
-1. **Добавьте конфиг по ссылке** (Shadowrocket → Add Config/Добавить конфиг → URL):
-   ```
+   ```text
    https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket.conf
    ```
-   > В конфиге указан `update-url`, поэтому он будет обновляться автоматически.
-2. **Добавьте подписку** на сервера в Shadowrocket (URL от вашего провайдера).
-   Группы используют разные фильтры: ручная группа принимает поддерживаемые узлы подписки без `WL`, а автоматические группы принимают `VLESS`, `TT`, `Naive`, `NV`, `MR`, `AWG`, `AWG2` и `AWG3.1` вне RU/BY/UA и без `WL`.
-3. **Проверьте группы прокси**:
-   - `MANUAL-PROXY` — ручной выбор поддерживаемых узлов подписки без standalone `WL`.
-   - `AUTO-SPEED` — `url-test`: выбирает самый быстрый узел `VLESS`, `TT`, `Naive`, `NV`, `MR`, `AWG`, `AWG2` или `AWG3.1` без `Russia`, `Belarus`, `Ukraine` и standalone `WL`.
-   - `AUTO-STABILITY` — `fallback`: берёт первый живой узел `VLESS`, `TT`, `Naive`, `NV`, `MR`, `AWG`, `AWG2` или `AWG3.1` без `Russia`, `Belarus`, `Ukraine` и standalone `WL`, в порядке подписки.
-   - `WL` — отдельная `select`-группа для узлов любого протокола со standalone `WL` (`policy-regex-filter=(?i)\bWL\b`), включая `WL-lte`.
-   - `\bWL\b` — standalone-токен: он не задевает имена вроде `WLAN` или `BOWL`.
-   - `PROXY` — главный переключатель (Select): по умолчанию выбран `AUTO-STABILITY`; доступны `MANUAL-PROXY`, `AUTO-SPEED`, `AUTO-STABILITY` и `WL`. `DIRECT` в этот переключатель не входит.
 
-Для GFN подключите `modules/GFN-AM.module` к основному конфигу. Модуль задаёт DIRECT и `always-real-ip` для NVIDIA/GFN. Прежний адрес custom сохранён для обновления установленных копий:
-```
-https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_custom.conf
-```
+2. Добавьте свою подписку на серверы или локальные серверы. Для ссылки на подписку используйте шаблон `shadowrocket://add/SUBSCRIPTION_URL`: замените `SUBSCRIPTION_URL` полным HTTPS-адресом своей подписки.
+3. Включите конфиг и выберите группу `PROXY`. По умолчанию она использует `AUTO-STABILITY`.
 
-Аварийный whitelist-only профиль, когда не нужны отдельные Google/Microsoft группы:
-```
-https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket_whitelist.conf
-```
-Сначала применяется `torrent_block.list` с политикой `REJECT`. Затем действуют локальные исключения, `whitelist_direct.list`, `.ru/.рф/.su` и `GEOIP,RU,DIRECT`; весь Google и любой другой non-direct трафик уходит в `PROXY`. Фильтр `PROXY` принимает любой протокол (включая `VLESS`, `Hysteria` и `Hysteria2`), кроме имён с `Russia` и standalone-токеном `Trojan`; standalone `WL` не исключается.
+[Ссылка для импорта конфига](https://potato-link.motivato-potato.workers.dev/sr/config). Если встроенный браузер мессенджера не открывает Shadowrocket, откройте её в Safari.
 
-Torrent-правила блокируют известные домены и IP-адреса трекеров и DHT bootstrap-узлов. Дополнения взяты из [ngosang/trackerslist](https://github.com/ngosang/trackerslist) и [XIU2/TrackersListCollection](https://github.com/XIU2/TrackersListCollection); новые домены добавляются точными совпадениями. Это не полный запрет BitTorrent: DHT, PEX и сохранённые адреса пиров позволяют соединяться без известных трекеров. После обновления опубликованного конфига обновите его rule-set в клиенте. IPv4-список исключений Amnezia не содержит блокирующих правил.
+## Выбор сервера
 
-Дополнительный HAPP-профиль для доступа к российским ресурсам через
-российский VPN-узел:
-```
-https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/HAPP/RU-VPN.DEEPLINK
-```
-`RU-VPN` направляет `geosite:category-ru` и `geoip:ru` через выбранный proxy,
-а весь несовпавший трафик — напрямую. Профиль выбирает трафик, но не страну
-сервера: перед активацией выберите узел с проверенным российским выходным IP.
+- `MANUAL-PROXY` — ручной выбор серверов без отдельных меток `WL` и `SS` в имени.
+- `AUTO-SPEED` — выбирает самый быстрый доступный сервер.
+- `AUTO-STABILITY` — выбирает первый доступный сервер в порядке списка.
+- `WL` — отдельная группа для серверов с самостоятельной меткой `WL` в имени.
 
-Те же профили для INCY:
-```
-https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/INCY/DEFAULT.DEEPLINK
-https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/INCY/RU-VPN.DEEPLINK
-```
-Кликабельные редиректы Worker: `/incy` и `/incy/ru` на домене
-`potato-link.motivato-potato.workers.dev`.
+Автоматические группы отбирают имена с отдельными метками `VLESS`, `TT`, `Naive`, `NV`, `MR`, `AWG`, `AWG2` или `AWG3.1`. Имена с `Russia`, `Belarus`, `Ukraine` или самостоятельной меткой `WL` исключаются. Если добавляете сервер вручную, укажите в его имени отдельную метку: `TT` для TrustTunnel, `NV` для Naive, `MR` для Mieru, `AWG` для AmneziaWG. Например: `TT Мой сервер`. Затем проверьте в Shadowrocket, появился ли локальный сервер в нужной группе.
 
-### AmneziaVPN (iOS / Premium)
+## Дополнения
 
-Профиль исключений для split tunneling:
-```
-https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/Amnezia/SR-DEFAULT-EXCLUDE.json
-```
-Импортируйте JSON в AmneziaVPN и выберите режим **«Адреса из списка не должны открываться через VPN»** (`Addresses from list must not go through VPN`). Список содержит IPv4-сети RU, локальные/служебные диапазоны и IPv4 из общего `sr-direct`; весь остальной IPv4-трафик направляется через VPN.
-После импорта записи отображаются как `cidr-...invalid`; полная CIDR намеренно находится в поле `ip`, поскольку текущий importer удаляет `/` из `hostname`.
+- [Модули Shadowrocket](docs/shadowrocket-modules.md) — Apple, GFN, Tailscale, WeChat, Twitch и блокировка рекламы; там же порядок включения.
+- [Аварийный whitelist-профиль](shadowrocket_whitelist.conf) — отдельный конфиг с маршрутизацией через один выбранный `PROXY`.
+- [Clash Verge Rev](docs/clash-verge-rev.md) — настройка Windows-клиента.
+- [INCY](INCY/README.md) — профили и ссылки для импорта; пользователям HAPP рекомендуется перейти на INCY.
+- [HAPP](HAPP/README.md) — сохранённые профили на время перехода.
+- [Сборка и сопровождение](docs/maintenance.md) — структура проекта, обновление списков и порядок пересборки.
 
-Профиль IPv4-only и не обновляется автоматически: после обновления репозитория скачайте JSON заново. Доменные DIRECT-правила Shadowrocket не переносятся в список адресов; они перечислены в `Amnezia/SR-DEFAULT-EXCLUDE.summary.json`.
-
-## Clash Verge Rev (Windows)
-
-> `clash_config.yaml` больше не поддерживается вручную отдельно: он генерируется из
-> `shadowrocket.conf` через `scripts/build_clash_config.py`.
-> Для автопроверки серверов `proxy-providers.Main-Sub.health-check`, `proxy-groups.AUTO-SPEED`
-> и `proxy-groups.AUTO-STABILITY` используется `https://www.youtube.com/favicon.ico`
-> (`AUTO-SPEED`: интервал 180, tolerance 100; `AUTO-STABILITY`: интервал 780).
-
-1. **Скачайте Clash Verge Rev**:  
-   https://github.com/clash-verge-rev/clash-verge-rev/releases  
-   Установите приложение.
-2. **Включите режим TUN**. Если появится сообщение о нехватке драйвера:
-   - нажмите на значок «гаечного ключа» рядом с тумблером TUN;
-   - установите драйвер и дождитесь завершения.
-3. **Подготовьте конфиг**:
-   - скачайте файл `clash_config.yaml` из репозитория;
-   - откройте его в редакторе и вставьте ссылку на свою подписку в соответствующее поле;
-   - если меняете routing-логику локально, пересоберите YAML через `python3 scripts/build_clash_config.py`.
-4. **Создайте профиль**:
-   - Профили → Новый;
-   - Тип: **Local**;
-   - Название: **GeoRU**;
-   - Выбрать файл → укажите отредактированный `clash_config.yaml`.
-5. **Проверьте работу**:
-   - переключите тумблер TUN (вкл/выкл);
-   - откройте вкладку **Тест**;
-   - в списке ожидаются «красные» записи:
-     - `bahamut anime`
-     - два китайских узла
-     - `youtube premium`
-   - все остальные — зелёные (значит конфиг настроен правильно).
-
-Важно: так как конфиг содержит ссылку на вашу подписку, публиковать его онлайн для автообновления нельзя.  
-При этом списки доменов и IP-диапазонов продолжают обновляться автоматически.
-
-## Структура репозитория
-
-| Путь | Назначение |
-| --- | --- |
-| `shadowrocket.conf` | Основной конфиг для Shadowrocket |
-| `shadowrocket_custom.conf` | Прежний адрес профиля; новые установки используют основной конфиг |
-| `clash_config.yaml` | Generated-конфиг для Clash Verge Rev |
-| `shadowrocket_whitelist.conf` | Custom-only аварийный whitelist-профиль: direct allowlist/RU напрямую, всё остальное через один `PROXY` |
-| `INCY/DEFAULT.*`, `INCY/RU-VPN.*` | Generated routing-профили и `incy://` deeplink для INCY |
-| `distillate/` | Канонический manifest, overlays и generated артефакты |
-| `Amnezia/SR-DEFAULT-EXCLUDE.json` | Generated IPv4 список исключений AmneziaVPN |
-| `Amnezia/SR-DEFAULT-EXCLUDE.summary.json` | Generated отчёт о составе списка и непредставленных domain DIRECT правилах |
-| `rules/` | Вручную поддерживаемые и generated consumer-списки |
-| `modules/` | Готовые модули для Shadowrocket |
-| `scripts/` | Вспомогательные скрипты |
-
-Практическое правило сопровождения:
-- вручную редактируются `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_whitelist.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `rules/adobe_telemetry_custom.list`, `rules/russia_extended.list`, `rules/voice_ports.list`, `modules/GFN-AM.module`, `modules/tailscale_tailnet.module`, `modules/wechat_direct.module`, `modules/tailscale_direct.module`;
-- generated-артефакты (`clash_config.yaml`, `HAPP/DEFAULT.*`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/upstream/v2fly/ru_ipv4.txt`, `distillate/summary.json`, `Amnezia/SR-DEFAULT-EXCLUDE*.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/openai.list`, `rules/telegram.list`, `rules/whitelist_direct.list`, `rules/torrent_block.list`, `rules/greylist_proxy.list`, `rules/anti_advertising.list`, `rules/anti_advertising*.[0-9][0-9].list`) не поддерживаются вручную;
-- `modules/anti_advertising.module` semi-generated: ручной заголовок сохраняется, а ссылки на anti-ad chunks переписываются сборкой.
-- Tailscale вынесен из общих профилей в отдельный модуль `modules/tailscale_tailnet.module`. Модуль использует встроенную политику `TAILSCALE`; `100.64.0.0/10` не добавляется в `tun-excluded-routes`.
-
-Основной и custom-профиль остаются отдельными ручными исходниками. Shared-изменения
-вносятся в оба файла с сохранением custom-only настроек. `distillate/`, полный
-anti-ad-список и его чанки в `rules/` сохраняются как входы сборки и публикуемые артефакты.
-
-### WeChat напрямую
-
-Если при активном VPN в WeChat не загружаются сообщения, изображения или
-мини-программы, подключите отдельный модуль:
-
-```text
-https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/wechat_direct.module
-```
-
-В Shadowrocket откройте **Config → Modules → Add**, вставьте URL и включите
-модуль. Если одновременно используется anti-advertising модуль, расположите
-`WeChat Direct` выше anti-advertising, чтобы DIRECT-правила применялись раньше
-блокирующих правил. Модуль направляет напрямую только домены WeChat и нужные
-CDN; весь Tencent/QQ он не обходит.
-
-## Логика `shadowrocket.conf`
+## Как работает конфиг
 
 ### [General]
 - Базовые сетевые настройки: DNS — `9.9.9.9`, `149.112.112.112`, `77.88.8.8`; fallback использует тот же набор, IPv6 выключен.
@@ -198,7 +53,7 @@ CDN; весь Tencent/QQ он не обходит.
 - **PROXY** — Select-группа; по умолчанию выбран `AUTO-STABILITY`, доступны `MANUAL-PROXY`/`AUTO-SPEED`/`AUTO-STABILITY`/`WL`.
   В `AUTO-STABILITY` первичным считается первый живой узел в порядке уже фильтрованной подписки.
 
-Тест загружает иконку с `www.youtube.com`; он проверяет доступность этого адреса, но не воспроизведение видео с `googlevideo.com`.
+Тест загружает иконку с www.youtube.com; он проверяет доступность этого адреса, но не воспроизведение видео с googlevideo.com.
 
 ### [Rule]
 Порядок важен: правила обрабатываются сверху вниз.
@@ -217,175 +72,6 @@ CDN; весь Tencent/QQ он не обходит.
 5. **FINAL**
    - Всё остальное — в `PROXY`.
 
-### [Host] / [URL Rewrite]
-- Статический `localhost`.
-- Редиректы для `nnmclub.to` и `yandex.ru`.
+## Импорт модулей
 
-## Обновление
-
-- Конфиг обновляется автоматически через `update-url`.
-- Канонические источники истины разделены: `shadowrocket.conf` задаёт routing order и базовые proxy-groups, `distillate/manifest.json` задаёт состав категорий и generation rule-list'ов.
-- Weekly workflow запускает `scripts/sync_lists.py --no-pull`: скрипт подтягивает upstream-листы в `distillate/upstream/*`, затем обновляет `distillate/text/*`, `distillate/summary.json`, `rules/*.list`, anti-ad module refs. Остальные артефакты собираются следующими шагами workflow.
-- `scripts/build_distillate.py --skip-compiled` пересобирает текстовые артефакты из кэша `distillate/upstream/*` без сетевого обновления. Без `--skip-compiled` скрипт также загружает закреплённые исходники Go-компиляторов и их зависимости для сборки `geosite.dat` и `geoip.dat`.
-- `scripts/build_amnezia_routing.py` собирает `Amnezia/SR-DEFAULT-EXCLUDE.json` из cached RU IPv4 (`distillate/upstream/v2fly/ru_ipv4.txt`), `sr-direct` и фиксированных локальных/служебных сетей; domain DIRECT правила только перечисляются в summary.
-- `scripts/build_clash_config.py` читает `[General]`, `[Proxy Group]` и `[Rule]` из базового `shadowrocket.conf` и пересобирает `clash_config.yaml` для Mihomo.
-  Он переносит все поддерживаемые rule/group mapping'и, а неподдерживаемые для Clash детали (`force-remote-dns`, `policy-select-name`, `timeout`) оставляет в предупреждениях сборки.
-- `scripts/build_happ_routing.py` не ходит в BM7: он берет агрегаты `sr-direct`/`sr-proxy` и `motivato_block` из `distillate/text/*`, затем собирает `HAPP/DEFAULT.*` (`роут-MotivatoPotato`) с детерминированным `LastUpdated`.
-- `scripts/build_incy_routing.py` использует те же агрегаты и семантические профили, адаптирует только поле `useChunkFiles: false` и собирает `INCY/DEFAULT.*` и `INCY/RU-VPN.*` с тем же `LastUpdated`.
-- Антирекламный список собирается в том же distillate-пайплайне из OISD + HaGeZi, но публикуется чанками `rules/anti_advertising.01.list`, `.02.list`, `.03.list` и далее по мере необходимости. Количество чанков выбирается автоматически так, чтобы вес каждого был не больше примерно 7 МБ. Он не включается в compiled `geosite.dat` и не используется в HAPP. Для него предполагается отдельный модуль Shadowrocket.
-- На этапе сборки из `anti_advertising` дополнительно вычищаются домены, содержащие `nvidia`/`geforce`/`geforcenow`/`nvidiagrid`, чтобы anti-ad модуль не ломал GeForce NOW и связанные NVIDIA API.
-- Там же вычищаются official suffix'ы Discord (`discord.com`, `discord.gg`, `discordapp.com`, `discordapp.net` и смежные), чтобы upstream anti-ad не зацепил клиентские API, gateway и служебные поддомены Discord.
-
-Fallback policy:
-- если очередной upstream-лист недоступен, последний закоммиченный snapshot в `distillate/upstream/*` сохраняется;
-- сборка `distillate` и HAPP продолжается на этой локальной копии;
-- удаление cache-файла из-за временной недоступности upstream не допускается.
-
-Правило безопасного локального запуска:
-- не запускайте `scripts/sync_lists.py` без необходимости refresh vendored upstream: по умолчанию он делает `git pull --rebase`;
-- для локальной пересборки без загрузки компиляторов используйте `python3 scripts/build_distillate.py --skip-compiled` на уже закешированных `distillate/upstream/*`;
-- если нужен локальный sync без обновления ветки, используйте `python3 scripts/sync_lists.py --no-pull`.
-
-### Кэшированная пересборка
-
-Запускайте из корня репозитория. Команды используют существующие `distillate/dat/*`
-и не перекомпилируют геоданные. Для изменившихся правил полная публикация требует
-пересборки `.dat` в release workflow.
-
-```bash
-python3 scripts/build_distillate.py --skip-compiled
-python3 scripts/build_amnezia_routing.py
-python3 scripts/build_clash_config.py
-python3 scripts/build_happ_routing.py
-python3 scripts/build_incy_routing.py
-python3 scripts/build_potato_link_worker.py
-```
-
-После пересборки выполните `python3 -m unittest discover -s tests -v` и
-`python3 -m compileall -q scripts tests`, затем проверьте diff.
-Генераторы HAPP/INCY должны остановиться при отсутствии обязательных текстовых входов;
-не заменяйте отсутствующие файлы пустыми ради прохождения сборки.
-
-### Обновление источников и полная сборка
-
-Для явного обновления upstream сначала запустите `python3 scripts/sync_lists.py --no-pull`.
-Затем выполните `python3 scripts/build_distillate.py` и остальные команды кэшированной
-последовательности, начиная с `build_amnezia_routing.py`. Полная сборка требует Git,
-Go и сетевого доступа; новые зависимости проверяются по правилам проекта.
-Обновление источников, сборка и публикация — отдельные операции.
-
-### GitHub Actions
-
-- `.github/workflows/sync-lists.yml` запускается по weekly cron или вручную через **Run workflow**. Read-only job получает плавающие публичные данные BM7/OISD/HaGeZi, собирает их закреплёнными версиями компиляторов, проверяет тесты и допустимый размер diff; отдельная write-job публикует только generated allowlist.
-- Для проверенного резкого изменения количества правил ручной запуск поддерживает `allow_large_diff`; пустые обязательные категории, неверный формат и запрещённые пути этот флаг не разрешает.
-- При ошибке или аномалии workflow создаёт GitHub issue со ссылкой на run, поэтому уведомление приходит через стандартные GitHub notifications/email.
-- `.github/workflows/build-happ-routing.yml` — read-only проверка cached rebuild и тестов; она ничего не коммитит.
-- Amnezia-профиль относится к shared routing-артефактам; оба release workflow пересобирают и проверяют его вместе с distillate.
-- HAPP и INCY-профили относятся к shared routing-артефактам; при изменении входов оба генератора и Worker-пакет пересобираются вместе.
-
-Политика изменений:
-- Изменение групп `MANUAL-PROXY`, `WL` и auto-фильтра — **shared**: синхронизировано в `shadowrocket.conf` и `shadowrocket_custom.conf`; custom-only поля `[General]` сохранены.
-- `shadowrocket_custom.conf`, `shadowrocket_whitelist.conf` считаются `custom-only`.
-- Если улучшение полезно всем, его нужно переносить и в основной конфиг, и в кастомные файлы.
-- При изменении generated `rules/*.list` меняйте `distillate/manifest.json`, `distillate/overlays/*` или `distillate/filters/*`, а не итоговые generated-файлы.
-- При изменении `shadowrocket.conf` пересобирайте `clash_config.yaml`, `HAPP/DEFAULT.*` и `INCY/*`.
-- При изменении `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*` или vendored upstream пересобирайте `distillate/*`, generated `rules/*.list`, anti-ad module refs, `HAPP/*` и `INCY/*`.
-
-## Расширение правил
-
-Если нужно добавить сервис — добавьте новую категорию в `distillate/manifest.json`,
-при необходимости создайте `distillate/overlays/*.list`, затем при необходимости подключите
-сгенерированный `rules/*.list` в секции `[Rule]`.
-Для анти-рекламы можно использовать модуль `modules/anti_advertising.module` по ссылке:
-```
-https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_advertising.module
-```
-Модуль подключает все собранные anti-ad чанки; ссылки `RULE-SET` обновляет генератор.
-Подключайте модуль целиком: число чанков меняется при обновлении источников. Примеры имён:
-``` 
-https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.01.list
-https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising.02.list
-```
-Как добавить модуль в Shadowrocket:
-1. Откройте **Config → Modules**.
-2. В правом верхнем углу нажмите **Add/Добавить**.
-3. Вставьте ссылку на модуль и подтвердите загрузку.
-4. Нажмите на загруженный модуль, чтобы активировать его.
-
-Модуль работает в дополнение к любому активному конфигу и не заменяет его.
-
-## Неизвестное поведение Shadowrocket
-
-Если непонятны параметры, порядок правил, DNS, модули или поддержка протокола,
-сначала проверьте [репозиторий руководства LOWERTOP/Shadowrocket](https://github.com/LOWERTOP/Shadowrocket)
-и [официальный новостной канал Shadowrocket News](https://t.me/ShadowrocketNews).
-Руководство поддерживает сообщество; это не исходный код приложения.
-Дополнительный источник — [Shadowrocket/manual](https://github.com/Shadowrocket/manual).
-
-Сопоставьте описание с установленной версией и номером сборки: изменения TestFlight
-не доказывают наличие функции в стабильном выпуске. Если источники не дают ответа,
-зафиксируйте неопределённость и проверьте поведение на минимальном примере в приложении.
-Не переносите семантику Clash, HAPP или INCY на Shadowrocket без проверки.
-
-## Сервисы Apple через прокси
-
-Модуль `Apple Proxy` направляет Apple Music, App Store, iCloud, push-уведомления,
-обновления и опубликованные Apple IP-диапазоны через выбранную политику `PROXY`.
-
-Добавьте в **Config → Modules → Add** ссылку и включите модуль:
-
-```text
-https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/apple_proxy.module
-```
-
-Установите глобальную маршрутизацию **Config / Конфигурация**. Расположите
-`15_01 · Apple Proxy` выше GFN, других модулей с пересекающимися DIRECT-правилами
-и блокировки рекламы. Доступность сервисов зависит от выбранного прокси-узла.
-
-Основной источник доменов и сетей — [требования Apple](https://support.apple.com/en-us/101555).
-
-## Порядок модулей
-
-Префиксы в `#!name` обозначают уровень и порядок внутри уровня. Выставьте этот
-порядок в Config → Modules; проверьте итоговые правила после компиляции.
-
-| Имя | Файл | Назначение |
-|---|---|---|
-| 10_01 · Tailscale Direct | `modules/tailscale_direct.module` | Официальный клиент Tailscale |
-| 10_02 · Tailscale Tailnet | `modules/tailscale_tailnet.module` | Встроенный Tailscale Shadowrocket |
-| 15_01 · Apple Proxy | `modules/apple_proxy.module` | Сервисы Apple через PROXY |
-| 20_01 · GFN Direct | `modules/GFN-AM.module` | NVIDIA/GFN и связанные исключения DIRECT |
-| 20_02 · WeChat Direct | `modules/wechat_direct.module` | WeChat и его CDN через DIRECT |
-| 20_04 · Twitch Video Direct | `modules/twitch_video_direct.module` | Видеосерверы Twitch через DIRECT; сайт и API по основному конфигу |
-| 90 · Anti-Advertising | `modules/anti_advertising.module` | Общая блокировка после сервисных исключений |
-
-Включайте только один модуль уровня 10. Сервисные исключения уровня 20 имеют
-приоритет перед анти-рекламой, включая разрешённую ими телеметрию.
-Префикс 20_03 зарезервирован для будущего решения Google/Gemini.
-
-При переходе удалите ранее установленные Anti-Advertising Custom и оба модуля
-Gemini из приложения: удаление файлов из репозитория не удаляет загруженные копии.
-Обновите оставшиеся модули и добавьте Tailscale Direct, если используете официальный клиент.
-GFN уже покрывает NVIDIA/GFN-исключения удалённого Custom через существующие
-DOMAIN-KEYWORD, DOMAIN-SUFFIX и IP-CIDR правила. Остальные правила Custom
-не включены в новый набор.
-
-Изменение набора и нумерации модулей — shared; правила GFN и WeChat остаются custom-only.
-
-## Импорт в Shadowrocket
-
-Откройте ссылку на устройстве с установленным Shadowrocket и подтвердите импорт.
-Если встроенный браузер мессенджера не открывает приложение, откройте ссылку в Safari.
-
-| Порядок | Что добавить | Назначение | Импорт |
-|---|---|---|---|
-| 1 | Основной конфиг | Базовые правила; подписка на серверы добавляется отдельно | [Добавить конфиг](https://potato-link.motivato-potato.workers.dev/sr/config) |
-| 10_01 | Tailscale Direct | Официальный клиент Tailscale | [Добавить](https://potato-link.motivato-potato.workers.dev/sr/modules/tailscale-direct) |
-| 10_02 | Tailscale Tailnet | Встроенный Tailscale Shadowrocket | [Добавить](https://potato-link.motivato-potato.workers.dev/sr/modules/tailscale-tailnet) |
-| 20_01 | GFN Direct | NVIDIA/GFN: DIRECT и реальные IP в DNS-ответах TUN | [Добавить](https://potato-link.motivato-potato.workers.dev/sr/modules/gfn) |
-| 20_02 | WeChat Direct | Исключения для WeChat и CDN | [Добавить](https://potato-link.motivato-potato.workers.dev/sr/modules/wechat) |
-| 20_04 | Twitch Video Direct | Видеосерверы Twitch напрямую | [Добавить](https://potato-link.motivato-potato.workers.dev/sr/modules/twitch) |
-| 90 | Anti-Advertising | Блокировка после сервисных исключений | [Добавить](https://potato-link.motivato-potato.workers.dev/sr/modules/anti-advertising) |
-
-Включайте только один вариант Tailscale. После импорта выставьте порядок по номерам.
-Ссылки импортируют элементы по одному и не назначают порядок автоматически.
+Инструкция и ссылки для импорта: [модули Shadowrocket](docs/shadowrocket-modules.md).

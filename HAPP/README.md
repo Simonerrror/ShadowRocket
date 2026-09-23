@@ -111,7 +111,6 @@ PY
 
 ## CI
 
-- `/.github/workflows/sync-lists.yml` обновляет vendored upstream, distillate, Amnezia, Clash, HAPP и INCY.
 - `/.github/workflows/build-happ-routing.yml` пересобирает оба профиля при изменениях в конфиге или сборочных входах.
 - `/.github/workflows/deploy-potato-link.yml` проверяет и публикует оба
   кликабельных редиректа после изменения deeplink.

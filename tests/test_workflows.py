@@ -33,10 +33,6 @@ class WorkflowHardeningTests(unittest.TestCase):
         self.assertIn("notify:\n    needs: [build, publish]", content)
         self.assertIn("issues: write", content)
         self.assertIn('go-version: "1.25.11"', content)
-        self.assertIn("if git diff --quiet -- distillate rules modules Amnezia clash_config.yaml", content)
-        self.assertIn("python3 scripts/build_amnezia_routing.py", content)
-        self.assertIn("Amnezia/SR-DEFAULT-EXCLUDE.json", content)
-        self.assertIn("Amnezia/SR-DEFAULT-EXCLUDE.summary.json", content)
         self.assertIn("python3 -m unittest discover -s tests -v", content)
         self.assertLess(content.index("python3 -m unittest discover"), content.index("actions/upload-artifact@"))
         self.assertNotIn("git push\n", content.split("  build:", 1)[1].split("  publish:", 1)[0])
@@ -128,8 +124,6 @@ class WorkflowHardeningTests(unittest.TestCase):
 
         self.assertIn("python3 scripts/build_potato_link_worker.py", sync)
         self.assertIn("python3 scripts/build_potato_link_worker.py", verify)
-        self.assertIn("python3 scripts/build_amnezia_routing.py", sync)
-        self.assertIn("python3 scripts/build_amnezia_routing.py", verify)
         self.assertIn(generated, sync)
         self.assertTrue(is_allowed_publish_path(generated))
         for content in (sync, verify):
@@ -173,19 +167,15 @@ class WorkflowHardeningTests(unittest.TestCase):
             "INCY/DEFAULT.DEEPLINK",
             "INCY/RU-VPN.JSON",
             "INCY/RU-VPN.DEEPLINK",
-            "distillate/upstream/v2fly/ru_ipv4.txt",
-            "Amnezia/SR-DEFAULT-EXCLUDE.json",
-            "Amnezia/SR-DEFAULT-EXCLUDE.summary.json",
         )
         denied = (
             "scripts/build_distillate.py",
             "distillate/manifest.json",
             "distillate/overlays/ru_direct.add.list",
-            "rules/adobe_telemetry_custom.list",
+            "rules/russia_extended.list",
             ".github/workflows/sync-lists.yml",
             "../distillate/text/domain/google.txt",
             "/tmp/distillate/text/domain/google.txt",
-            "Amnezia/other.json",
         )
 
         for path in allowed:

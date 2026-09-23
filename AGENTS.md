@@ -7,10 +7,9 @@
 - Сохраняйте смысл и порядок правил маршрутизации: порядок строк важен в конфигурациях Shadowrocket/Clash.
 - Не добавляйте новые правила без явного указания пользователя.
 - Предпочитайте минимальные изменения: не переформатируйте файлы без необходимости.
-- Любое изменение по умолчанию нужно явно классифицировать как `shared` или `custom-only`.
-- AmneziaVPN IPv4-профиль и его summary относятся к `shared` routing-артефактам.
-- Изменения для GFN/NVIDIA и одного пользователя по умолчанию считаются `custom-only`.
-- Если улучшение полезно всем, его нужно раскатывать и в основной конфиг, и в кастомные файлы.
+- Для изменения маршрутизации определите область `shared` или `custom-only`; отражайте её в отчёте, когда она влияет на состав изменений.
+- Общедоступные сервисные модули, включая GFN/NVIDIA, относятся к `shared`. Персональные узлы, параметры и исключения относятся к `custom-only`.
+- Общие изменения профиля синхронизируйте между основным и custom-профилем. Логику самостоятельного сервисного модуля храните в его модуле.
 
 ## Проверка поведения Shadowrocket
 
@@ -32,25 +31,19 @@
 - `distillate/` и `rules/`, включая полный anti-ad-список и чанки, сохраняются. Их размер сам по себе не основание для удаления или переноса.
 - Для пользователей HAPP рекомендуйте переход на INCY: поддержка HAPP в этом репозитории сворачивается. Пока сохраняйте существующие HAPP-артефакты, URL и сборочный каскад; прекращение их публикации требует отдельного решения.
 
-## Git preflight и синхронизация между Mac
+## Рабочее дерево и публикация
 
-Перед любым изменением:
+Перед редактированием проверьте Git root, ветку и `git status --short --branch`. Сохраните чужие изменения. Продолжайте работу при независимых изменениях; при пересечении с нужными строками выясните их назначение и согласуйте конфликт. Stash, reset, rebase и force-push требуют отдельного основания и полномочий.
 
-1. Выполните `git fetch --prune origin`.
-2. Выполните `git status --short --branch` и `git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}'`.
-3. Если рабочее дерево не чистое или upstream не настроен, остановитесь и покажите состояние. Не применяйте stash, reset или rebase автоматически.
-4. Выполните `git rev-list --left-right --count HEAD...'@{upstream}'`.
-5. Если локальная ветка содержит свои коммиты или история разошлась, остановитесь. Не используйте force-push.
-6. Если локальная ветка только отстаёт, выполните `git pull --ff-only`.
-7. Повторно проверьте, что текущая ветка соответствует задаче и имеет `0 ahead / 0 behind` относительно upstream.
+Для запрошенной синхронизации или публикации выполните fetch и проверьте upstream и расхождение истории. Fast-forward допустим, когда он сохраняет текущую работу. При конфликте или расхождении истории определите безопасный способ интеграции до изменения истории. Перенос между компьютерами регулирует `$route-codex-remote-projects`.
 
-Перед переходом на другой Mac завершите проверку, закоммитьте согласованные изменения и отправьте их в upstream. Не публикуйте private subscription, токены, ключи, Tailnet/SSH-параметры и machine-specific конфигурацию. Перед push проверьте `git diff --cached`.
+Commit и push выполняйте в пределах разрешения пользователя на текущую задачу. Перед публикацией проверьте staged diff, публикуемые refs и generated-артефакты на приватные данные по `AGENTS.local.md`.
 
 ## Падения CI
 
-- Если job этого репозитория падает, агент должен сразу найти и исправить причину без дополнительного подтверждения пользователя.
-- Агент должен обновить необходимые исходники, generated-артефакты, тесты и workflow, затем сделать commit/push и дождаться результата нового CI-запуска.
-- Агент не должен обходить проверки, ослаблять security controls, использовать force-push, раскрывать секреты или выполнять destructive-действия. Если исправление требует таких действий либо новых внешних прав, агент должен остановиться и запросить разрешение.
+При запросе на исправление CI найдите причину, исправьте необходимые исходники и зависимые артефакты, затем выполните релевантные проверки. Если публикация уже разрешена, сделайте commit/push и проверьте новый запуск CI. Само падение CI не расширяет полномочия на публикацию.
+
+Сохраняйте проверки и security controls. Действия с удалением данных, секретами или новыми внешними правами регулируются глобальными правилами полномочий.
 
 ## Источники истины
 - `shadowrocket.conf` — source of truth для порядка `[Rule]`, inline-правил, `[General]` и `[Proxy Group]` базового профиля.
@@ -69,47 +62,41 @@
 - `rules/`: часть списков поддерживается вручную, часть генерируется скриптами и коммитится в эту же ветку.
 - `modules/`: модули Shadowrocket. Не ломайте совместимость с существующими конфигами.
 - `scripts/`: вспомогательные утилиты; обновляйте README, если меняете публичный интерфейс скриптов.
-- `distillate/upstream`, `distillate/text`, `distillate/dat`, `distillate/summary.json`, `distillate/upstream/v2fly/ru_ipv4.txt`, `Amnezia/SR-DEFAULT-EXCLUDE.json`, `Amnezia/SR-DEFAULT-EXCLUDE.summary.json`, `HAPP/DEFAULT.*`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`, `cloudflare/potato-link/dist/destinations.js`: generated-артефакты; при изменении сборки обновляйте их вместе с кодом.
+- `distillate/upstream`, `distillate/text`, `distillate/dat`, `distillate/summary.json`, `HAPP/DEFAULT.*`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`, `cloudflare/potato-link/dist/destinations.js`: generated-артефакты; при изменении сборки обновляйте их вместе с кодом.
 - `clash_config.yaml`: generated-артефакт от `shadowrocket.conf` и Clash/Mihomo template-настроек; при изменении логики сборки обновляйте его вместе с кодом.
 
 ## Ownership файлов
-- Редактируются вручную: `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_whitelist.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `rules/adobe_telemetry_custom.list`, `rules/russia_extended.list`, `rules/voice_ports.list`, `modules/GFN-AM.module`, `modules/tailscale_tailnet.module`, `modules/wechat_direct.module`, `modules/tailscale_direct.module`.
-- Generated, не редактировать вручную: `clash_config.yaml`, `HAPP/DEFAULT.*`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/summary.json`, `distillate/upstream/v2fly/ru_ipv4.txt`, `Amnezia/SR-DEFAULT-EXCLUDE.json`, `Amnezia/SR-DEFAULT-EXCLUDE.summary.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/openai.list`, `rules/telegram.list`, `rules/whitelist_direct.list`, `rules/greylist_proxy.list`, `rules/anti_advertising*.list`.
+- Редактируются вручную: `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_whitelist.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `rules/russia_extended.list`, `rules/voice_ports.list`, `modules/GFN-AM.module`, `modules/tailscale_tailnet.module`, `modules/wechat_direct.module`, `modules/tailscale_direct.module`.
+- Generated, не редактировать вручную: `clash_config.yaml`, `HAPP/DEFAULT.*`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/summary.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/openai.list`, `rules/telegram.list`, `rules/whitelist_direct.list`, `rules/greylist_proxy.list`, `rules/anti_advertising*.list`.
 - Semi-generated: `modules/anti_advertising.module` хранит ручной заголовок, но `RULE-SET` на anti-ad chunks переписываются сборкой.
 
 ## Документация
-- При изменении поведения конфигов обновляйте README и указывайте, какие секции затронуты.
+- Обновляйте README, когда изменение поведения делает пользовательские инструкции неточными или требует нового действия пользователя.
 
 ## Правила изменений
 - Если нужно поменять содержимое generated `rules/*.list`, меняйте `distillate/manifest.json`, `distillate/overlays/*` или `distillate/filters/*`, а не итоговые списки.
 - Если меняется routing-логика, полезная всем, синхронизируйте её в `shadowrocket.conf` и `shadowrocket_custom.conf`, но не перетирайте custom-only поля из `[General]` и custom `policy-select-name`.
-- `shadowrocket_custom.conf`, `shadowrocket_whitelist.conf`, `modules/wechat_direct.module`, `rules/adobe_telemetry_custom.list` и GFN/NVIDIA-исключения по умолчанию считаются `custom-only`.
+- `shadowrocket_custom.conf` и `shadowrocket_whitelist.conf` относятся к `custom-only`; публичные сервисные модули поддерживаются как самостоятельные shared-артефакты.
 - Не запускайте `scripts/sync_lists.py` без явного запроса на refresh vendored upstream. Для локальной текстовой пересборки без сети используйте закешированные `distillate/upstream/*` и `python3 scripts/build_distillate.py --skip-compiled`. Без этого флага сборка загружает закреплённые Go-компиляторы и зависимости; её запускают отдельно для обновления `.dat`.
 - Если всё же нужен локальный sync, используйте `python3 scripts/sync_lists.py --no-pull`, чтобы не делать `git pull --rebase` автоматически.
 
 ## Каскад пересборки
+
+Применяйте к изменённым входам и их зависимым выходам. Текстовая правка описания или инструкции сама по себе не запускает каскад. Полная compiled-сборка следует правилам зависимостей; локальная текстовая пересборка использует `--skip-compiled` и cached upstream.
+
 - Изменили `shadowrocket.conf`: пересоберите `clash_config.yaml`, `HAPP/DEFAULT.*` и `INCY/*`.
-- Пересобрали `HAPP/*.DEEPLINK` или `INCY/*.DEEPLINK`: запустите `python3 scripts/build_potato_link_worker.py` и закоммитьте `cloudflare/potato-link/dist/destinations.js`.
+- Пересобрали `HAPP/*.DEEPLINK` или `INCY/*.DEEPLINK`: запустите `python3 scripts/build_potato_link_worker.py` и включите `cloudflare/potato-link/dist/destinations.js` в набор изменённых артефактов.
 - Изменили `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*` или vendored upstream в `distillate/upstream/*`: пересоберите `distillate/text/*`, `distillate/dat/*`, `distillate/summary.json`, generated `rules/*.list`, anti-ad module refs, `HAPP/*` и `INCY/*`.
 - Изменили `scripts/build_distillate.py`: проверьте, не затрагивает ли это `rules/*.list`, anti-ad chunking и `modules/anti_advertising*.module`.
-- Изменили `scripts/build_distillate.py` или `scripts/build_amnezia_routing.py`: пересоберите cached RU IPv4 и `Amnezia/SR-DEFAULT-EXCLUDE*.json`; summary должен явно показывать domain DIRECT правила, которые не представлены в IPv4.
 - Изменили набор generated outputs или build inputs: обновите `.github/workflows/*.yml` path-фильтры и списки `git add`.
 
 ## Тесты/проверки
-- Автоматические тесты обязательны: `python3 -m unittest discover -s tests -v` и `python3 -m compileall -q scripts tests`.
-- Считайте только tracked-тесты (`git ls-files 'tests/test_*.py'`); локальные ignored-проверки не включайте в отчёт CI.
-- Каждый тест должен владеть отдельным пользовательским контрактом, security/data-loss риском, fail-closed границей или межартефактной инвариантой.
-- Объединяйте табличные варианты одного поведения. Не дублируйте инварианту на нескольких уровнях без отдельного риска каждого уровня.
-- Не тестируйте константу ради константы, форматирование/документацию без исполняемого контракта, стандартную библиотеку или модель внешней программы, написанную внутри самого теста.
-- После изменения `shadowrocket.conf` запускайте:
-  - `python3 scripts/build_clash_config.py`
-  - `python3 scripts/build_happ_routing.py`
-  - `python3 scripts/build_incy_routing.py`
-- После изменения `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*` или vendored upstream запускайте:
-  - `python3 scripts/build_distillate.py`
-  - `python3 scripts/build_amnezia_routing.py`
-  - `python3 scripts/build_happ_routing.py`
-  - `python3 scripts/build_incy_routing.py`
-- Для отдельной проверки Amnezia: `python3 scripts/build_amnezia_routing.py`, затем проверьте JSON-массив `{ "hostname": "cidr-...invalid", "ip": "CIDR" }`, IPv4-only canonical CIDR и summary.
-- Если менялся weekly sync flow, отдельно проверяйте `python3 scripts/sync_lists.py --no-pull`.
-- При возможности указывайте ручные шаги проверки, например импорт конфига в Shadowrocket/Clash или проверку обновлённых generated-артефактов.
+
+- Выбирайте проверки по изменённому контракту. Для текста инструкций и документации проверьте смысл, ссылки и diff. Для модулей проверьте синтаксис, порядок, URL и связанные правила. Для Python запустите затронутые tracked-тесты и compileall изменённых модулей.
+- Полный `python3 -m unittest discover -s tests -v` и `python3 -m compileall -q scripts tests` выполняйте при изменениях общей сборочной логики, нескольких связанных контрактов или CI, требующего полного набора.
+- Каскад пересборки выше — единственный источник зависимостей. Проверьте воспроизводимость затронутых generated и semi-generated файлов: повторная сборка сохраняет результат и ручные заголовки, включая `#!url` модулей.
+- Считайте только tracked-тесты (`git ls-files 'tests/test_*.py'`); локальные ignored-проверки отделяйте от отчёта CI.
+- Каждый тест проверяет пользовательский контракт, security/data-loss риск, fail-closed границу или межартефактную инварианту. Объединяйте варианты одного поведения; повторение проверки требует отдельного риска.
+- Не тестируйте константы ради констант, стандартную библиотеку или модель внешней программы, написанную внутри самого теста.
+- Изменение weekly sync проверяйте локально на затронутом контракте. Запуск `scripts/sync_lists.py --no-pull` требует разрешённого refresh upstream, как указано в правилах изменений.
+- Проверку в приложении выполняйте, когда она нужна для подтверждения поведения и разрешена пользователем. В отчёте укажите фактические проверки и существенную оставшуюся неопределённость.
