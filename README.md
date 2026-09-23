@@ -107,7 +107,7 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/Amnezia/SR-DEFAU
 > `clash_config.yaml` больше не поддерживается вручную отдельно: он генерируется из
 > `shadowrocket.conf` через `scripts/build_clash_config.py`.
 > Для автопроверки серверов `proxy-providers.Main-Sub.health-check`, `proxy-groups.AUTO-SPEED`
-> и `proxy-groups.AUTO-STABILITY` используется `https://abs.twimg.com/favicon.ico`
+> и `proxy-groups.AUTO-STABILITY` используется `https://www.youtube.com/favicon.ico`
 > (`AUTO-SPEED`: интервал 180, tolerance 100; `AUTO-STABILITY`: интервал 780).
 
 1. **Скачайте Clash Verge Rev**:  
@@ -191,12 +191,14 @@ CDN; весь Tencent/QQ он не обходит.
 ### [Proxy Group]
 - **MANUAL-PROXY** — ручной выбор поддерживаемых узлов подписки без standalone `WL`.
 - **AUTO-SPEED** — `url-test`-группа для выбора самого быстрого живого узла из подписки:
-  фильтр принимает standalone `VLESS`, `TT`, `Naive`, `NV`, `MR`, `AWG`, `AWG2` и `AWG3.1` и исключает `Russia`, `Belarus`, `Ukraine` и standalone `WL`; `url=https://abs.twimg.com/favicon.ico`, `interval=180`, `tolerance=100`, `timeout=7`.
+  фильтр принимает standalone `VLESS`, `TT`, `Naive`, `NV`, `MR`, `AWG`, `AWG2` и `AWG3.1` и исключает `Russia`, `Belarus`, `Ukraine` и standalone `WL`; `url=https://www.youtube.com/favicon.ico`, `interval=180`, `tolerance=100`, `timeout=7`.
 - **AUTO-STABILITY** — `fallback`-группа для выбора первого живого узла в порядке подписки:
-  фильтр принимает standalone `VLESS`, `TT`, `Naive`, `NV`, `MR`, `AWG`, `AWG2` и `AWG3.1` и исключает `Russia`, `Belarus`, `Ukraine` и standalone `WL`; `url=https://abs.twimg.com/favicon.ico`, `interval=780`, `timeout=7`.
+  фильтр принимает standalone `VLESS`, `TT`, `Naive`, `NV`, `MR`, `AWG`, `AWG2` и `AWG3.1` и исключает `Russia`, `Belarus`, `Ukraine` и standalone `WL`; `url=https://www.youtube.com/favicon.ico`, `interval=780`, `timeout=7`.
 - **WL** — отдельная `select`-группа для узлов любого протокола со standalone `WL` (включая `WL-lte`), фильтр `(?i)\bWL\b`.
 - **PROXY** — Select-группа; по умолчанию выбран `AUTO-STABILITY`, доступны `MANUAL-PROXY`/`AUTO-SPEED`/`AUTO-STABILITY`/`WL`.
   В `AUTO-STABILITY` первичным считается первый живой узел в порядке уже фильтрованной подписки.
+
+Тест загружает иконку с `www.youtube.com`; он проверяет доступность этого адреса, но не воспроизведение видео с `googlevideo.com`.
 
 ### [Rule]
 Порядок важен: правила обрабатываются сверху вниз.
@@ -325,6 +327,23 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_adver
 зафиксируйте неопределённость и проверьте поведение на минимальном примере в приложении.
 Не переносите семантику Clash, HAPP или INCY на Shadowrocket без проверки.
 
+## Сервисы Apple через прокси
+
+Модуль `Apple Proxy` направляет Apple Music, App Store, iCloud, push-уведомления,
+обновления и опубликованные Apple IP-диапазоны через выбранную политику `PROXY`.
+
+Добавьте в **Config → Modules → Add** ссылку и включите модуль:
+
+```text
+https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/apple_proxy.module
+```
+
+Установите глобальную маршрутизацию **Config / Конфигурация**. Расположите
+`15_01 · Apple Proxy` выше GFN, других модулей с пересекающимися DIRECT-правилами
+и блокировки рекламы. Доступность сервисов зависит от выбранного прокси-узла.
+
+Основной источник доменов и сетей — [требования Apple](https://support.apple.com/en-us/101555).
+
 ## Порядок модулей
 
 Префиксы в `#!name` обозначают уровень и порядок внутри уровня. Выставьте этот
@@ -334,6 +353,7 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_adver
 |---|---|---|
 | 10_01 · Tailscale Direct | `modules/tailscale_direct.module` | Официальный клиент Tailscale |
 | 10_02 · Tailscale Tailnet | `modules/tailscale_tailnet.module` | Встроенный Tailscale Shadowrocket |
+| 15_01 · Apple Proxy | `modules/apple_proxy.module` | Сервисы Apple через PROXY |
 | 20_01 · GFN Direct | `modules/GFN-AM.module` | NVIDIA/GFN и связанные исключения DIRECT |
 | 20_02 · WeChat Direct | `modules/wechat_direct.module` | WeChat и его CDN через DIRECT |
 | 20_04 · Twitch Video Direct | `modules/twitch_video_direct.module` | Видеосерверы Twitch через DIRECT; сайт и API по основному конфигу |

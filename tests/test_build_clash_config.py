@@ -61,7 +61,7 @@ class BuildClashConfigTests(unittest.TestCase):
 
         self.assertIn("    type: url-test", speed_group)
         self.assertIn("    type: fallback", stability_group)
-        self.assertIn('    url: "https://abs.twimg.com/favicon.ico"', speed_group)
+        self.assertIn('    url: "https://www.youtube.com/favicon.ico"', speed_group)
         self.assertIn("    interval: 180", speed_group)
         self.assertIn("    tolerance: 100", speed_group)
         for group in (speed_group, stability_group):

@@ -1,0 +1,33 @@
+#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/apple_proxy.module
+#!name=15_01 · Apple Proxy
+#!desc=Сервисы Apple через PROXY.
+
+[Rule]
+DOMAIN-SUFFIX,apple,PROXY
+DOMAIN-SUFFIX,apple.com,PROXY
+DOMAIN-SUFFIX,apple.com.cn,PROXY
+DOMAIN-SUFFIX,aaplimg.com,PROXY
+DOMAIN-SUFFIX,cdn-apple.com,PROXY
+DOMAIN-SUFFIX,apple-cloudkit.com,PROXY
+DOMAIN-SUFFIX,apple-livephotoskit.com,PROXY
+DOMAIN-SUFFIX,apple-dns.net,PROXY
+DOMAIN-SUFFIX,apple-mapkit.com,PROXY
+DOMAIN-SUFFIX,axm-usercontent-apple.com,PROXY
+DOMAIN-SUFFIX,appleschoolcontent.com,PROXY
+DOMAIN-SUFFIX,apzones.com,PROXY
+DOMAIN-SUFFIX,icloud.com,PROXY
+DOMAIN-SUFFIX,icloud.com.cn,PROXY
+DOMAIN-SUFFIX,icloud-content.com,PROXY
+DOMAIN-SUFFIX,me.com,PROXY
+DOMAIN-SUFFIX,mac.com,PROXY
+DOMAIN-SUFFIX,itunes.com,PROXY
+DOMAIN-SUFFIX,itunes.net,PROXY
+DOMAIN-SUFFIX,mzstatic.com,PROXY
+DOMAIN,appldnld.apple.com.edgesuite.net,PROXY
+DOMAIN,apple-relay.cloudflare.com,PROXY
+DOMAIN,apple-relay.fastly-edge.com,PROXY
+DOMAIN,cp4.cloudflare.com,PROXY
+IP-CIDR,17.0.0.0/8,PROXY,no-resolve
+IP-CIDR6,2403:300::/32,PROXY,no-resolve
+IP-CIDR6,2620:149::/32,PROXY,no-resolve
+IP-CIDR6,2a01:b740::/32,PROXY,no-resolve
