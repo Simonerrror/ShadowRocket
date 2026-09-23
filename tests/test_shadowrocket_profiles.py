@@ -18,7 +18,7 @@ EXPECTED_MANUAL_FILTER = r"(?i)^(?!.*\bWL\b)(?!.*\bSS\b).*$"
 EXPECTED_AUTO_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\b(?:VLESS|TT|Naive|NV|MR|AWG(?:2|3\.1)?)\b.*$"
 EXPECTED_WL_FILTER = r"(?i)\bWL\b"
 EXPECTED_PROVENANCE = [
-    "# Config-Version: 2026.08.26.1",
+    "# Config-Version: 2026.09.23.1",
     "# Maintainer: Simonerrror; contact: https://t.me/AIDHDaily",
     "# README: https://github.com/Simonerrror/ShadowRocket#readme",
 ]
