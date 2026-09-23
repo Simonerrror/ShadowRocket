@@ -141,8 +141,8 @@ proxy-groups:
   - name: PROXY
     type: select
     proxies:
-      - MANUAL-PROXY
       - AUTO-SPEED
+      - MANUAL-PROXY
       - AUTO-STABILITY
       - WL
 
