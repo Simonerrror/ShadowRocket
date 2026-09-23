@@ -237,7 +237,7 @@ def main(argv: list[str] | None = None) -> int:
     write_text_if_changed(out_dir / "DEFAULT.DEEPLINK", default_deeplink + "\n")
 
     ru_profile = build_profile(
-        **common,
+        **{**common, "route_order": "block-direct-proxy"},
         profile_name=RU_PROFILE_NAME,
         global_proxy="false",
         direct_geosite_tag=None,

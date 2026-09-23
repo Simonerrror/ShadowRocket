@@ -16,6 +16,7 @@
   "DnsHosts": {},
   "RouteOrder": "block-proxy-direct",
   "DirectSites": [
+    "domain:saby.ru",
     "geosite:sr-direct"
   ],
   "DirectIp": [

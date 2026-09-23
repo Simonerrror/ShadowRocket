@@ -123,7 +123,7 @@ class HappRuVpnProfileTests(unittest.TestCase):
             data=data,
             geodata_base="https://example.test/dat",
             last_updated="123",
-            route_order="block-proxy-direct",
+            route_order="block-direct-proxy",
             remote_dns_ip="8.8.8.8",
             remote_dns_domain="https://8.8.8.8/dns-query",
             domestic_dns_ip="77.88.8.8",
@@ -144,7 +144,8 @@ class HappRuVpnProfileTests(unittest.TestCase):
         self.assertEqual(profile["DomesticDns"], "77.88.8.8")
         self.assertEqual(profile["DomesticDNSIP"], "77.88.8.8")
         self.assertEqual(profile["DomesticDNSDomain"], "https://77.88.8.8/dns-query")
-        self.assertEqual(profile["DirectSites"], [])
+        self.assertEqual(profile["DirectSites"], ["domain:saby.ru"])
+        self.assertEqual(profile["RouteOrder"], "block-direct-proxy")
         self.assertEqual(profile["DirectIp"], ["127.0.0.1"])
         self.assertEqual(profile["ProxySites"], ["geosite:category-ru"])
         self.assertEqual(profile["ProxyIp"], ["geoip:ru"])

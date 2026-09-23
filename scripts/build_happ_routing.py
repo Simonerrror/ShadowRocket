@@ -316,7 +316,7 @@ def build_profile(
     )
     proxy_ip = route_tag("geoip", proxy_geoip_tag, bool(data.proxy.cidrs))
     block_ip = ["geoip:sr-block"] if data.block.cidrs else []
-    direct_sites = route_tag("geosite", direct_geosite_tag, bool(data.direct.site_rules))
+    direct_sites = ["domain:saby.ru"] + route_tag("geosite", direct_geosite_tag, bool(data.direct.site_rules))
     proxy_sites = route_tag("geosite", proxy_geosite_tag, bool(data.proxy.site_rules))
     block_sites = [f"geosite:{block_geosite_tag}"] if data.block.site_rules and block_geosite_tag else []
 
@@ -411,7 +411,7 @@ def main() -> int:
         data=data,
         geodata_base=geodata_base,
         last_updated=build_stamp,
-        route_order=args.route_order,
+        route_order="block-direct-proxy",
         remote_dns_ip=remote_dns_ip,
         remote_dns_domain=args.remote_dns_domain,
         domestic_dns_ip=args.domestic_dns_ip,
