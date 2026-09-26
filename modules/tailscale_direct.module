@@ -1,4 +1,5 @@
 #!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/tailscale_direct.module
+#!icon=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/icons/tailscale_direct.png
 #!name=10_01 · Tailscale Direct
 #!desc=Use with the official Tailscale client. Enable either this module or Tailscale Tailnet, never both.
 

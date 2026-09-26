@@ -1,4 +1,5 @@
 #!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/tailscale_tailnet.module
+#!icon=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/icons/tailscale_tailnet.png
 #!name=10_02 · Tailscale Tailnet
 #!desc=Use the built-in Tailscale tunnel. Enable either this module or Tailscale Direct, never both.
 
