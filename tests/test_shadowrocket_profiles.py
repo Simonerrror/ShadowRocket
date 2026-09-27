@@ -18,7 +18,7 @@ EXPECTED_MANUAL_FILTER = r"(?i)^(?!.*\bWL\b)(?!.*\bSS\b).*$"
 EXPECTED_AUTO_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\b(?:VLESS|TT|Naive|NV|MR|AWG(?:2|3\.1)?)\b.*$"
 EXPECTED_WL_FILTER = r"(?i)\bWL\b"
 EXPECTED_PROVENANCE = [
-    "# Config-Version: 2026.09.23.2",
+    "# Config-Version: 2026.09.27.1",
     "# Maintainer: Simonerrror; contact: https://t.me/AIDHDaily",
     "# README: https://github.com/Simonerrror/ShadowRocket#readme",
 ]
@@ -199,7 +199,7 @@ class ShadowrocketProfilesTests(unittest.TestCase):
             with self.subTest(profile="whitelist", key=key):
                 self.assertEqual(custom_general[key], whitelist_general[key])
 
-    def test_gfn_real_ip_is_owned_by_module(self) -> None:
+    def test_gfn_and_ru_real_ip_settings_are_separate(self) -> None:
         module = REPO_ROOT / "modules" / "GFN-AM.module"
         self.assertEqual(
             "*.nvidiagrid.net,*.geforcenow.com,*.nvidia.com",
@@ -207,7 +207,8 @@ class ShadowrocketProfilesTests(unittest.TestCase):
         )
         base = key_values(BASE_CONF, "General")
         custom = key_values(CUSTOM_CONF, "General")
-        self.assertNotIn("always-real-ip", custom)
+        self.assertEqual("*.ru,*.su,*.рф", base["always-real-ip"])
+        self.assertEqual(base["always-real-ip"], custom["always-real-ip"])
         self.assertEqual(
             {k: v for k, v in base.items() if k != "update-url"},
             {k: v for k, v in custom.items() if k != "update-url"},
@@ -217,7 +218,7 @@ class ShadowrocketProfilesTests(unittest.TestCase):
         base_general = key_values(BASE_CONF, "General")
         base_content = BASE_CONF.read_text(encoding="utf-8")
 
-        self.assertNotIn("always-real-ip", base_general)
+        self.assertEqual("*.ru,*.su,*.рф", base_general["always-real-ip"])
         self.assertNotIn("geforcenow", base_content)
         self.assertNotIn("nvidiagrid", base_content)
 
