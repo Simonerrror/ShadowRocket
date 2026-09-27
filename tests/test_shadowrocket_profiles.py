@@ -209,9 +209,10 @@ class ShadowrocketProfilesTests(unittest.TestCase):
         custom = key_values(CUSTOM_CONF, "General")
         self.assertEqual("*.ru,*.su,*.рф", base["always-real-ip"])
         self.assertEqual(base["always-real-ip"], custom["always-real-ip"])
+        self.assertEqual(base["update-url"], custom["update-url"])
         self.assertEqual(
-            {k: v for k, v in base.items() if k != "update-url"},
-            {k: v for k, v in custom.items() if k != "update-url"},
+            BASE_CONF.read_text(encoding="utf-8").splitlines()[1:],
+            CUSTOM_CONF.read_text(encoding="utf-8").splitlines()[1:],
         )
 
     def test_base_keeps_custom_only_gfn_exceptions_out(self) -> None:
