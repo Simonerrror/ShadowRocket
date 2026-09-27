@@ -1,15 +1,9 @@
 #!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/twitch_video_direct.module
 #!icon=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/icons/twitch_video_direct.png
-#!name=20_04 · Twitch Direct
-#!desc=Пускает сайт, API, чат и видеопотоки Twitch напрямую.
+#!name=20_04 · Twitch Video Direct
+#!desc=Пускает видеосерверы Twitch напрямую. Сайт и API следуют правилам основного конфига.
 
 [Rule]
-DOMAIN-SUFFIX,ext-twitch.tv,DIRECT
-DOMAIN-SUFFIX,jtvnw.net,DIRECT
+DOMAIN-SUFFIX,hls.ttvnw.net,DIRECT
 DOMAIN-SUFFIX,live-video.net,DIRECT
-DOMAIN-SUFFIX,ttvnw.net,DIRECT
-DOMAIN-SUFFIX,twitch-ext.rootonline.de,DIRECT
-DOMAIN-SUFFIX,twitch.tv,DIRECT
-DOMAIN-SUFFIX,twitchcdn.net,DIRECT
-DOMAIN-SUFFIX,twitchsvc.net,DIRECT
 DOMAIN-KEYWORD,video-weaver,DIRECT
