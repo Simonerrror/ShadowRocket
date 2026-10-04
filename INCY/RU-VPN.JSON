@@ -12,7 +12,7 @@
   "DomesticDNSIP": "77.88.8.8",
   "Geoipurl": "https://github.com/Simonerrror/ShadowRocket/releases/download/incy-geodata/geoip.dat",
   "Geositeurl": "https://github.com/Simonerrror/ShadowRocket/releases/download/incy-geodata/geosite.dat",
-  "LastUpdated": "1790503122",
+  "LastUpdated": "1791109984",
   "DnsHosts": {},
   "RouteOrder": "block-direct-proxy",
   "DirectSites": [
