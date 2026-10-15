@@ -51,25 +51,22 @@ class BuildClashConfigTests(unittest.TestCase):
         self.assertNotIn("    filter:", manual_group)
         self.assertNotIn("unsupported proxy-group option use=true", "\n".join(warnings))
 
-    def test_auto_speed_uses_url_test_and_auto_stability_uses_fallback(self) -> None:
+    def test_auto_speed_is_the_only_automatic_proxy_group(self) -> None:
         content, _warnings = build_config(DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL)
         self.assertIn("  - name: AUTO-SPEED", content)
-        self.assertIn("  - name: AUTO-STABILITY", content)
+        self.assertNotIn("AUTO-STABILITY", content)
         speed_group = content.split("  - name: AUTO-SPEED", 1)[1].split("  - name:", 1)[0]
-        stability_group = content.split("  - name: AUTO-STABILITY", 1)[1].split("  - name:", 1)[0]
         proxy_group = content.split("  - name: PROXY", 1)[1].split("# 6. RULES", 1)[0]
 
         self.assertIn("    type: url-test", speed_group)
-        self.assertIn("    type: fallback", stability_group)
         self.assertIn('    url: "https://www.youtube.com/favicon.ico"', speed_group)
         self.assertIn("    interval: 180", speed_group)
         self.assertIn("    tolerance: 100", speed_group)
-        for group in (speed_group, stability_group):
+        for group in (speed_group,):
             self.assertIn(f"    filter: {yaml_quote(EXPECTED_MIHOMO_AUTO_FILTER)}", group)
             self.assertIn(f"    exclude-filter: {yaml_quote(EXPECTED_MIHOMO_AUTO_EXCLUDE_FILTER)}", group)
         self.assertIn("      - MANUAL-PROXY", proxy_group)
         self.assertIn("      - AUTO-SPEED", proxy_group)
-        self.assertIn("      - AUTO-STABILITY", proxy_group)
         self.assertIn("      - WL", proxy_group)
         self.assertNotIn("      - GOOGLE", proxy_group)
         self.assertNotIn("      - DIRECT", proxy_group)
@@ -84,7 +81,7 @@ class BuildClashConfigTests(unittest.TestCase):
             "Germany DRAWG",
             "Germany AWG3.10",
         )
-        for group in (speed_group, stability_group):
+        for group in (speed_group,):
             filter_line = next(line for line in group.splitlines() if line.startswith("    filter: "))
             exclude_line = next(line for line in group.splitlines() if line.startswith("    exclude-filter: "))
             generated_filter = re.compile(json.loads(filter_line.split(": ", 1)[1]))

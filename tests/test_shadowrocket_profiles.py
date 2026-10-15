@@ -18,7 +18,7 @@ EXPECTED_MANUAL_FILTER = r"(?i)^(?!.*\bWL\b)(?!.*\bSS\b).*$"
 EXPECTED_AUTO_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\b(?:VLESS|TT|Naive|NV|MR|AWG(?:2|3\.1)?)\b.*$"
 EXPECTED_WL_FILTER = r"(?i)\bWL\b"
 EXPECTED_PROVENANCE = [
-    "# Config-Version: 2026.09.27.1",
+    "# Config-Version: 2026.10.15.1",
     "# Maintainer: Simonerrror; contact: https://t.me/AIDHDaily",
     "# README: https://github.com/Simonerrror/ShadowRocket#readme",
 ]
@@ -92,7 +92,7 @@ class ShadowrocketProfilesTests(unittest.TestCase):
             lines = path.read_text(encoding="utf-8").splitlines()
             general_index = lines.index("[General]")
             with self.subTest(path=path.name):
-                self.assertEqual(EXPECTED_PROVENANCE, lines[general_index + 1 : general_index + 4])
+                self.assertEqual(EXPECTED_PROVENANCE, lines[general_index - 3 : general_index])
 
     def test_proxy_groups_apply_each_subscription_scope(self) -> None:
         profiles = (BASE_CONF, CUSTOM_CONF)
@@ -102,17 +102,17 @@ class ShadowrocketProfilesTests(unittest.TestCase):
             for key, expected_filter in (
                 ("MANUAL-PROXY", EXPECTED_MANUAL_FILTER),
                 ("AUTO-SPEED", EXPECTED_AUTO_FILTER),
-                ("AUTO-STABILITY", EXPECTED_AUTO_FILTER),
                 ("WL", EXPECTED_WL_FILTER),
             ):
                 with self.subTest(path=path.name, key=key):
                     actual_filter = groups[key].partition("policy-regex-filter=")[2].split(",", 1)[0]
                     self.assertEqual(expected_filter, actual_filter)
 
+            self.assertNotIn("AUTO-STABILITY", groups)
             self.assertNotIn("GOOGLE", groups)
             self.assertTrue(groups["WL"].startswith("select,"))
             self.assertEqual(
-                ["select", "AUTO-SPEED", "MANUAL-PROXY", "AUTO-STABILITY", "WL", "policy-select-name=AUTO-SPEED"],
+                ["select", "AUTO-SPEED", "MANUAL-PROXY", "WL", "policy-select-name=AUTO-SPEED"],
                 groups["PROXY"].split(","),
             )
 

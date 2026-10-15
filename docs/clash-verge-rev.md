@@ -2,9 +2,9 @@
 
 > `clash_config.yaml` больше не поддерживается вручную отдельно: он генерируется из
 > `shadowrocket.conf` через `scripts/build_clash_config.py`.
-> Для автопроверки серверов `proxy-providers.Main-Sub.health-check`, `proxy-groups.AUTO-SPEED`
-> и `proxy-groups.AUTO-STABILITY` используется `https://www.youtube.com/favicon.ico`
-> (`AUTO-SPEED`: интервал 180, tolerance 100; `AUTO-STABILITY`: интервал 780).
+> Для автопроверки серверов `proxy-providers.Main-Sub.health-check` и `proxy-groups.AUTO-SPEED`
+> используется `https://www.youtube.com/favicon.ico`. Интервал проверки провайдера — 780 секунд;
+> для `AUTO-SPEED` — 180 секунд, tolerance — 100.
 
 1. **Скачайте Clash Verge Rev**: [официальные выпуски](https://github.com/clash-verge-rev/clash-verge-rev/releases).
    Установите приложение.

@@ -123,15 +123,6 @@ proxy-groups:
     interval: 180
     tolerance: 100
 
-  - name: AUTO-STABILITY
-    type: fallback
-    use:
-      - Main-Sub
-    filter: "(?i)\\b(?:VLESS|TT|Naive|NV|MR|AWG(?:2|3\\.1)?)\\b"
-    exclude-filter: "(?i)Russia|Belarus|Ukraine|\\bWL\\b"
-    url: "https://www.youtube.com/favicon.ico"
-    interval: 780
-
   - name: WL
     type: select
     use:
@@ -143,7 +134,6 @@ proxy-groups:
     proxies:
       - AUTO-SPEED
       - MANUAL-PROXY
-      - AUTO-STABILITY
       - WL
 
 # 6. RULES

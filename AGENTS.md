@@ -53,6 +53,7 @@ Commit и push выполняйте в пределах разрешения п�
 - `shadowrocket_whitelist.conf` — отдельный `custom-only` whitelist-профиль: direct allowlist/RU идут напрямую, весь остальной трафик идёт через один выбранный `PROXY`.
 
 ## Форматирование и стиль
+- Когда меняете заголовок профиля, размещайте служебные комментарии перед `[General]`; комментарии в `[Rule]` пишите по-русски.
 - Используйте LF и UTF-8.
 - В конфигурациях (`shadowrocket.conf`, `shadowrocket_custom.conf`, `clash_config.yaml`) не меняйте секции местами и не переставляйте блоки.
 - `clash_config.yaml` должен пересобираться из `shadowrocket.conf` через `scripts/build_clash_config.py`, а не поддерживаться вручную параллельно.

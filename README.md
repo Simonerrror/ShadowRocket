@@ -11,7 +11,7 @@
    ```
 
 2. Добавьте свою подписку на серверы или локальные серверы. Для ссылки на подписку используйте шаблон `shadowrocket://add/SUBSCRIPTION_URL`: замените `SUBSCRIPTION_URL` полным HTTPS-адресом своей подписки.
-3. Включите конфиг и выберите группу `PROXY`. По умолчанию она использует `AUTO-STABILITY`.
+3. Включите конфиг и выберите группу `PROXY`. По умолчанию она использует `AUTO-SPEED`.
 
 [Ссылка для импорта конфига](https://potato-link.motivato-potato.workers.dev/sr/config). Если встроенный браузер мессенджера не открывает Shadowrocket, откройте её в Safari.
 
@@ -19,10 +19,9 @@
 
 - `MANUAL-PROXY` — ручной выбор серверов без отдельных меток `WL` и `SS` в имени.
 - `AUTO-SPEED` — выбирает самый быстрый доступный сервер.
-- `AUTO-STABILITY` — выбирает первый доступный сервер в порядке списка.
 - `WL` — отдельная группа для серверов с самостоятельной меткой `WL` в имени.
 
-Автоматические группы отбирают имена с отдельными метками `VLESS`, `TT`, `Naive`, `NV`, `MR`, `AWG`, `AWG2` или `AWG3.1`. Имена с `Russia`, `Belarus`, `Ukraine` или самостоятельной меткой `WL` исключаются. Если добавляете сервер вручную, укажите в его имени отдельную метку: `TT` для TrustTunnel, `NV` для Naive, `MR` для Mieru, `AWG` для AmneziaWG. Например: `TT Мой сервер`. Затем проверьте в Shadowrocket, появился ли локальный сервер в нужной группе.
+Группа `AUTO-SPEED` отбирает имена с отдельными метками `VLESS`, `TT`, `Naive`, `NV`, `MR`, `AWG`, `AWG2` или `AWG3.1`. Имена с `Russia`, `Belarus`, `Ukraine` или самостоятельной меткой `WL` исключаются. Если добавляете сервер вручную, укажите в его имени отдельную метку: `TT` для TrustTunnel, `NV` для Naive, `MR` для Mieru, `AWG` для AmneziaWG. Например: `TT Мой сервер`. Затем проверьте в Shadowrocket, появился ли локальный сервер в нужной группе.
 
 ## Дополнения
 
@@ -41,17 +40,14 @@
 - Основной и custom-профиль используют общий DNS/skip/bypass каркас.
 - GFN/NVIDIA `always-real-ip` остаётся custom-only и не переносится в основной профиль.
 - `update-url` указывает на конфиг в репозитории.
-- Каждый публикуемый Shadowrocket-профиль содержит `Config-Version` сразу после `[General]`. Формат версии: `YYYY.MM.DD.N`, где `N` — номер ревизии за день.
+- Каждый публикуемый Shadowrocket-профиль содержит `Config-Version`, сведения о сопровождающем и ссылку на README перед `[General]`. Формат версии: `YYYY.MM.DD.N`, где `N` — номер ревизии за день.
 
 ### [Proxy Group]
 - **MANUAL-PROXY** — ручной выбор поддерживаемых узлов подписки без standalone `WL`.
 - **AUTO-SPEED** — `url-test`-группа для выбора самого быстрого живого узла из подписки:
   фильтр принимает standalone `VLESS`, `TT`, `Naive`, `NV`, `MR`, `AWG`, `AWG2` и `AWG3.1` и исключает `Russia`, `Belarus`, `Ukraine` и standalone `WL`; `url=https://www.youtube.com/favicon.ico`, `interval=180`, `tolerance=100`, `timeout=7`.
-- **AUTO-STABILITY** — `fallback`-группа для выбора первого живого узла в порядке подписки:
-  фильтр принимает standalone `VLESS`, `TT`, `Naive`, `NV`, `MR`, `AWG`, `AWG2` и `AWG3.1` и исключает `Russia`, `Belarus`, `Ukraine` и standalone `WL`; `url=https://www.youtube.com/favicon.ico`, `interval=780`, `timeout=7`.
 - **WL** — отдельная `select`-группа для узлов любого протокола со standalone `WL` (включая `WL-lte`), фильтр `(?i)\bWL\b`.
-- **PROXY** — Select-группа; по умолчанию выбран `AUTO-STABILITY`, доступны `MANUAL-PROXY`/`AUTO-SPEED`/`AUTO-STABILITY`/`WL`.
-  В `AUTO-STABILITY` первичным считается первый живой узел в порядке уже фильтрованной подписки.
+- **PROXY** — Select-группа; по умолчанию выбран `AUTO-SPEED`, доступны `AUTO-SPEED`/`MANUAL-PROXY`/`WL`.
 
 Тест загружает иконку с www.youtube.com; он проверяет доступность этого адреса, но не воспроизведение видео с googlevideo.com.
 
