@@ -26,7 +26,6 @@
 ## Дополнения
 
 - [Модули Shadowrocket](docs/shadowrocket-modules.md) — Apple, GFN, Tailscale, WeChat и блокировка рекламы; там же порядок включения.
-- [Аварийный whitelist-профиль](shadowrocket_whitelist.conf) — отдельный конфиг с маршрутизацией через один выбранный `PROXY`.
 - [Clash Verge Rev](docs/clash-verge-rev.md) — настройка Windows-клиента.
 - [INCY](INCY/README.md) — профили и ссылки для импорта; пользователям HAPP рекомендуется перейти на INCY.
 - Поддержка HAPP завершена. Для готовой маршрутизации используйте INCY.

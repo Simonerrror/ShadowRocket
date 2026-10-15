@@ -7,7 +7,6 @@
 | `shadowrocket.conf` | Основной конфиг для Shadowrocket |
 | `shadowrocket_custom.conf` | Прежний адрес профиля; новые установки используют основной конфиг |
 | `clash_config.yaml` | Generated-конфиг для Clash Verge Rev |
-| `shadowrocket_whitelist.conf` | Custom-only аварийный whitelist-профиль: direct allowlist/RU напрямую, всё остальное через один `PROXY` |
 | `INCY/DEFAULT.*`, `INCY/RU-VPN.*` | Generated routing-профили и `incy://` deeplink для INCY |
 | `distillate/` | Канонический manifest, overlays и generated артефакты |
 | `rules/` | Вручную поддерживаемые и generated consumer-списки |
@@ -15,7 +14,7 @@
 | `scripts/` | Вспомогательные скрипты |
 
 Практическое правило сопровождения:
-- вручную редактируются `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_whitelist.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `modules/GFN-AM.module`, `modules/tailscale_tailnet.module`, `modules/wechat_direct.module`, `modules/tailscale_direct.module`;
+- вручную редактируются `shadowrocket.conf`, `shadowrocket_custom.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `modules/GFN-AM.module`, `modules/tailscale_tailnet.module`, `modules/wechat_direct.module`, `modules/tailscale_direct.module`;
 - generated-артефакты (`clash_config.yaml`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/summary.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/openai.list`, `rules/telegram.list`, `rules/whitelist_direct.list`, `rules/torrent_block.list`, `rules/greylist_proxy.list`, `rules/anti_advertising.list`, `rules/anti_advertising*.[0-9][0-9].list`) не поддерживаются вручную;
 - `modules/anti_advertising.module` semi-generated: ручной заголовок сохраняется, а ссылки на anti-ad chunks переписываются сборкой.
 - Tailscale вынесен из общих профилей в отдельный модуль `modules/tailscale_tailnet.module`. Модуль использует встроенную политику `TAILSCALE`; `100.64.0.0/10` не добавляется в `tun-excluded-routes`.
@@ -82,7 +81,7 @@ Go и сетевого доступа; новые зависимости про�
 
 Политика изменений:
 - Изменение групп `MANUAL-PROXY`, `WL` и auto-фильтра — **shared**: синхронизировано в `shadowrocket.conf` и `shadowrocket_custom.conf`; custom-only поля `[General]` сохранены.
-- `shadowrocket_custom.conf`, `shadowrocket_whitelist.conf` считаются `custom-only`.
+- `shadowrocket_custom.conf` считается `custom-only`.
 - Если улучшение полезно всем, его нужно переносить и в основной конфиг, и в кастомные файлы.
 - При изменении generated `rules/*.list` меняйте `distillate/manifest.json`, `distillate/overlays/*` или `distillate/filters/*`, а не итоговые generated-файлы.
 - При изменении `shadowrocket.conf` пересобирайте `clash_config.yaml`, `INCY/*`.

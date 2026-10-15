@@ -7,7 +7,6 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 BASE_CONF = REPO_ROOT / "shadowrocket.conf"
 CUSTOM_CONF = REPO_ROOT / "shadowrocket_custom.conf"
-WHITELIST_CONF = REPO_ROOT / "shadowrocket_whitelist.conf"
 TORRENT_DOMAINS = REPO_ROOT / "distillate" / "text" / "domain" / "motivato_torrent.txt"
 SR_DIRECT_DOMAINS = REPO_ROOT / "distillate" / "text" / "domain" / "sr-direct.txt"
 SR_BLOCK_DOMAINS = REPO_ROOT / "distillate" / "text" / "domain" / "sr-block.txt"
@@ -88,7 +87,7 @@ class ShadowrocketProfilesTests(unittest.TestCase):
         block_ips = set((REPO_ROOT / "distillate/text/ip/sr-block.txt").read_text().splitlines())
         self.assertTrue(torrent_ips)
         self.assertLessEqual(torrent_ips, block_ips)
-        for path in (BASE_CONF, CUSTOM_CONF, WHITELIST_CONF):
+        for path in (BASE_CONF, CUSTOM_CONF):
             with self.subTest(path=path.name):
                 self.assertEqual(
                     "RULE-SET,https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/torrent_block.list,REJECT",
@@ -115,7 +114,7 @@ class ShadowrocketProfilesTests(unittest.TestCase):
         self.assertEqual(expected, actual)
 
     def test_published_profiles_show_version_maintainer_and_readme(self) -> None:
-        for path in (BASE_CONF, CUSTOM_CONF, WHITELIST_CONF):
+        for path in (BASE_CONF, CUSTOM_CONF):
             lines = path.read_text(encoding="utf-8").splitlines()
             general_index = lines.index("[General]")
             with self.subTest(path=path.name):
@@ -211,21 +210,10 @@ class ShadowrocketProfilesTests(unittest.TestCase):
     def test_profiles_keep_shared_dns_contracts(self) -> None:
         base_general = key_values(BASE_CONF, "General")
         custom_general = key_values(CUSTOM_CONF, "General")
-        whitelist_general = key_values(WHITELIST_CONF, "General")
 
         self.assertEqual("9.9.9.9, 149.112.112.112, 77.88.8.8", base_general["dns-server"])
         self.assertEqual(base_general["dns-server"], custom_general["dns-server"])
         self.assertEqual(base_general["fallback-dns-server"], custom_general["fallback-dns-server"])
-        for key in (
-            "dns-server",
-            "fallback-dns-server",
-            "dns-direct-system",
-            "dns-direct-fallback-proxy",
-            "hijack-dns",
-        ):
-            with self.subTest(profile="whitelist", key=key):
-                self.assertEqual(custom_general[key], whitelist_general[key])
-
     def test_gfn_and_ru_real_ip_settings_are_separate(self) -> None:
         module = REPO_ROOT / "modules" / "GFN-AM.module"
         self.assertEqual(
@@ -259,7 +247,7 @@ class ShadowrocketProfilesTests(unittest.TestCase):
     def test_tailscale_specific_rules_stay_in_module(self) -> None:
         profile_contents = "\n".join(
             path.read_text(encoding="utf-8")
-            for path in (BASE_CONF, CUSTOM_CONF, WHITELIST_CONF)
+            for path in (BASE_CONF, CUSTOM_CONF)
         )
         module_content = TAILSCALE_MODULE.read_text(encoding="utf-8")
         module_rules = section_lines(TAILSCALE_MODULE, "Rule")
