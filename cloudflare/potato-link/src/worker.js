@@ -43,12 +43,7 @@ export default {
     }
     if (env?.ASSETS && !PATHS.has(pathname) &&
         (request.method === "GET" || request.method === "HEAD")) {
-      const assetURL = new URL(request.url);
-      if (pathname === "/") {
-        assetURL.pathname = "/index.html";
-
-      }
-      return env.ASSETS.fetch(new Request(assetURL, request));
+      return env.ASSETS.fetch(request);
     }
     const destination = PATHS.get(new URL(request.url).pathname);
     if (destination === undefined) {

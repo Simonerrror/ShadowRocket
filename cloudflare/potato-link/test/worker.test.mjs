@@ -152,6 +152,6 @@ test("unsupported methods return 405 on a known path", async () => {
   }}};
   const response = await worker.fetch(new Request("https://potato-link.example/"), env);
   assert.equal(await response.text(), "hub");
-  assert.deepEqual(seen, ["/index.html"]);
+  assert.deepEqual(seen, ["/"]);
   assert.equal((await request("/ru")).status, 404);
 });
