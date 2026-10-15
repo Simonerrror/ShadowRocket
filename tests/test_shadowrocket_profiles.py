@@ -49,6 +49,15 @@ def key_values(path: Path, section: str) -> dict[str, str]:
 
 
 class ShadowrocketProfilesTests(unittest.TestCase):
+    def test_googlevideo_uses_geoip_exception_list_before_ru_direct(self) -> None:
+        self.assertIn("DOMAIN-SUFFIX,googlevideo.com",
+                      (REPO_ROOT / "rules/greylist_proxy.list").read_text().splitlines())
+        for profile in (BASE_CONF, CUSTOM_CONF):
+            rules = section_lines(profile, "Rule")
+            exception = next(i for i, rule in enumerate(rules)
+                             if "/greylist_proxy.list,PROXY" in rule)
+            self.assertLess(exception, rules.index("GEOIP,RU,DIRECT"))
+
     def test_torrent_destinations_are_blocked_before_allow_rules(self) -> None:
         torrent_domains = set(TORRENT_DOMAINS.read_text(encoding="utf-8").splitlines())
         direct_domains = set(SR_DIRECT_DOMAINS.read_text(encoding="utf-8").splitlines())

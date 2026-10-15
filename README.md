@@ -58,6 +58,7 @@
    - `distillate/overlays/whitelist_direct.add.list` — принудительно DIRECT.
    - Точечное DIRECT-исключение для Path of Exile (`DOMAIN-SUFFIX,pathofexile.com`, `DOMAIN-SUFFIX,poecdn.com`, плюс `DOMAIN-KEYWORD,pathofexile` и `DOMAIN-KEYWORD,pasthofexile`) также ведётся через `whitelist_direct`.
    - `distillate/overlays/greylist_proxy.add.list` — принудительно PROXY.
+   - `googlevideo.com` закреплён в `greylist_proxy`: видеосерверы YouTube идут через `PROXY`, даже если их IP определяется как российский.
    - X/Twitter redirect и статика (`t.co`, `x.com`, `twitter.com`, `twimg.com`) закрепляются через `greylist_proxy`, чтобы короткие ссылки и связанные ресурсы не выпадали из принудительного PROXY-маршрута.
 2. **Microsoft/Office 365/Teams/OneDrive**
    - Категория `microsoft` собирается из BM7 `Microsoft` и уходит в `PROXY`.

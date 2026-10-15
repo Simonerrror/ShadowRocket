@@ -1,3 +1,4 @@
+domain:googlevideo.com
 domain:t.co
 domain:twimg.com
 domain:twitter.com
