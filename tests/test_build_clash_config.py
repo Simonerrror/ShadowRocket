@@ -32,6 +32,12 @@ class BuildClashConfigTests(unittest.TestCase):
         self.assertNotIn("RULE-SET,google_all", content)
         self.assertNotIn("  - name: GOOGLE", content)
 
+    def test_rule_providers_declare_text_format_for_shadowrocket_lists(self) -> None:
+        content, _ = build_config(DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL)
+        providers = content.split("rule-providers:\n", 1)[1].split("# 5. PROXY GROUPS", 1)[0]
+        for provider in re.split(r"(?m)^  [A-Za-z0-9_]+:\n", providers)[1:]:
+            self.assertIn("    format: text", provider)
+
     def test_torrent_block_precedes_all_other_generated_rules(self) -> None:
         content, _warnings = build_config(DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL)
         rules = content.split("\nrules:\n", 1)[1]

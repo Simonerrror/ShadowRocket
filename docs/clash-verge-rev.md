@@ -2,6 +2,8 @@
 
 > `clash_config.yaml` больше не поддерживается вручную отдельно: он генерируется из
 > `shadowrocket.conf` через `scripts/build_clash_config.py`.
+> Rule providers используют `format: text`: их источники — текстовые списки
+> Shadowrocket, а не YAML с полем payload.
 > Для автопроверки серверов `proxy-providers.Main-Sub.health-check` и `proxy-groups.AUTO-SPEED`
 > используется `https://www.youtube.com/favicon.ico`. Интервал проверки провайдера — 780 секунд;
 > для `AUTO-SPEED` — 180 секунд, tolerance — 100.

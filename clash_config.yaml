@@ -73,6 +73,7 @@ rule-providers:
   torrent_block:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/torrent_block.list"
     path: ./rules/torrent_block.yaml
     interval: 86400
@@ -80,6 +81,7 @@ rule-providers:
   whitelist_direct:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/whitelist_direct.list"
     path: ./rules/whitelist_direct.yaml
     interval: 86400
@@ -87,6 +89,7 @@ rule-providers:
   greylist_proxy:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/greylist_proxy.list"
     path: ./rules/greylist_proxy.yaml
     interval: 86400
@@ -94,6 +97,7 @@ rule-providers:
   microsoft:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/microsoft.list"
     path: ./rules/microsoft.yaml
     interval: 86400
@@ -101,6 +105,7 @@ rule-providers:
   domains_community:
     type: http
     behavior: classical
+    format: text
     url: "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/domains_community.list"
     path: ./rules/domains_community.yaml
     interval: 86400

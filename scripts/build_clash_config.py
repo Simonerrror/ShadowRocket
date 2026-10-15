@@ -182,6 +182,7 @@ def render_rule_providers(rule_lines: list[str]) -> tuple[list[str], list[str]]:
                 f"  {provider_name}:",
                 "    type: http",
                 "    behavior: classical",
+                "    format: text",
                 f"    url: {yaml_quote(url)}",
                 f"    path: ./rules/{provider_name}.yaml",
                 f"    interval: {RULE_PROVIDER_INTERVAL}",
