@@ -13,10 +13,10 @@ test("page offers working Worker imports for both clients and no empty links", a
   assert.ok(imports.some(link => link.endsWith("/sr/config")));
   assert.ok(imports.some(link => link.endsWith("/incy")));
   assert.ok(imports.some(link => link.endsWith("/incy/ru")));
-  assert.equal(imports.filter(link => link.includes("/sr/modules/")).length, 6);
+  assert.equal(imports.filter(link => link.includes("/sr/modules/")).length, 5);
   assert.ok(links.some(link => link.endsWith("/sr/modules/dns-override")));
   assert.ok(links.some(link => link.endsWith("/sr/modules/google-ai")));
-  assert.ok(!links.some(link => /whitelist|apple_proxy|wechat|tailscale/.test(link)));
+  assert.ok(!links.some(link => /whitelist|apple_proxy|wechat|tailscale|twitch/.test(link)));
   assert.ok(html.indexOf("Добавить в Shadowrocket") < html.indexOf("Блог ↗"));
   for (const link of imports) {
     const response = worker.fetch(new Request(link));

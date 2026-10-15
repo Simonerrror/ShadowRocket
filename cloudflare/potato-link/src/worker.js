@@ -9,7 +9,6 @@ const MODULES = Object.freeze({
   "openai-usa": "openai_usa.module",
   "anti-advertising": "anti_advertising.module",
   "gfn": "GFN-AM.module",
-  "twitch": "twitch_video_direct.module",
   "apple": "apple_proxy.module",
   "wechat": "wechat_direct.module",
   "tailscale-direct": "tailscale_direct.module",

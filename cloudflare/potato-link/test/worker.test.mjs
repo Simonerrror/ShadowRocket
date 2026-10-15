@@ -14,7 +14,6 @@ const SHADOWROCKET_MODULES = [
   ["/sr/modules/tailscale-tailnet", `${PUBLIC_REPOSITORY}/modules/tailscale_tailnet.module`],
   ["/sr/modules/gfn", `${PUBLIC_REPOSITORY}/modules/GFN-AM.module`],
   ["/sr/modules/wechat", `${PUBLIC_REPOSITORY}/modules/wechat_direct.module`],
-  ["/sr/modules/twitch", `${PUBLIC_REPOSITORY}/modules/twitch_video_direct.module`],
   [
     "/sr/modules/anti-advertising",
     `${PUBLIC_REPOSITORY}/modules/anti_advertising.module`,
@@ -154,4 +153,8 @@ test("unsupported methods return 405 on a known path", async () => {
   assert.equal(await response.text(), "hub");
   assert.deepEqual(seen, ["/"]);
   assert.equal((await request("/ru")).status, 404);
+});
+
+test("retired Twitch import is unavailable", async () => {
+  assert.equal((await request("/sr/modules/twitch")).status, 404);
 });

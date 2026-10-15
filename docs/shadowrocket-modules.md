@@ -84,7 +84,6 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_adver
 | 15_02 · OpenAI USA | `modules/openai_usa.module` | OpenAI через автоматический выбор среди узлов USA из всех подписок |
 | 20_01 · GFN Direct | `modules/GFN-AM.module` | NVIDIA/GFN и связанные исключения DIRECT |
 | 20_02 · WeChat Direct | `modules/wechat_direct.module` | WeChat и его CDN через DIRECT |
-| 20_04 · Twitch Video Direct | `modules/twitch_video_direct.module` | Видеосерверы Twitch через DIRECT; сайт и API по основному конфигу |
 | 90 · Anti-Advertising | `modules/anti_advertising.module` | Общая блокировка после сервисных исключений |
 
 Включайте только один модуль уровня 10. Сервисные исключения уровня 20 имеют
@@ -112,5 +111,4 @@ DOMAIN-KEYWORD, DOMAIN-SUFFIX и IP-CIDR правила. Остальные пр
 | 15_01 | Apple Proxy | [Файл модуля](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/apple_proxy.module) |
 | 20_01 | GFN Direct | [Добавить](https://potato-link.motivato-potato.workers.dev/sr/modules/gfn) |
 | 20_02 | WeChat Direct | [Добавить](https://potato-link.motivato-potato.workers.dev/sr/modules/wechat) |
-| 20_04 | Twitch Video Direct | [Добавить](https://potato-link.motivato-potato.workers.dev/sr/modules/twitch) |
 | 90 | Anti-Advertising | [Добавить](https://potato-link.motivato-potato.workers.dev/sr/modules/anti-advertising) |
