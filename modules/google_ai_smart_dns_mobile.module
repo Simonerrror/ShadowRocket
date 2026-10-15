@@ -1,0 +1,48 @@
+#!name=Google AI — Smart DNS (Mobile)
+#!desc=Для мобильного Shadowrocket в связке со Smart DNS: Google AI и googleapis.com — DIRECT, youtubei.googleapis.com — PROXY. DNS настраивается отдельно.
+#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/google_ai_smart_dns_mobile.module
+
+[Rule]
+
+DOMAIN,youtubei.googleapis.com,PROXY
+
+# Gemini / Google AI Studio / API
+DOMAIN-SUFFIX,gemini.google.com,DIRECT
+DOMAIN-SUFFIX,gemini.google,DIRECT
+DOMAIN-SUFFIX,bard.google.com,DIRECT
+DOMAIN-SUFFIX,ai.google.dev,DIRECT
+DOMAIN-SUFFIX,ai.studio,DIRECT
+DOMAIN-SUFFIX,aistudio.google.com,DIRECT
+DOMAIN-SUFFIX,generativeai.google,DIRECT
+DOMAIN-SUFFIX,makersuite.google.com,DIRECT
+DOMAIN,alkalicore-pa.clients6.google.com,DIRECT
+DOMAIN,alkalimakersuite-pa.clients6.google.com,DIRECT
+DOMAIN,webchannel-alkalimakersuite-pa.clients6.google.com,DIRECT
+DOMAIN-SUFFIX,gemini.gstatic.com,DIRECT
+
+# NotebookLM
+DOMAIN-SUFFIX,notebooklm.google.com,DIRECT
+DOMAIN-SUFFIX,notebooklm.google,DIRECT
+DOMAIN-SUFFIX,notebook.google.com,DIRECT
+
+# Google Labs / Flow / FX / Opal / Stitch
+DOMAIN-SUFFIX,labs.google,DIRECT
+DOMAIN-SUFFIX,labs.google.com,DIRECT
+DOMAIN-SUFFIX,flow.google,DIRECT
+DOMAIN-SUFFIX,fx.google.com,DIRECT
+DOMAIN-SUFFIX,opal.google,DIRECT
+DOMAIN-SUFFIX,opal.google.com,DIRECT
+DOMAIN-SUFFIX,stitch.withgoogle.com,DIRECT
+
+# Jules / Antigravity / DeepMind
+DOMAIN-SUFFIX,jules.google,DIRECT
+DOMAIN-SUFFIX,jules.google.com,DIRECT
+DOMAIN-SUFFIX,antigravity.google,DIRECT
+DOMAIN-SUFFIX,antigravity-unleash.goog,DIRECT
+DOMAIN-SUFFIX,deepmind.google,DIRECT
+DOMAIN-SUFFIX,deepmind.com,DIRECT
+
+# Google AI / Cloud AI / NotebookLM internal APIs
+# Covers Gemini, Vertex AI, Code Assist, NotebookLM, Antigravity APIs
+# Intentionally broad, as requested: also routes non-AI Google APIs DIRECT
+DOMAIN-SUFFIX,googleapis.com,DIRECT
