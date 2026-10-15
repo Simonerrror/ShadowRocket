@@ -10,11 +10,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.build_happ_routing import (
+from scripts.build_incy_routing import (
     RU_PROFILE_NAME,
     BuildData,
     Bucket,
-    build_profile as build_happ_profile,
 )
 from scripts.build_incy_routing import (
     build_profile,
@@ -96,19 +95,13 @@ class IncyProfileContractTests(unittest.TestCase):
             "proxy_geoip_tag": "ru",
         }
 
-    def test_incy_profile_matches_happ_routing_semantics_with_official_field(self) -> None:
-        kwargs = self._profile_kwargs()
-
-        happ = build_happ_profile(**kwargs)
-        incy = build_profile(**kwargs)
-
-        expected = dict(happ)
-        expected.pop("UseChunkFiles")
-        expected["useChunkFiles"] = False
-        self.assertEqual(incy, expected)
-        self.assertEqual(incy["RouteOrder"], "block-proxy-direct")
-        self.assertIs(incy["useChunkFiles"], False)
-        self.assertNotIn("UseChunkFiles", incy)
+    def test_incy_profile_uses_native_field_contract(self) -> None:
+        profile = build_profile(**self._profile_kwargs())
+        self.assertEqual(profile["RouteOrder"], "block-proxy-direct")
+        self.assertIs(profile["useChunkFiles"], False)
+        self.assertNotIn("UseChunkFiles", profile)
+        self.assertEqual(profile["ProxySites"], ["geosite:category-ru"])
+        self.assertEqual(profile["ProxyIp"], ["geoip:ru"])
 
     def test_incy_deeplink_modes_are_compact_base64_and_decode_to_profile(self) -> None:
         profile = {"Name": "RU-VPN", "GlobalProxy": "false", "useChunkFiles": False}

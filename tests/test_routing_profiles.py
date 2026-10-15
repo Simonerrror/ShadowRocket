@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.build_happ_routing import (
+from scripts.build_incy_routing import (
     RU_PROFILE_NAME,
     BuildData,
     Bucket,
@@ -19,11 +19,11 @@ from scripts.build_happ_routing import (
 )
 
 
-class HappBuildStampTests(unittest.TestCase):
+class RoutingBuildStampTests(unittest.TestCase):
     def test_build_stamp_precedence_and_invalid_fallback(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
-            out_dir = root / "HAPP"
+            out_dir = root / "INCY"
             out_dir.mkdir()
             (out_dir / "DEFAULT.JSON").write_text(
                 json.dumps({"LastUpdated": "1234567890"}),
@@ -36,9 +36,9 @@ class HappBuildStampTests(unittest.TestCase):
             self.assertIsNone(existing_build_stamp(out_dir))
 
 
-class HappInputValidationTests(unittest.TestCase):
+class RoutingInputValidationTests(unittest.TestCase):
     def test_domestic_dns_rejects_non_yandex_override(self) -> None:
-        for script_name in ("build_happ_routing.py", "build_incy_routing.py"):
+        for script_name in ("build_incy_routing.py",):
             with self.subTest(script_name=script_name):
                 result = subprocess.run(
                     [
@@ -88,7 +88,7 @@ class HappInputValidationTests(unittest.TestCase):
                 "domain:block.example\n",
                 encoding="utf-8",
             )
-            out_dir = root / "HAPP"
+            out_dir = root / "INCY"
             out_dir.mkdir()
             output = out_dir / "DEFAULT.JSON"
             obsolete = out_dir / "REPORT.md"
@@ -98,7 +98,7 @@ class HappInputValidationTests(unittest.TestCase):
             result = subprocess.run(
                 [
                     sys.executable,
-                    str(Path(__file__).parents[1] / "scripts" / "build_happ_routing.py"),
+                    str(Path(__file__).parents[1] / "scripts" / "build_incy_routing.py"),
                 ],
                 cwd=root,
                 capture_output=True,
@@ -111,7 +111,7 @@ class HappInputValidationTests(unittest.TestCase):
             self.assertEqual(obsolete.read_text(encoding="utf-8"), "old report\n")
 
 
-class HappRuVpnProfileTests(unittest.TestCase):
+class RoutingRuVpnProfileTests(unittest.TestCase):
     def test_ru_vpn_proxies_only_ru_tags_and_defaults_to_direct(self) -> None:
         data = BuildData(
             direct=Bucket(site_rules=["domain:ru"], cidrs=["192.0.2.0/24"]),

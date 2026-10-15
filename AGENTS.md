@@ -29,7 +29,7 @@
 
 - Основной и custom-профиль сохраняются отдельными ручными исходниками; shared-правки синхронизируются с сохранением custom-only настроек.
 - `distillate/` и `rules/`, включая полный anti-ad-список и чанки, сохраняются. Их размер сам по себе не основание для удаления или переноса.
-- Для пользователей HAPP рекомендуйте переход на INCY: поддержка HAPP в этом репозитории сворачивается. Пока сохраняйте существующие HAPP-артефакты, URL и сборочный каскад; прекращение их публикации требует отдельного решения.
+- Поддержка HAPP завершена по решению пользователя. Не возвращайте HAPP-артефакты, генератор или ссылки импорта; поддерживаемый клиент маршрутизации — INCY.
 
 ## Рабочее дерево и публикация
 
@@ -63,12 +63,12 @@ Commit и push выполняйте в пределах разрешения п�
 - `rules/`: часть списков поддерживается вручную, часть генерируется скриптами и коммитится в эту же ветку.
 - `modules/`: модули Shadowrocket. Не ломайте совместимость с существующими конфигами.
 - `scripts/`: вспомогательные утилиты; обновляйте README, если меняете публичный интерфейс скриптов.
-- `distillate/upstream`, `distillate/text`, `distillate/dat`, `distillate/summary.json`, `HAPP/DEFAULT.*`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`, `cloudflare/potato-link/dist/destinations.js`: generated-артефакты; при изменении сборки обновляйте их вместе с кодом.
+- `distillate/upstream`, `distillate/text`, `distillate/dat`, `distillate/summary.json`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`, `cloudflare/potato-link/dist/destinations.js`: generated-артефакты; при изменении сборки обновляйте их вместе с кодом.
 - `clash_config.yaml`: generated-артефакт от `shadowrocket.conf` и Clash/Mihomo template-настроек; при изменении логики сборки обновляйте его вместе с кодом.
 
 ## Ownership файлов
 - Редактируются вручную: `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_whitelist.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `rules/russia_extended.list`, `rules/voice_ports.list`, `modules/GFN-AM.module`, `modules/tailscale_tailnet.module`, `modules/wechat_direct.module`, `modules/tailscale_direct.module`.
-- Generated, не редактировать вручную: `clash_config.yaml`, `HAPP/DEFAULT.*`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/summary.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/openai.list`, `rules/telegram.list`, `rules/whitelist_direct.list`, `rules/greylist_proxy.list`, `rules/anti_advertising*.list`.
+- Generated, не редактировать вручную: `clash_config.yaml`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/summary.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/openai.list`, `rules/telegram.list`, `rules/whitelist_direct.list`, `rules/greylist_proxy.list`, `rules/anti_advertising*.list`.
 - Semi-generated: `modules/anti_advertising.module` хранит ручной заголовок, но `RULE-SET` на anti-ad chunks переписываются сборкой.
 
 ## Документация
@@ -85,9 +85,9 @@ Commit и push выполняйте в пределах разрешения п�
 
 Применяйте к изменённым входам и их зависимым выходам. Текстовая правка описания или инструкции сама по себе не запускает каскад. Полная compiled-сборка следует правилам зависимостей; локальная текстовая пересборка использует `--skip-compiled` и cached upstream.
 
-- Изменили `shadowrocket.conf`: пересоберите `clash_config.yaml`, `HAPP/DEFAULT.*` и `INCY/*`.
-- Пересобрали `HAPP/*.DEEPLINK` или `INCY/*.DEEPLINK`: запустите `python3 scripts/build_potato_link_worker.py` и включите `cloudflare/potato-link/dist/destinations.js` в набор изменённых артефактов.
-- Изменили `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*` или vendored upstream в `distillate/upstream/*`: пересоберите `distillate/text/*`, `distillate/dat/*`, `distillate/summary.json`, generated `rules/*.list`, anti-ad module refs, `HAPP/*` и `INCY/*`.
+- Изменили `shadowrocket.conf`: пересоберите `clash_config.yaml`, `INCY/*`.
+- Пересобрали `INCY/*.DEEPLINK`: запустите `python3 scripts/build_potato_link_worker.py` и включите `cloudflare/potato-link/dist/destinations.js` в набор изменённых артефактов.
+- Изменили `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*` или vendored upstream в `distillate/upstream/*`: пересоберите `distillate/text/*`, `distillate/dat/*`, `distillate/summary.json`, generated `rules/*.list`, anti-ad module refs, `INCY/*`.
 - Изменили `scripts/build_distillate.py`: проверьте, не затрагивает ли это `rules/*.list`, anti-ad chunking и `modules/anti_advertising*.module`.
 - Изменили набор generated outputs или build inputs: обновите `.github/workflows/*.yml` path-фильтры и списки `git add`.
 

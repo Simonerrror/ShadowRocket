@@ -59,6 +59,23 @@ class ShadowrocketProfilesTests(unittest.TestCase):
             self.assertLess(exception, rules.index("GEOIP,RU,DIRECT"))
             self.assertNotIn("force-remote-dns", rules[exception])
 
+    def test_openai_usa_module_collects_usa_nodes_and_routes_openai_list(self) -> None:
+        module = REPO_ROOT / "modules/openai_usa.module"
+        group = key_values(module, "Proxy Group")["OpenAI USA"]
+        options = group.split(",")
+        self.assertEqual(options[0], "url-test")
+        self.assertTrue(all("=" in option for option in options[1:]))
+        pattern = next(option.split("=", 1)[1] for option in options
+                       if option.startswith("policy-regex-filter="))
+        subscriptions = [["VLESS USA 1", "VLESS Germany"],
+                         ["TT usa 2", "Naive Japan", "AWG USA 3"]]
+        selected = [name for subscription in subscriptions for name in subscription
+                    if re.search(pattern, name)]
+        self.assertEqual(selected, ["VLESS USA 1", "TT usa 2", "AWG USA 3"])
+        self.assertEqual(section_lines(module, "Rule"), [
+            "RULE-SET,https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/openai.list,OpenAI USA",
+        ])
+
     def test_torrent_destinations_are_blocked_before_allow_rules(self) -> None:
         torrent_domains = set(TORRENT_DOMAINS.read_text(encoding="utf-8").splitlines())
         direct_domains = set(SR_DIRECT_DOMAINS.read_text(encoding="utf-8").splitlines())

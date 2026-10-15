@@ -8,7 +8,7 @@ from scripts.validate_publish_paths import is_allowed_publish_path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SYNC_WORKFLOW = REPO_ROOT / ".github/workflows/sync-lists.yml"
-VERIFY_WORKFLOW = REPO_ROOT / ".github/workflows/build-happ-routing.yml"
+VERIFY_WORKFLOW = REPO_ROOT / ".github/workflows/verify-release.yml"
 DEPLOY_WORKFLOW = REPO_ROOT / ".github/workflows/deploy-potato-link.yml"
 
 ACTION_PINS = (
@@ -139,9 +139,6 @@ class WorkflowHardeningTests(unittest.TestCase):
         ):
             with self.subTest(path=path):
                 self.assertIn(path, deploy)
-        self.assertIn('- "HAPP/**"', verify)
-        for path in ("HAPP/RU-VPN.JSON", "HAPP/RU-VPN.DEEPLINK"):
-            with self.subTest(path=path):
                 self.assertIn(path, sync)
         self.assertIn("permissions:\n  contents: read", verify)
         self.assertIn("persist-credentials: false", verify)
@@ -160,9 +157,6 @@ class WorkflowHardeningTests(unittest.TestCase):
             "rules/anti_advertising.04.list",
             "modules/anti_advertising.module",
             "clash_config.yaml",
-            "HAPP/DEFAULT.JSON",
-            "HAPP/RU-VPN.JSON",
-            "HAPP/RU-VPN.DEEPLINK",
             "INCY/DEFAULT.JSON",
             "INCY/DEFAULT.DEEPLINK",
             "INCY/RU-VPN.JSON",

@@ -16,7 +16,7 @@
 
 Практическое правило сопровождения:
 - вручную редактируются `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_whitelist.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `rules/russia_extended.list`, `rules/voice_ports.list`, `modules/GFN-AM.module`, `modules/tailscale_tailnet.module`, `modules/wechat_direct.module`, `modules/tailscale_direct.module`;
-- generated-артефакты (`clash_config.yaml`, `HAPP/DEFAULT.*`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/summary.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/openai.list`, `rules/telegram.list`, `rules/whitelist_direct.list`, `rules/torrent_block.list`, `rules/greylist_proxy.list`, `rules/anti_advertising.list`, `rules/anti_advertising*.[0-9][0-9].list`) не поддерживаются вручную;
+- generated-артефакты (`clash_config.yaml`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/summary.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/openai.list`, `rules/telegram.list`, `rules/whitelist_direct.list`, `rules/torrent_block.list`, `rules/greylist_proxy.list`, `rules/anti_advertising.list`, `rules/anti_advertising*.[0-9][0-9].list`) не поддерживаются вручную;
 - `modules/anti_advertising.module` semi-generated: ручной заголовок сохраняется, а ссылки на anti-ad chunks переписываются сборкой.
 - Tailscale вынесен из общих профилей в отдельный модуль `modules/tailscale_tailnet.module`. Модуль использует встроенную политику `TAILSCALE`; `100.64.0.0/10` не добавляется в `tun-excluded-routes`.
 
@@ -32,15 +32,14 @@ anti-ad-список и его чанки в `rules/` сохраняются к�
 - `scripts/build_distillate.py --skip-compiled` пересобирает текстовые артефакты из кэша `distillate/upstream/*` без сетевого обновления. Без `--skip-compiled` скрипт также загружает закреплённые исходники Go-компиляторов и их зависимости для сборки `geosite.dat` и `geoip.dat`.
 - `scripts/build_clash_config.py` читает `[General]`, `[Proxy Group]` и `[Rule]` из базового `shadowrocket.conf` и пересобирает `clash_config.yaml` для Mihomo.
   Он переносит все поддерживаемые rule/group mapping'и, а неподдерживаемые для Clash детали (`force-remote-dns`, `policy-select-name`, `timeout`) оставляет в предупреждениях сборки.
-- `scripts/build_happ_routing.py` не ходит в BM7: он берет агрегаты `sr-direct`/`sr-proxy` и `motivato_block` из `distillate/text/*`, затем собирает `HAPP/DEFAULT.*` (`роут-MotivatoPotato`) с детерминированным `LastUpdated`.
-- `scripts/build_incy_routing.py` использует те же агрегаты и семантические профили, адаптирует только поле `useChunkFiles: false` и собирает `INCY/DEFAULT.*` и `INCY/RU-VPN.*` с тем же `LastUpdated`.
-- Антирекламный список собирается в том же distillate-пайплайне из OISD + HaGeZi, но публикуется чанками `rules/anti_advertising.01.list`, `.02.list`, `.03.list` и далее по мере необходимости. Количество чанков выбирается автоматически так, чтобы вес каждого был не больше примерно 7 МБ. Он не включается в compiled `geosite.dat` и не используется в HAPP. Для него предполагается отдельный модуль Shadowrocket.
+- `scripts/build_incy_routing.py` не ходит в BM7: он берет агрегаты `sr-direct`/`sr-proxy` и `motivato_block` из `distillate/text/*`, затем собирает `INCY/DEFAULT.*` (`роут-MotivatoPotato`) с детерминированным `LastUpdated`.
+- Антирекламный список собирается в том же distillate-пайплайне из OISD + HaGeZi, но публикуется чанками `rules/anti_advertising.01.list`, `.02.list`, `.03.list` и далее по мере необходимости. Количество чанков выбирается автоматически так, чтобы вес каждого был не больше примерно 7 МБ. Он не включается в compiled `geosite.dat` и не используется в INCY. Для него предполагается отдельный модуль Shadowrocket.
 - На этапе сборки из `anti_advertising` дополнительно вычищаются домены, содержащие `nvidia`/`geforce`/`geforcenow`/`nvidiagrid`, чтобы anti-ad модуль не ломал GeForce NOW и связанные NVIDIA API.
 - Там же вычищаются official suffix'ы Discord (`discord.com`, `discord.gg`, `discordapp.com`, `discordapp.net` и смежные), чтобы upstream anti-ad не зацепил клиентские API, gateway и служебные поддомены Discord.
 
 Fallback policy:
 - если очередной upstream-лист недоступен, последний закоммиченный snapshot в `distillate/upstream/*` сохраняется;
-- сборка `distillate` и HAPP продолжается на этой локальной копии;
+- сборка `distillate` и INCY продолжается на этой локальной копии;
 - удаление cache-файла из-за временной недоступности upstream не допускается.
 
 Правило безопасного локального запуска:
@@ -57,14 +56,13 @@ Fallback policy:
 ```bash
 python3 scripts/build_distillate.py --skip-compiled
 python3 scripts/build_clash_config.py
-python3 scripts/build_happ_routing.py
 python3 scripts/build_incy_routing.py
 python3 scripts/build_potato_link_worker.py
 ```
 
 После пересборки выполните `python3 -m unittest discover -s tests -v` и
 `python3 -m compileall -q scripts tests`, затем проверьте diff.
-Генераторы HAPP/INCY должны остановиться при отсутствии обязательных текстовых входов;
+Генераторы INCY должны остановиться при отсутствии обязательных текстовых входов;
 не заменяйте отсутствующие файлы пустыми ради прохождения сборки.
 
 ### Обновление источников и полная сборка
@@ -79,16 +77,16 @@ Go и сетевого доступа; новые зависимости про�
 - `.github/workflows/sync-lists.yml` запускается по weekly cron или вручную через **Run workflow**. Read-only job получает плавающие публичные данные BM7/OISD/HaGeZi, собирает их закреплёнными версиями компиляторов, проверяет тесты и допустимый размер diff; отдельная write-job публикует только generated allowlist.
 - Для проверенного резкого изменения количества правил ручной запуск поддерживает `allow_large_diff`; пустые обязательные категории, неверный формат и запрещённые пути этот флаг не разрешает.
 - При ошибке или аномалии workflow создаёт GitHub issue со ссылкой на run, поэтому уведомление приходит через стандартные GitHub notifications/email.
-- `.github/workflows/build-happ-routing.yml` — read-only проверка cached rebuild и тестов; она ничего не коммитит.
-- HAPP и INCY-профили относятся к shared routing-артефактам; при изменении входов оба генератора и Worker-пакет пересобираются вместе.
+- `.github/workflows/verify-release.yml` — read-only проверка cached rebuild и тестов; она ничего не коммитит.
+- INCY-профили относятся к shared routing-артефактам; при изменении входов генератор и Worker-пакет пересобираются вместе.
 
 Политика изменений:
 - Изменение групп `MANUAL-PROXY`, `WL` и auto-фильтра — **shared**: синхронизировано в `shadowrocket.conf` и `shadowrocket_custom.conf`; custom-only поля `[General]` сохранены.
 - `shadowrocket_custom.conf`, `shadowrocket_whitelist.conf` считаются `custom-only`.
 - Если улучшение полезно всем, его нужно переносить и в основной конфиг, и в кастомные файлы.
 - При изменении generated `rules/*.list` меняйте `distillate/manifest.json`, `distillate/overlays/*` или `distillate/filters/*`, а не итоговые generated-файлы.
-- При изменении `shadowrocket.conf` пересобирайте `clash_config.yaml`, `HAPP/DEFAULT.*` и `INCY/*`.
-- При изменении `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*` или vendored upstream пересобирайте `distillate/*`, generated `rules/*.list`, anti-ad module refs, `HAPP/*` и `INCY/*`.
+- При изменении `shadowrocket.conf` пересобирайте `clash_config.yaml`, `INCY/*`.
+- При изменении `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*` или vendored upstream пересобирайте `distillate/*`, generated `rules/*.list`, anti-ad module refs, `INCY/*`.
 
 ## Неизвестное поведение Shadowrocket
 

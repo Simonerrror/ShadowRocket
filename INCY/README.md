@@ -1,10 +1,9 @@
 # INCY Routing
 
-**Пользователям HAPP настоятельно рекомендуем перейти на INCY: поддержка HAPP в этом репозитории сворачивается.**
+**Пользователям HAPP настоятельно рекомендуем перейти на INCY: поддержка HAPP завершена.**
 
-Готовые routing-профили для INCY. Профили используют те же distillate-агрегаты,
-что и HAPP, но сериализуются по официальному INCY-контракту:
-`useChunkFiles` — boolean `false`, без HAPP-only поля `UseChunkFiles`.
+Готовые routing-профили для INCY. Профили строятся из distillate-агрегатов по официальному INCY-контракту:
+`useChunkFiles` — boolean `false`, без поля `UseChunkFiles`.
 
 ## Ссылки
 
@@ -31,8 +30,8 @@ Deeplink имеет вид `incy://routing/onadd/<standard-base64-compact-json>`
 
 Оба профиля используют `RouteOrder: block-proxy-direct`, геоданные из
 [release incy-geodata](https://github.com/Simonerrror/ShadowRocket/releases/tag/incy-geodata)
-(`geoip.dat` и `geosite.dat`), а также общий
-`LastUpdated` с HAPP. При наличии `.sha256` рядом с geo-файлами INCY сможет
+(`geoip.dat` и `geosite.dat`), а также сохранённый
+`LastUpdated`. При наличии `.sha256` рядом с geo-файлами INCY сможет
 пропускать скачивание неизменившихся файлов.
 
 ## Сборка
@@ -42,6 +41,5 @@ python3 scripts/build_incy_routing.py
 python3 scripts/build_potato_link_worker.py
 ```
 
-Скрипт INCY не дублирует routing-логику: он адаптирует профиль HAPP и
-сохраняет семантику правил, DNS, geodata и stamp. Worker сохраняет HAPP-маршруты
-на `/` и `/ru`, а INCY-маршруты предоставляет на `/incy` и `/incy/ru`.
+Генератор самостоятельно строит профили из distillate. Worker предоставляет
+страницу ссылок на `/`, импорт INCY на `/incy` и `/incy/ru`.

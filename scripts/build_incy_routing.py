@@ -1,29 +1,250 @@
 #!/usr/bin/env python3
-"""Build INCY routing artifacts from the same distillate data as HAPP."""
-
+"""Build INCY routing artifacts from distillate outputs."""
 from __future__ import annotations
-
 import argparse
 import base64
 import hashlib
+import ipaddress
 import json
+import shlex
+import subprocess
+import sys
+from dataclasses import dataclass, field
 from pathlib import Path
-
-try:
-    from scripts import build_happ_routing as happ
-except ModuleNotFoundError:  # pragma: no cover - supports direct script execution
-    import build_happ_routing as happ
-
+from typing import Iterable
+from urllib.parse import urlparse
 
 DEFAULT_OUTPUT_DIR = "INCY"
 INCY_SCHEME = "incy"
-DEFAULT_PROFILE_NAME = happ.DEFAULT_PROFILE_NAME
-RU_PROFILE_NAME = happ.RU_PROFILE_NAME
-OBSOLETE_INCY_FILES = happ.OBSOLETE_HAPP_FILES
+
+DEFAULT_PROFILE_NAME = "роут-MotivatoPotato"
+
+
+RU_PROFILE_NAME = "RU-VPN"
+
+
+OBSOLETE_INCY_FILES = (
+    "geoip.dat",
+    "geosite.dat",
+    "default_geoip.dat",
+    "default_geosite.dat",
+    "BONUS.JSON",
+    "BONUS.DEEPLINK",
+    "bonus_geoip.dat",
+    "bonus_geosite.dat",
+    "REPORT.md",
+)
+
+
+DEFAULT_REMOTE_DNS_IP = "8.8.8.8"
+
+
+DEFAULT_REMOTE_DNS_DOMAIN = "https://8.8.8.8/dns-query"
+
+
+DEFAULT_DOMESTIC_DNS_IP = "77.88.8.8"
+
+
+DEFAULT_DOMESTIC_DNS_DOMAIN = "https://77.88.8.8/dns-query"
+
+
+DEFAULT_DNS_HOSTS: dict[str, str] = {}
+
+
+REQUIRED_DISTILLATE_FILES = tuple(
+    Path("text") / kind / f"sr-{bucket}.txt"
+    for bucket in ("direct", "proxy", "block")
+    for kind in ("domain", "ip")
+) + (Path("text") / "domain" / "motivato_block.txt",)
+
+
+@dataclass
+class Bucket:
+    site_rules: list[str] = field(default_factory=list)
+    cidrs: list[str] = field(default_factory=list)
+
+
+@dataclass
+class BuildData:
+    direct: Bucket = field(default_factory=Bucket)
+    proxy: Bucket = field(default_factory=Bucket)
+    block: Bucket = field(default_factory=Bucket)
+    processed_domain_lines: int = 0
+    processed_ip_lines: int = 0
+
+    def bucket(self, action: str) -> Bucket:
+        if action == "direct":
+            return self.direct
+        if action == "proxy":
+            return self.proxy
+        return self.block
+
+
+def dedupe_preserve(items: Iterable[str]) -> list[str]:
+    seen: set[str] = set()
+    output: list[str] = []
+    for item in items:
+        if item in seen:
+            continue
+        seen.add(item)
+        output.append(item)
+    return output
+
+
+def write_text_if_changed(path: Path, content: str) -> None:
+    if path.exists() and path.read_text(encoding="utf-8") == content:
+        return
+    path.write_text(content, encoding="utf-8")
+
+
+def run(cmd: list[str], cwd: Path | None = None) -> str:
+    result = subprocess.run(
+        cmd,
+        cwd=str(cwd) if cwd else None,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if result.returncode != 0:
+        detail = result.stderr.strip() or result.stdout.strip() or f"exit code {result.returncode}"
+        raise RuntimeError(f"Command failed: {shlex.join(cmd)}\n{detail}")
+    return result.stdout.strip()
+
+
+def extract_general_values(conf_path: Path) -> dict[str, str]:
+    values: dict[str, str] = {}
+    in_general = False
+    for raw in conf_path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if line.startswith("[General]"):
+            in_general = True
+            continue
+        if in_general and line.startswith("["):
+            break
+        if not in_general or not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        values[key.strip()] = value.strip()
+    return values
+
+
+def extract_remote_dns_ip(conf_path: Path) -> str | None:
+    values = extract_general_values(conf_path)
+    dns_value = values.get("dns-server")
+    if not dns_value:
+        return None
+    first = dns_value.split(",", 1)[0].strip()
+    if not first:
+        return None
+    if "://" in first:
+        parsed = urlparse(first)
+        return parsed.hostname
+    return first
+
+
+def normalize_cidr(value: str) -> str:
+    return str(ipaddress.ip_network(value.strip(), strict=False))
+
+
+def extract_general_ips(conf_path: Path, key: str) -> list[str]:
+    values = extract_general_values(conf_path)
+    raw_value = values.get(key, "")
+    if not raw_value:
+        return []
+
+    ips: list[str] = []
+    for token in (item.strip() for item in raw_value.split(",")):
+        if not token:
+            continue
+        try:
+            if "/" in token:
+                ips.append(normalize_cidr(token))
+            else:
+                ips.append(str(ipaddress.ip_address(token)))
+        except ValueError:
+            continue
+    return dedupe_preserve(ips)
+
+
+def extract_skip_proxy_ips(conf_path: Path) -> list[str]:
+    return extract_general_ips(conf_path, "skip-proxy")
+
+
+def extract_bypass_tun_ips(conf_path: Path) -> list[str]:
+    return extract_general_ips(conf_path, "bypass-tun")
+
+
+def read_text_lines(path: Path) -> list[str]:
+    if not path.exists():
+        return []
+    return [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def validate_distillate_inputs(distillate_dir: Path) -> None:
+    missing = [
+        relative_path
+        for relative_path in REQUIRED_DISTILLATE_FILES
+        if not (distillate_dir / relative_path).is_file()
+    ]
+    if missing:
+        details = ", ".join(str(path) for path in missing)
+        raise FileNotFoundError(f"Required distillate routing inputs are missing: {details}")
+
+
+def load_build_data_from_distillate(distillate_dir: Path) -> BuildData:
+    data = BuildData()
+    for bucket_name in ("direct", "proxy", "block"):
+        bucket = data.bucket(bucket_name)
+        site_lines = read_text_lines(distillate_dir / "text" / "domain" / f"sr-{bucket_name}.txt")
+        ip_lines = read_text_lines(distillate_dir / "text" / "ip" / f"sr-{bucket_name}.txt")
+        bucket.site_rules = dedupe_preserve(site_lines)
+        bucket.cidrs = dedupe_preserve(ip_lines)
+        data.processed_domain_lines += len(bucket.site_rules)
+        data.processed_ip_lines += len(bucket.cidrs)
+    return data
+
+
+def repo_slug(repo_root: Path) -> str:
+    remote = run(["git", "-C", str(repo_root), "remote", "get-url", "origin"]).strip()
+    if remote.endswith(".git"):
+        remote = remote[:-4]
+    if remote.startswith("git@github.com:"):
+        return remote.removeprefix("git@github.com:")
+    marker = "github.com/"
+    if marker in remote:
+        return remote.split(marker, 1)[1]
+    raise RuntimeError(f"Unsupported origin URL format: {remote}")
+
+
+def existing_build_stamp(out_dir: Path) -> str | None:
+    path = out_dir / "DEFAULT.JSON"
+    if not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    value = payload.get("LastUpdated") if isinstance(payload, dict) else None
+    if isinstance(value, (str, int)) and str(value):
+        return str(value)
+    return None
+
+
+def resolve_build_stamp(repo_root: Path, explicit_value: str, out_dir: Path | None = None) -> str:
+    if explicit_value:
+        return explicit_value
+    if out_dir is not None:
+        preserved = existing_build_stamp(out_dir)
+        if preserved is not None:
+            return preserved
+    try:
+        return run(["git", "-C", str(repo_root), "log", "-1", "--format=%ct"])
+    except RuntimeError:
+        return "0"
 
 
 def build_profile(
-    data: happ.BuildData,
+    data: BuildData,
     geodata_base: str,
     last_updated: str,
     route_order: str,
@@ -41,40 +262,51 @@ def build_profile(
     proxy_geosite_tag: str | None = "sr-proxy",
     proxy_geoip_tag: str | None = "sr-proxy",
 ) -> dict[str, object]:
-    """Adapt HAPP's routing payload to the official INCY field spelling/types."""
-
-    happ_profile = happ.build_profile(
-        data=data,
-        geodata_base=geodata_base,
-        last_updated=last_updated,
-        route_order=route_order,
-        remote_dns_ip=remote_dns_ip,
-        remote_dns_domain=remote_dns_domain,
-        domestic_dns_ip=domestic_dns_ip,
-        remote_dns_type=remote_dns_type,
-        domestic_dns_type=domestic_dns_type,
-        general_direct_ips=general_direct_ips,
-        profile_name=profile_name,
-        block_geosite_tag=block_geosite_tag,
-        global_proxy=global_proxy,
-        direct_geosite_tag=direct_geosite_tag,
-        direct_geoip_tag=direct_geoip_tag,
-        proxy_geosite_tag=proxy_geosite_tag,
-        proxy_geoip_tag=proxy_geoip_tag,
-    )
-
-    # Preserve HAPP's key order for reproducible compact payloads while using
-    # INCY's documented lower-case boolean field.
-    return {
-        ("useChunkFiles" if key == "UseChunkFiles" else key): (
-            False if key == "UseChunkFiles" else value
+    if domestic_dns_ip != DEFAULT_DOMESTIC_DNS_IP:
+        raise ValueError(
+            f"Domestic DNS IP must be {DEFAULT_DOMESTIC_DNS_IP} for the Yandex DNS pair"
         )
-        for key, value in happ_profile.items()
+
+    def route_tag(prefix: str, tag: str | None, source_available: bool) -> list[str]:
+        if tag is None or (tag.startswith("sr-") and not source_available):
+            return []
+        return [f"{prefix}:{tag}"]
+
+    direct_ip = dedupe_preserve(
+        general_direct_ips + route_tag("geoip", direct_geoip_tag, bool(data.direct.cidrs))
+    )
+    proxy_ip = route_tag("geoip", proxy_geoip_tag, bool(data.proxy.cidrs))
+    block_ip = ["geoip:sr-block"] if data.block.cidrs else []
+    direct_sites = ["domain:saby.ru"] + route_tag("geosite", direct_geosite_tag, bool(data.direct.site_rules))
+    proxy_sites = route_tag("geosite", proxy_geosite_tag, bool(data.proxy.site_rules))
+    block_sites = [f"geosite:{block_geosite_tag}"] if data.block.site_rules and block_geosite_tag else []
+
+    return {
+        "Name": profile_name,
+        "GlobalProxy": global_proxy,
+        "useChunkFiles": False,
+        "RemoteDns": remote_dns_ip,
+        "DomesticDns": domestic_dns_ip,
+        "RemoteDNSType": remote_dns_type,
+        "RemoteDNSDomain": remote_dns_domain,
+        "RemoteDNSIP": remote_dns_ip,
+        "DomesticDNSType": domestic_dns_type,
+        "DomesticDNSDomain": DEFAULT_DOMESTIC_DNS_DOMAIN if domestic_dns_type == "DoH" else "",
+        "DomesticDNSIP": domestic_dns_ip,
+        "Geoipurl": f"{geodata_base}/geoip.dat",
+        "Geositeurl": f"{geodata_base}/geosite.dat",
+        "LastUpdated": last_updated,
+        "DnsHosts": DEFAULT_DNS_HOSTS,
+        "RouteOrder": route_order,
+        "DirectSites": direct_sites,
+        "DirectIp": direct_ip,
+        "ProxySites": proxy_sites,
+        "ProxyIp": proxy_ip,
+        "BlockSites": block_sites,
+        "BlockIp": block_ip,
+        "DomainStrategy": "IPIfNonMatch",
+        "FakeDNS": "false",
     }
-
-
-# Name the adapter explicitly for callers that want to distinguish it from HAPP.
-build_incy_profile = build_profile
 
 
 def profile_to_deeplink(profile: dict[str, object], mode: str) -> tuple[str, str, str]:
@@ -86,25 +318,6 @@ def profile_to_deeplink(profile: dict[str, object], mode: str) -> tuple[str, str
     json_compact = json.dumps(profile, separators=(",", ":"), ensure_ascii=False)
     encoded = base64.b64encode(json_compact.encode("utf-8")).decode("ascii")
     return json_pretty, json_compact, f"{INCY_SCHEME}://routing/{mode}/{encoded}"
-
-
-def existing_build_stamp(out_dir: Path) -> str | None:
-    return happ.existing_build_stamp(out_dir)
-
-
-def resolve_build_stamp(repo_root: Path, explicit_value: str, out_dir: Path | None = None) -> str:
-    """Preserve INCY's stamp, then the paired HAPP stamp, then HAPP's fallback."""
-
-    if explicit_value:
-        return explicit_value
-    if out_dir is not None:
-        preserved = existing_build_stamp(out_dir)
-        if preserved is not None:
-            return preserved
-    happ_stamp = existing_build_stamp(repo_root / "HAPP")
-    if happ_stamp is not None:
-        return happ_stamp
-    return happ.resolve_build_stamp(repo_root, explicit_value, out_dir)
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -131,11 +344,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         ],
         help="RouteOrder value for INCY profile",
     )
-    parser.add_argument("--remote-dns-ip", default=happ.DEFAULT_REMOTE_DNS_IP, help="Remote DNS IP")
+    parser.add_argument("--remote-dns-ip", default=DEFAULT_REMOTE_DNS_IP, help="Remote DNS IP")
     parser.add_argument(
         "--domestic-dns-ip",
-        default=happ.DEFAULT_DOMESTIC_DNS_IP,
-        choices=[happ.DEFAULT_DOMESTIC_DNS_IP],
+        default=DEFAULT_DOMESTIC_DNS_IP,
+        choices=[DEFAULT_DOMESTIC_DNS_IP],
         help="Domestic DNS IP (Yandex)",
     )
     parser.add_argument(
@@ -146,7 +359,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--remote-dns-domain",
-        default=happ.DEFAULT_REMOTE_DNS_DOMAIN,
+        default=DEFAULT_REMOTE_DNS_DOMAIN,
         help="Remote DNS domain or URL (used for DoH)",
     )
     parser.add_argument(
@@ -161,10 +374,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Stable LastUpdated value written into DEFAULT.JSON/DEEPLINK.",
     )
     return parser.parse_args(argv)
-
-
-def write_text_if_changed(path: Path, content: str) -> None:
-    happ.write_text_if_changed(path, content)
 
 
 def release_geodata_base(repo_slug: str) -> str:
@@ -199,15 +408,15 @@ def main(argv: list[str] | None = None) -> int:
             "distillate dat artifacts are missing; run scripts/build_distillate.py before build_incy_routing.py"
         )
 
-    happ.validate_distillate_inputs(distillate_dir)
-    data = happ.load_build_data_from_distillate(distillate_dir)
-    general_direct_ips = happ.dedupe_preserve(
-        happ.extract_skip_proxy_ips(conf_path) + happ.extract_bypass_tun_ips(conf_path)
+    validate_distillate_inputs(distillate_dir)
+    data = load_build_data_from_distillate(distillate_dir)
+    general_direct_ips = dedupe_preserve(
+        extract_skip_proxy_ips(conf_path) + extract_bypass_tun_ips(conf_path)
     )
-    geodata_base = release_geodata_base(happ.repo_slug(repo_root))
+    geodata_base = release_geodata_base(repo_slug(repo_root))
     block_site_tag = (
         "motivato-block"
-        if happ.read_text_lines(distillate_dir / "text" / "domain" / "motivato_block.txt")
+        if read_text_lines(distillate_dir / "text" / "domain" / "motivato_block.txt")
         else None
     )
     build_stamp = resolve_build_stamp(repo_root, args.build_stamp, out_dir)

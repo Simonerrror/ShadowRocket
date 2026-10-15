@@ -7,6 +7,9 @@ import worker from "../src/worker.js";
 
 const PUBLIC_REPOSITORY = "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main";
 const SHADOWROCKET_MODULES = [
+  ["/sr/modules/openai-usa", `${PUBLIC_REPOSITORY}/modules/openai_usa.module`],
+  ["/sr/modules/dns-override", `${PUBLIC_REPOSITORY}/modules/dns_override.module`],
+  ["/sr/modules/google-ai", `${PUBLIC_REPOSITORY}/modules/google_ai_smart_dns_mobile.module`],
   ["/sr/modules/tailscale-direct", `${PUBLIC_REPOSITORY}/modules/tailscale_direct.module`],
   ["/sr/modules/tailscale-tailnet", `${PUBLIC_REPOSITORY}/modules/tailscale_tailnet.module`],
   ["/sr/modules/gfn", `${PUBLIC_REPOSITORY}/modules/GFN-AM.module`],
@@ -26,19 +29,12 @@ async function request(path, method = "GET") {
 }
 
 
-test("root redirects to the default profile", async () => {
-  const response = await request("/");
-
-  assert.equal(response.status, 302);
-  assert.equal(response.headers.get("location"), DESTINATIONS.default);
-});
-
-test("/ru redirects to the RU profile", async () => {
-  const response = await request("/ru");
-
-  assert.equal(response.status, 302);
-  assert.equal(response.headers.get("location"), DESTINATIONS.ru);
-  assert.notEqual(DESTINATIONS.ru, DESTINATIONS.default);
+test("root serves the hub and retired HAPP route returns 404", async () => {
+  const response = await worker.fetch(new Request("https://potato-link.example/"), {
+    ASSETS: {fetch: async () => new Response("hub")},
+  });
+  assert.equal(await response.text(), "hub");
+  assert.equal((await request("/ru")).status, 404);
 });
 
 test("/incy redirects to the INCY default profile", async () => {
@@ -59,7 +55,7 @@ test("/incy/ru redirects to the INCY RU profile", async () => {
 });
 
 test("HEAD redirects without a body", async () => {
-  const response = await request("/ru", "HEAD");
+  const response = await request("/incy", "HEAD");
 
   assert.equal(response.status, 302);
   assert.equal(await response.text(), "");
@@ -120,7 +116,7 @@ test("unknown Shadowrocket imports return 404", async () => {
 });
 
 test("redirects disable caching and referrers", async () => {
-  const response = await request("/");
+  const response = await request("/incy");
 
   assert.equal(response.headers.get("cache-control"), "no-store");
   assert.equal(response.headers.get("referrer-policy"), "no-referrer");
@@ -142,8 +138,20 @@ test("unknown INCY paths return 404 without exposing a deeplink", async () => {
 });
 
 test("unsupported methods return 405 on a known path", async () => {
-  const response = await request("/", "POST");
+  const response = await request("/incy", "POST");
 
   assert.equal(response.status, 405);
   assert.equal(response.headers.get("allow"), "GET, HEAD");
+});
+
+ test("link hub serves the index asset and retired route stays unavailable", async () => {
+  const seen = [];
+  const env = {ASSETS: {fetch: async request => {
+    seen.push(new URL(request.url).pathname);
+    return new Response("hub", {headers: {"content-type": "text/html"}});
+  }}};
+  const response = await worker.fetch(new Request("https://potato-link.example/"), env);
+  assert.equal(await response.text(), "hub");
+  assert.deepEqual(seen, ["/index.html"]);
+  assert.equal((await request("/ru")).status, 404);
 });

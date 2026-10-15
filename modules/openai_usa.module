@@ -1,0 +1,10 @@
+#!name=15_02 · OpenAI USA
+#!desc=OpenAI и ChatGPT через узлы USA из всех подписок. Автоматический выбор сервера.
+
+#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/openai_usa.module
+
+[Proxy Group]
+OpenAI USA = url-test,policy-regex-filter=(?i)USA,interval=180,tolerance=100,url=https://www.youtube.com/favicon.ico,timeout=7
+
+[Rule]
+RULE-SET,https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/openai.list,OpenAI USA

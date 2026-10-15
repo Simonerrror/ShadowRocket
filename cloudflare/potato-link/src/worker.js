@@ -3,47 +3,27 @@ import { DESTINATIONS } from "../dist/destinations.js";
 
 const PUBLIC_REPOSITORY = "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main";
 const CONFIG_URL = `${PUBLIC_REPOSITORY}/shadowrocket.conf`;
-const MODULE_URLS = Object.freeze({
-  tailscaleDirect: `${PUBLIC_REPOSITORY}/modules/tailscale_direct.module`,
-  tailscaleTailnet: `${PUBLIC_REPOSITORY}/modules/tailscale_tailnet.module`,
-  gfn: `${PUBLIC_REPOSITORY}/modules/GFN-AM.module`,
-  wechat: `${PUBLIC_REPOSITORY}/modules/wechat_direct.module`,
-  twitch: `${PUBLIC_REPOSITORY}/modules/twitch_video_direct.module`,
-  antiAdvertising: `${PUBLIC_REPOSITORY}/modules/anti_advertising.module`,
+const MODULES = Object.freeze({
+  "dns-override": "dns_override.module",
+  "google-ai": "google_ai_smart_dns_mobile.module",
+  "openai-usa": "openai_usa.module",
+  "anti-advertising": "anti_advertising.module",
+  "gfn": "GFN-AM.module",
+  "twitch": "twitch_video_direct.module",
+  "apple": "apple_proxy.module",
+  "wechat": "wechat_direct.module",
+  "tailscale-direct": "tailscale_direct.module",
+  "tailscale-tailnet": "tailscale_tailnet.module",
 });
-
 const SHADOWROCKET_IMPORTS = new Map([
   ["/sr/config", `shadowrocket://config/add/${CONFIG_URL}`],
-  [
-    "/sr/modules/tailscale-direct",
-    `shadowrocket://install?module=${encodeURIComponent(MODULE_URLS.tailscaleDirect)}`,
-  ],
-  [
-    "/sr/modules/tailscale-tailnet",
-    `shadowrocket://install?module=${encodeURIComponent(MODULE_URLS.tailscaleTailnet)}`,
-  ],
-  [
-    "/sr/modules/gfn",
-    `shadowrocket://install?module=${encodeURIComponent(MODULE_URLS.gfn)}`,
-  ],
-  [
-    "/sr/modules/wechat",
-    `shadowrocket://install?module=${encodeURIComponent(MODULE_URLS.wechat)}`,
-  ],
-  [
-    "/sr/modules/twitch",
-    `shadowrocket://install?module=${encodeURIComponent(MODULE_URLS.twitch)}`,
-  ],
-  [
-    "/sr/modules/anti-advertising",
-    `shadowrocket://install?module=${encodeURIComponent(MODULE_URLS.antiAdvertising)}`,
-  ],
+  ...Object.entries(MODULES).map(([slug, filename]) => [
+    `/sr/modules/${slug}`,
+    `shadowrocket://install?module=${encodeURIComponent(`${PUBLIC_REPOSITORY}/modules/${filename}`)}`,
+  ]),
 ]);
 
-
 const PATHS = new Map([
-  ["/", DESTINATIONS.default],
-  ["/ru", DESTINATIONS.ru],
   ["/incy", DESTINATIONS.incyDefault],
   ["/incy/ru", DESTINATIONS.incyRu],
   ...SHADOWROCKET_IMPORTS,
@@ -56,7 +36,20 @@ const TEXT_HEADERS = {
 
 
 export default {
-  fetch(request) {
+  fetch(request, env) {
+    const pathname = new URL(request.url).pathname;
+    if (pathname === "/links" || pathname === "/links/") {
+      return new Response(null, {status: 302, headers: {location: "/"}});
+    }
+    if (env?.ASSETS && !PATHS.has(pathname) &&
+        (request.method === "GET" || request.method === "HEAD")) {
+      const assetURL = new URL(request.url);
+      if (pathname === "/") {
+        assetURL.pathname = "/index.html";
+
+      }
+      return env.ASSETS.fetch(new Request(assetURL, request));
+    }
     const destination = PATHS.get(new URL(request.url).pathname);
     if (destination === undefined) {
       return new Response("Not found\n", {

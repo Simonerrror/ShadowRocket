@@ -1,5 +1,22 @@
 # Модули Shadowrocket
 
+### Private DNS Override
+
+Модуль `modules/private_dns_override.module` подставляет аргумент `DNS` в
+`dns-server`, `fallback-dns-server` и `direct-dns-server`. Перед включением
+задайте адрес DNS в параметрах модуля. `dns-direct-system` установлен в `false`.
+
+### OpenAI через США
+
+Модуль `modules/openai_usa.module` направляет существующий список
+`rules/openai.list` в группу `OpenAI USA`. Группа собирает узлы с `USA`
+в названии без учёта регистра из всех добавленных подписок. Выбор узла автоматический (url-test, каждые 180 секунд).
+
+Импортируйте локальный файл в **Config → Modules**, включите модуль и
+используйте группу **OpenAI USA** с автоматическим выбором узла. Используйте маршрутизацию
+**Config / Конфигурация**. Расположите модуль выше GFN Direct и
+Anti-Advertising, чтобы пересекающиеся правила OpenAI применялись первыми.
+
 ### Сервисы Apple через прокси
 
 Модуль `Apple Proxy` направляет через `PROXY` домены и IP-диапазоны сервисов Apple,
@@ -64,6 +81,7 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_adver
 | 10_01 · Tailscale Direct | `modules/tailscale_direct.module` | Официальный клиент Tailscale |
 | 10_02 · Tailscale Tailnet | `modules/tailscale_tailnet.module` | Встроенный Tailscale Shadowrocket |
 | 15_01 · Apple Proxy | `modules/apple_proxy.module` | Сервисы Apple через выбранную политику PROXY |
+| 15_02 · OpenAI USA | `modules/openai_usa.module` | OpenAI через автоматический выбор среди узлов USA из всех подписок |
 | 20_01 · GFN Direct | `modules/GFN-AM.module` | NVIDIA/GFN и связанные исключения DIRECT |
 | 20_02 · WeChat Direct | `modules/wechat_direct.module` | WeChat и его CDN через DIRECT |
 | 20_04 · Twitch Video Direct | `modules/twitch_video_direct.module` | Видеосерверы Twitch через DIRECT; сайт и API по основному конфигу |
