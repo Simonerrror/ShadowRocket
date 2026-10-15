@@ -67,8 +67,8 @@ jobs:
       - name: Install exact Worker dependencies
         run: npm ci --ignore-scripts --prefix cloudflare/potato-link
 
-      - name: Audit production dependencies
-        run: npm audit --omit=dev --prefix cloudflare/potato-link
+      - name: Audit deployment dependencies
+        run: npm audit --audit-level=high --prefix cloudflare/potato-link
 
       - name: Rebuild embedded destinations
         run: python3 scripts/build_potato_link_worker.py

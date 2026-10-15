@@ -67,7 +67,7 @@ Commit и push выполняйте в пределах разрешения п�
 - `clash_config.yaml`: generated-артефакт от `shadowrocket.conf` и Clash/Mihomo template-настроек; при изменении логики сборки обновляйте его вместе с кодом.
 
 ## Ownership файлов
-- Редактируются вручную: `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_whitelist.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `rules/russia_extended.list`, `rules/voice_ports.list`, `modules/GFN-AM.module`, `modules/tailscale_tailnet.module`, `modules/wechat_direct.module`, `modules/tailscale_direct.module`.
+- Редактируются вручную: `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_whitelist.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `modules/GFN-AM.module`, `modules/tailscale_tailnet.module`, `modules/wechat_direct.module`, `modules/tailscale_direct.module`.
 - Generated, не редактировать вручную: `clash_config.yaml`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/summary.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/openai.list`, `rules/telegram.list`, `rules/whitelist_direct.list`, `rules/greylist_proxy.list`, `rules/anti_advertising*.list`.
 - Semi-generated: `modules/anti_advertising.module` хранит ручной заголовок, но `RULE-SET` на anti-ad chunks переписываются сборкой.
 

@@ -13,7 +13,6 @@ from urllib.parse import urlparse
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = REPO_ROOT / "clash_config.yaml"
 DEFAULT_CONF = REPO_ROOT / "shadowrocket.conf"
-DEFAULT_GEMINI_ALLOWLIST = REPO_ROOT / "gemini_node_allowlist.txt"
 DEFAULT_SUBSCRIPTION_URL = "<INSERT_SUBSCRIPTION_URL_HERE>"
 DEFAULT_PROVIDER_FILTER = ""
 DEFAULT_PROVIDER_EXCLUDE_FILTER = ""
@@ -22,16 +21,10 @@ DEFAULT_HEALTHCHECK_INTERVAL = 780
 RULE_PROVIDER_INTERVAL = 86400
 SHADOWROCKET_MANUAL_SUBSCRIPTION_FILTER = r"(?i)^(?!.*\bWL\b)(?!.*\bSS\b).*$"
 SHADOWROCKET_AUTO_SUBSCRIPTION_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\b(?:VLESS|TT|Naive|NV|MR|AWG(?:2|3\.1)?)\b.*$"
-SHADOWROCKET_GOOGLE_SUBSCRIPTION_FILTER = "(?i)^(?:" + "|".join(
-    re.escape(line.strip())
-    for line in DEFAULT_GEMINI_ALLOWLIST.read_text(encoding="utf-8").splitlines()
-    if line.strip()
-) + ")$"
 SHADOWROCKET_WL_SUBSCRIPTION_FILTER = r"(?i)\bWL\b"
 MIHOMO_MANUAL_SUBSCRIPTION_EXCLUDE_FILTER = r"(?i)\b(?:WL|SS)\b"
 MIHOMO_AUTO_SUBSCRIPTION_FILTER = r"(?i)\b(?:VLESS|TT|Naive|NV|MR|AWG(?:2|3\.1)?)\b"
 MIHOMO_AUTO_SUBSCRIPTION_EXCLUDE_FILTER = r"(?i)Russia|Belarus|Ukraine|\bWL\b"
-MIHOMO_GOOGLE_SUBSCRIPTION_FILTER = SHADOWROCKET_GOOGLE_SUBSCRIPTION_FILTER
 MIHOMO_WL_FILTER = r"(?i)\bWL\b"
 FAKE_IP_FILTER = [
     "+.lan",
@@ -223,8 +216,6 @@ def render_proxy_groups(groups: list[GroupSpec]) -> tuple[list[str], list[str]]:
             elif regex_filter == SHADOWROCKET_AUTO_SUBSCRIPTION_FILTER:
                 rendered.append(f"    filter: {yaml_quote(MIHOMO_AUTO_SUBSCRIPTION_FILTER)}")
                 rendered.append(f"    exclude-filter: {yaml_quote(MIHOMO_AUTO_SUBSCRIPTION_EXCLUDE_FILTER)}")
-            elif regex_filter == SHADOWROCKET_GOOGLE_SUBSCRIPTION_FILTER:
-                rendered.append(f"    filter: {yaml_quote(MIHOMO_GOOGLE_SUBSCRIPTION_FILTER)}")
             elif regex_filter == SHADOWROCKET_WL_SUBSCRIPTION_FILTER:
                 rendered.append(f"    filter: {yaml_quote(MIHOMO_WL_FILTER)}")
             else:

@@ -166,7 +166,6 @@ class WorkflowHardeningTests(unittest.TestCase):
             "scripts/build_distillate.py",
             "distillate/manifest.json",
             "distillate/overlays/ru_direct.add.list",
-            "rules/russia_extended.list",
             ".github/workflows/sync-lists.yml",
             "../distillate/text/domain/google.txt",
             "/tmp/distillate/text/domain/google.txt",

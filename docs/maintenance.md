@@ -15,7 +15,7 @@
 | `scripts/` | Вспомогательные скрипты |
 
 Практическое правило сопровождения:
-- вручную редактируются `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_whitelist.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `rules/russia_extended.list`, `rules/voice_ports.list`, `modules/GFN-AM.module`, `modules/tailscale_tailnet.module`, `modules/wechat_direct.module`, `modules/tailscale_direct.module`;
+- вручную редактируются `shadowrocket.conf`, `shadowrocket_custom.conf`, `shadowrocket_whitelist.conf`, `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*`, `modules/GFN-AM.module`, `modules/tailscale_tailnet.module`, `modules/wechat_direct.module`, `modules/tailscale_direct.module`;
 - generated-артефакты (`clash_config.yaml`, `INCY/DEFAULT.*`, `INCY/RU-VPN.*`, `distillate/text/**`, `distillate/dat/**`, `distillate/summary.json`, `rules/google-all.list`, `rules/microsoft.list`, `rules/domains_community.list`, `rules/openai.list`, `rules/telegram.list`, `rules/whitelist_direct.list`, `rules/torrent_block.list`, `rules/greylist_proxy.list`, `rules/anti_advertising.list`, `rules/anti_advertising*.[0-9][0-9].list`) не поддерживаются вручную;
 - `modules/anti_advertising.module` semi-generated: ручной заголовок сохраняется, а ссылки на anti-ad chunks переписываются сборкой.
 - Tailscale вынесен из общих профилей в отдельный модуль `modules/tailscale_tailnet.module`. Модуль использует встроенную политику `TAILSCALE`; `100.64.0.0/10` не добавляется в `tun-excluded-routes`.
@@ -105,3 +105,11 @@ Go и сетевого доступа; новые зависимости про�
 ## Расширение правил
 
 Если нужно добавить сервис, добавьте категорию в `distillate/manifest.json` и при необходимости вход в `distillate/overlays/*.list`. Подключите сгенерированный список в `[Rule]`, если маршрут требует отдельного правила.
+
+## Проверка публикации
+
+Перед публикацией проверяйте также devDependencies инструмента Wrangler.
+Pre-push hook сообщает только путь и категорию совпадения; содержимое
+подозрительных строк в журнал не выводится.
+Старая Gemini allowlist-связка и списки russia_extended/voice_ports удалены.
+Текущий Gemini-маршрут задаёт модуль Google AI Smart DNS.
