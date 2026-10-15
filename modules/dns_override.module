@@ -1,10 +1,10 @@
 #!name=01 · DNS Override
-#!desc=Основной DNS — публичный или приватный; прямой DNS — Smart DNS. Резервный DNS из конфига.
+#!desc=Перед включением откройте текст модуля и впишите Smart DNS после direct-dns-server =. Основной DNS можно заменить своим приватным.
 #!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/dns_override.module
-#!arguments=DNS:9.9.9.9,SmartDNS:
-#!arguments-desc=DNS: основной DNS; можно указать свой приватный DNS. По умолчанию 9.9.9.9.\n\nSmartDNS: адрес Smart DNS. Заполните перед включением; обычный публичный DNS здесь не заменяет Smart DNS.
 
 [General]
-dns-server = {{{DNS}}}
-direct-dns-server = {{{SmartDNS}}}
+# Основной DNS: замените адрес своим приватным DNS при необходимости.
+dns-server = 9.9.9.9
+# Обязательно впишите Smart DNS после знака = перед включением модуля.
+direct-dns-server =
 dns-direct-system = false
