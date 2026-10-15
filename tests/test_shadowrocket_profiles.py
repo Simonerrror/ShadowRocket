@@ -18,7 +18,7 @@ EXPECTED_MANUAL_FILTER = r"(?i)^(?!.*\bWL\b)(?!.*\bSS\b).*$"
 EXPECTED_AUTO_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\b(?:VLESS|TT|Naive|NV|MR|AWG(?:2|3\.1)?)\b.*$"
 EXPECTED_WL_FILTER = r"(?i)\bWL\b"
 EXPECTED_PROVENANCE = [
-    "# Config-Version: 2026.10.15.1",
+    "# Config-Version: 2026.10.15.2",
     "# Maintainer: Simonerrror; contact: https://t.me/AIDHDaily",
     "# README: https://github.com/Simonerrror/ShadowRocket#readme",
 ]
@@ -57,6 +57,7 @@ class ShadowrocketProfilesTests(unittest.TestCase):
             exception = next(i for i, rule in enumerate(rules)
                              if "/greylist_proxy.list,PROXY" in rule)
             self.assertLess(exception, rules.index("GEOIP,RU,DIRECT"))
+            self.assertNotIn("force-remote-dns", rules[exception])
 
     def test_torrent_destinations_are_blocked_before_allow_rules(self) -> None:
         torrent_domains = set(TORRENT_DOMAINS.read_text(encoding="utf-8").splitlines())
