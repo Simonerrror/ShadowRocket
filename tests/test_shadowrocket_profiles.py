@@ -80,6 +80,7 @@ class ShadowrocketProfilesTests(unittest.TestCase):
         options = key_values(module, "Proxy Group")["Twitch PL-RS"].split(",")
         self.assertEqual(options[0], "url-test")
         self.assertIn("interval=180", options)
+        self.assertIn("url=https://www.twitch.tv/favicon.ico", options)
         pattern = next(option.split("=", 1)[1] for option in options
                        if option.startswith("policy-regex-filter="))
         subscriptions = [["VLESS Poland", "TT Germany", "🇵🇱 Польша AWG2"],

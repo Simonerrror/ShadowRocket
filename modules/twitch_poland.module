@@ -4,7 +4,7 @@
 #!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/twitch_poland.module
 
 [Proxy Group]
-Twitch PL-RS = url-test,policy-regex-filter=(?i)(?:\bPoland\b|Польша|\bPL\b|🇵🇱|\bSerbia\b|Сербия|\bRS\b|🇷🇸),interval=180,tolerance=100,url=https://www.youtube.com/favicon.ico,timeout=7
+Twitch PL-RS = url-test,policy-regex-filter=(?i)(?:\bPoland\b|Польша|\bPL\b|🇵🇱|\bSerbia\b|Сербия|\bRS\b|🇷🇸),interval=180,tolerance=100,url=https://www.twitch.tv/favicon.ico,timeout=7
 
 [Rule]
 RULE-SET,https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/twitch.list,Twitch PL-RS
