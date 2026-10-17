@@ -75,21 +75,23 @@ class ShadowrocketProfilesTests(unittest.TestCase):
             "RULE-SET,https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/openai.list,OpenAI USA",
         ])
 
-    def test_twitch_poland_routes_streams_and_selects_only_polish_nodes(self) -> None:
+    def test_twitch_routes_streams_and_selects_polish_and_serbian_nodes(self) -> None:
         module = REPO_ROOT / "modules/twitch_poland.module"
-        options = key_values(module, "Proxy Group")["Twitch Poland"].split(",")
+        options = key_values(module, "Proxy Group")["Twitch PL-RS"].split(",")
         self.assertEqual(options[0], "url-test")
         self.assertIn("interval=180", options)
         pattern = next(option.split("=", 1)[1] for option in options
                        if option.startswith("policy-regex-filter="))
         subscriptions = [["VLESS Poland", "TT Germany", "🇵🇱 Польша AWG2"],
-                         ["Naive pl 2", "🇵🇱 Mieru", "USA Apple", "Poland TT", "PLAIN USA"]]
+                         ["Naive pl 2", "🇵🇱 Mieru", "USA Apple", "Poland TT", "PLAIN USA", "Serbia VLESS",
+                          "🇷🇸 Сербия TT", "Naive rs 1", "PERSONAL USA"]]
         selected = [name for subscription in subscriptions for name in subscription
                     if re.search(pattern, name)]
         self.assertEqual(selected, ["VLESS Poland", "🇵🇱 Польша AWG2", "Naive pl 2",
-                                    "🇵🇱 Mieru", "Poland TT"])
+                                    "🇵🇱 Mieru", "Poland TT", "Serbia VLESS",
+                                    "🇷🇸 Сербия TT", "Naive rs 1"])
         self.assertEqual(section_lines(module, "Rule"), [
-            "RULE-SET,https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/twitch.list,Twitch Poland",
+            "RULE-SET,https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/twitch.list,Twitch PL-RS",
         ])
         rules = (REPO_ROOT / "rules/twitch.list").read_text().splitlines()
         for domain in ("twitch.tv", "ttvnw.net", "jtvnw.net", "live-video.net", "twitchcdn.net"):
