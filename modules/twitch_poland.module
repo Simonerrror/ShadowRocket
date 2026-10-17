@@ -1,0 +1,10 @@
+#!name=15_03 · Twitch Poland
+#!desc=Twitch, чат и видео через польские узлы из всех подписок. Автоматический выбор сервера.
+
+#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/twitch_poland.module
+
+[Proxy Group]
+Twitch Poland = url-test,policy-regex-filter=(?i)(?:\bPoland\b|Польша|\bPL\b|🇵🇱),interval=180,tolerance=100,url=https://www.youtube.com/favicon.ico,timeout=7
+
+[Rule]
+RULE-SET,https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/twitch.list,Twitch Poland

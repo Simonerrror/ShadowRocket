@@ -291,7 +291,7 @@
     {
       "name": "twitch",
       "bucket": null,
-      "legacy_rule_path": null,
+      "legacy_rule_path": "rules/twitch.list",
       "domains": 9,
       "ip_cidrs": 12,
       "ip_asns": 0,

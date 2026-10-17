@@ -7,6 +7,7 @@ const MODULES = Object.freeze({
   "dns-override": "dns_override.module",
   "google-ai": "google_ai_smart_dns_mobile.module",
   "openai-usa": "openai_usa.module",
+  "twitch-poland": "twitch_poland.module",
   "anti-advertising": "anti_advertising.module",
   "gfn": "GFN-AM.module",
   "apple": "apple_proxy.module",

@@ -7,6 +7,7 @@ import worker from "../src/worker.js";
 
 const PUBLIC_REPOSITORY = "https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main";
 const SHADOWROCKET_MODULES = [
+  ["/sr/modules/twitch-poland", `${PUBLIC_REPOSITORY}/modules/twitch_poland.module`],
   ["/sr/modules/openai-usa", `${PUBLIC_REPOSITORY}/modules/openai_usa.module`],
   ["/sr/modules/dns-override", `${PUBLIC_REPOSITORY}/modules/dns_override.module`],
   ["/sr/modules/google-ai", `${PUBLIC_REPOSITORY}/modules/google_ai_smart_dns_mobile.module`],

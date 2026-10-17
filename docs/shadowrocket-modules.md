@@ -17,6 +17,23 @@
 **Config / Конфигурация**. Расположите модуль выше GFN Direct и
 Anti-Advertising, чтобы пересекающиеся правила OpenAI применялись первыми.
 
+### Twitch через Польшу
+
+Модуль `modules/twitch_poland.module` направляет Twitch, чат и видеопотоки
+из списка `rules/twitch.list` через группу `Twitch Poland`.
+Группа автоматически выбирает узел из всех подписок по названиям `Poland`,
+`Польша`, отдельному коду `PL` или флагу 🇵🇱. Проверка — каждые 180 секунд.
+Добавьте польские узлы в Shadowrocket перед включением модуля.
+
+Добавьте модуль в **Config → Modules** по ссылке:
+
+```text
+https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/twitch_poland.module
+```
+
+Включите маршрутизацию **Config / Конфигурация**. Расположите модуль после
+OpenAI USA и выше Anti-Advertising. URL в заголовке модуля служит для обновления.
+
 ### Сервисы Apple через прокси
 
 Модуль `Apple Proxy` направляет через `PROXY` домены и IP-диапазоны сервисов Apple,
@@ -82,6 +99,7 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_adver
 | 10_02 · Tailscale Tailnet | `modules/tailscale_tailnet.module` | Встроенный Tailscale Shadowrocket |
 | 15_01 · Apple Proxy | `modules/apple_proxy.module` | Сервисы Apple через выбранную политику PROXY |
 | 15_02 · OpenAI USA | `modules/openai_usa.module` | OpenAI через автоматический выбор среди узлов USA из всех подписок |
+| 15_03 · Twitch Poland | `modules/twitch_poland.module` | Twitch через автоматический выбор польских узлов из всех подписок |
 | 20_01 · GFN Direct | `modules/GFN-AM.module` | NVIDIA/GFN и связанные исключения DIRECT |
 | 20_02 · WeChat Direct | `modules/wechat_direct.module` | WeChat и его CDN через DIRECT |
 | 90 · Anti-Advertising | `modules/anti_advertising.module` | Общая блокировка после сервисных исключений |

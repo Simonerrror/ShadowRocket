@@ -75,6 +75,31 @@ class ShadowrocketProfilesTests(unittest.TestCase):
             "RULE-SET,https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/openai.list,OpenAI USA",
         ])
 
+    def test_twitch_poland_routes_streams_and_selects_only_polish_nodes(self) -> None:
+        module = REPO_ROOT / "modules/twitch_poland.module"
+        options = key_values(module, "Proxy Group")["Twitch Poland"].split(",")
+        self.assertEqual(options[0], "url-test")
+        self.assertIn("interval=180", options)
+        pattern = next(option.split("=", 1)[1] for option in options
+                       if option.startswith("policy-regex-filter="))
+        subscriptions = [["VLESS Poland", "TT Germany", "🇵🇱 Польша AWG2"],
+                         ["Naive pl 2", "🇵🇱 Mieru", "USA Apple", "Poland TT", "PLAIN USA"]]
+        selected = [name for subscription in subscriptions for name in subscription
+                    if re.search(pattern, name)]
+        self.assertEqual(selected, ["VLESS Poland", "🇵🇱 Польша AWG2", "Naive pl 2",
+                                    "🇵🇱 Mieru", "Poland TT"])
+        self.assertEqual(section_lines(module, "Rule"), [
+            "RULE-SET,https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/twitch.list,Twitch Poland",
+        ])
+        rules = (REPO_ROOT / "rules/twitch.list").read_text().splitlines()
+        for domain in ("twitch.tv", "ttvnw.net", "jtvnw.net", "live-video.net", "twitchcdn.net"):
+            self.assertIn(f"DOMAIN-SUFFIX,{domain}", rules)
+        self.assertIn("DOMAIN-KEYWORD,ttvnw", rules)
+        self.assertIn("IP-CIDR,185.42.204.0/22", rules)
+        self.assertIn("IP-CIDR6,2402:2a80::/32", rules)
+        self.assertIn("#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/twitch_poland.module",
+                      module.read_text().splitlines())
+
     def test_torrent_destinations_are_blocked_before_allow_rules(self) -> None:
         torrent_domains = set(TORRENT_DOMAINS.read_text(encoding="utf-8").splitlines())
         direct_domains = set(SR_DIRECT_DOMAINS.read_text(encoding="utf-8").splitlines())
