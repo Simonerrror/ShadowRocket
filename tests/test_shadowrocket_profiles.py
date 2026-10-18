@@ -146,7 +146,7 @@ class ShadowrocketProfilesTests(unittest.TestCase):
             lines = path.read_text(encoding="utf-8").splitlines()
             general_index = lines.index("[General]")
             with self.subTest(path=path.name):
-                self.assertEqual(EXPECTED_PROVENANCE, lines[general_index - 3 : general_index])
+                self.assertEqual(EXPECTED_PROVENANCE, lines[general_index + 1 : general_index + 4])
 
     def test_proxy_groups_apply_each_subscription_scope(self) -> None:
         profiles = (BASE_CONF, CUSTOM_CONF)
