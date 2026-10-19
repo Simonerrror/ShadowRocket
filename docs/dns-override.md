@@ -12,9 +12,12 @@
 Smart DNS применяется ко всем прямым доменным правилам, а не только к Gemini.
 Для Gemini используйте также модуль Google AI Smart DNS.
 
-Модуль Google AI Smart DNS направляет `waa-pa.clients6.google.com` и
-`geminiweb-pa.clients6.google.com` через `DIRECT` вместе с Gemini.
+Модуль Google AI Smart DNS направляет `waa-pa.clients6.google.com`,
+`geminiweb-pa.clients6.google.com` и `ogads-pa.clients6.google.com` через
+`DIRECT` вместе с Gemini.
 DNS для этих запросов задаёт `direct-dns-server`.
+Расположите Google AI Smart DNS выше Anti-Advertising, чтобы исключения
+применялись раньше блокирующих правил.
 
 Добавьте Google AI Smart DNS по постоянной ссылке:
 

@@ -30,6 +30,7 @@ class DNSOverrideTests(unittest.TestCase):
             'gemini.google.com': 'DIRECT',
             'waa-pa.clients6.google.com': 'DIRECT',
             'geminiweb-pa.clients6.google.com': 'DIRECT',
+            'ogads-pa.clients6.google.com': 'DIRECT',
             'youtubei.googleapis.com': 'PROXY',
             'unrelated.clients6.google.com': None,
             'www.google.com': None,
