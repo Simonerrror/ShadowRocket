@@ -13,3 +13,26 @@ class DNSOverrideTests(unittest.TestCase):
         self.assertEqual(values, {'dns-server': '9.9.9.9', 'direct-dns-server': '', 'dns-direct-system': 'false'})
         self.assertNotIn('#!arguments', text)
         self.assertNotIn('{{{', text)
+
+    def test_google_ai_routes_web_dependencies_through_direct_dns(self):
+        text = (ROOT / 'modules/google_ai_smart_dns_mobile.module').read_text()
+        rules = [line.split(',') for line in text.splitlines()
+                 if line.startswith(('DOMAIN,', 'DOMAIN-SUFFIX,'))]
+
+        def policy(host):
+            for kind, domain, target in rules:
+                if host == domain or (kind == 'DOMAIN-SUFFIX' and
+                                      host.endswith('.' + domain)):
+                    return target
+            return None
+
+        for host, expected in {
+            'gemini.google.com': 'DIRECT',
+            'waa-pa.clients6.google.com': 'DIRECT',
+            'geminiweb-pa.clients6.google.com': 'DIRECT',
+            'youtubei.googleapis.com': 'PROXY',
+            'unrelated.clients6.google.com': None,
+            'www.google.com': None,
+        }.items():
+            with self.subTest(host=host):
+                self.assertEqual(policy(host), expected)

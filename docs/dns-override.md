@@ -12,6 +12,17 @@
 Smart DNS применяется ко всем прямым доменным правилам, а не только к Gemini.
 Для Gemini используйте также модуль Google AI Smart DNS.
 
+Модуль Google AI Smart DNS направляет `waa-pa.clients6.google.com` и
+`geminiweb-pa.clients6.google.com` через `DIRECT` вместе с Gemini.
+DNS для этих запросов задаёт `direct-dns-server`.
+
+Добавьте Google AI Smart DNS по постоянной ссылке:
+
+https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/google_ai_smart_dns_mobile.module
+
+Для уже добавленного модуля выполните обновление в Config → Modules.
+Его заголовок `#!url` содержит ту же ссылку.
+
 Установите DNS Override самым верхним в списке модулей.
 
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/dns_override.module

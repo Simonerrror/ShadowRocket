@@ -18,6 +18,8 @@ DOMAIN-SUFFIX,makersuite.google.com,DIRECT
 DOMAIN,alkalicore-pa.clients6.google.com,DIRECT
 DOMAIN,alkalimakersuite-pa.clients6.google.com,DIRECT
 DOMAIN,webchannel-alkalimakersuite-pa.clients6.google.com,DIRECT
+DOMAIN,waa-pa.clients6.google.com,DIRECT
+DOMAIN,geminiweb-pa.clients6.google.com,DIRECT
 DOMAIN-SUFFIX,gemini.gstatic.com,DIRECT
 
 # NotebookLM
