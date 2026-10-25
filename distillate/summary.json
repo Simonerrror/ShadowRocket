@@ -15,7 +15,7 @@
       "name": "anti_advertising",
       "bucket": null,
       "legacy_rule_path": "rules/anti_advertising.list",
-      "domains": 393210,
+      "domains": 397091,
       "ip_cidrs": 0,
       "ip_asns": 0,
       "dropped": {}
@@ -44,8 +44,8 @@
       "name": "domains_community",
       "bucket": "proxy",
       "legacy_rule_path": "rules/domains_community.list",
-      "domains": 380,
-      "ip_cidrs": 22,
+      "domains": 383,
+      "ip_cidrs": 34,
       "ip_asns": 5,
       "dropped": {
         "ignored_process_name": 7
@@ -272,8 +272,8 @@
       "name": "steam",
       "bucket": null,
       "legacy_rule_path": null,
-      "domains": 54,
-      "ip_cidrs": 0,
+      "domains": 57,
+      "ip_cidrs": 12,
       "ip_asns": 0,
       "dropped": {}
     },
@@ -340,8 +340,8 @@
     },
     {
       "name": "sr-proxy",
-      "domains": 2002,
-      "ip_cidrs": 55
+      "domains": 2005,
+      "ip_cidrs": 67
     }
   ]
 }

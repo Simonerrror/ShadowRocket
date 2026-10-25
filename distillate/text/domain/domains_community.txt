@@ -60,6 +60,7 @@ domain:cdn-ws.content.steamchina.com
 domain:csgo.wmsj.cn
 domain:dl.steam.clngaa.com
 domain:dl.steam.ksyna.com
+domain:dota2.com
 domain:dota2.wmsj.cn
 domain:edge.steam-dns.top.comcast.net
 domain:f3b7q2p3.ssl.hwcdn.net
@@ -85,6 +86,7 @@ domain:steambroadcast.akamaized.net
 domain:steamcdn-a.akamaihd.net
 domain:steamcommunity-a.akamaihd.net
 domain:steamcommunity.com
+domain:steamconnecttest.com
 domain:steamcontent.tnkjmec.com
 domain:steamdeck.com
 domain:steamgames.com
@@ -103,6 +105,7 @@ domain:steamusercontent-a.akamaihd.net
 domain:steamuserimages-a.akamaihd.net
 domain:steamvideo-a.akamaihd.net
 domain:underlords.com
+domain:valve.net
 domain:valvesoftware.com
 domain:wmsjsteam.com
 keyword:steambroadcast
