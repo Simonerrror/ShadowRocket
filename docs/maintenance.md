@@ -108,6 +108,11 @@ Go и сетевого доступа; новые зависимости про�
 ## Проверка публикации
 
 Перед публикацией проверяйте также devDependencies инструмента Wrangler.
+Worker использует точный npm override `undici: 7.30.1`, поскольку Miniflare
+в Wrangler 4.151.0 закрепляет уязвимую версию 7.29.1. Override устраняет
+GHSA-4qv8-2p9j-2685, GHSA-f72v-6w45-q472 и GHSA-xjj6-f33q-929c.
+Установка выполняется по lockfile с `npm ci --ignore-scripts`; проверка
+`npm audit --audit-level=high` остаётся обязательной до deploy.
 Pre-push hook сообщает только путь и категорию совпадения; содержимое
 подозрительных строк в журнал не выводится.
 Старая Gemini allowlist-связка и списки russia_extended/voice_ports удалены.
