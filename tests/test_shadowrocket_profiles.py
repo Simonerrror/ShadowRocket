@@ -48,6 +48,15 @@ def key_values(path: Path, section: str) -> dict[str, str]:
 
 
 class ShadowrocketProfilesTests(unittest.TestCase):
+    def test_com_x_and_subdomains_use_the_shared_direct_whitelist(self) -> None:
+        rules = (REPO_ROOT / "rules/whitelist_direct.list").read_text().splitlines()
+        self.assertIn("DOMAIN-SUFFIX,com-x.life", rules)
+        for profile in ("shadowrocket.conf", "shadowrocket_custom.conf"):
+            routing = section_lines(REPO_ROOT / profile, "Rule")
+            direct = next(i for i, rule in enumerate(routing) if "whitelist_direct.list" in rule)
+            proxy = next(i for i, rule in enumerate(routing) if "greylist_proxy.list" in rule)
+            self.assertLess(direct, proxy)
+
     def test_googlevideo_uses_geoip_exception_list_before_ru_direct(self) -> None:
         self.assertIn("DOMAIN-SUFFIX,googlevideo.com",
                       (REPO_ROOT / "rules/greylist_proxy.list").read_text().splitlines())

@@ -23,3 +23,4 @@ domain:poecdn.com
 keyword:pathofexile
 keyword:pasthofexile
 domain:bee-link.com.cn
+domain:com-x.life

@@ -84,6 +84,7 @@ Go и сетевого доступа; новые зависимости про�
 - `shadowrocket_custom.conf` считается `custom-only`.
 - Если улучшение полезно всем, его нужно переносить и в основной конфиг, и в кастомные файлы.
 - При изменении generated `rules/*.list` меняйте `distillate/manifest.json`, `distillate/overlays/*` или `distillate/filters/*`, а не итоговые generated-файлы.
+- Для DIRECT-исключения добавляйте домен в `distillate/overlays/whitelist_direct.add.list`. Клиентам с подключённым `whitelist_direct` достаточно обновить удалённый список правил; повторный импорт профиля не требуется.
 - При изменении `shadowrocket.conf` пересобирайте `clash_config.yaml`, `INCY/*`.
 - При изменении `distillate/manifest.json`, `distillate/overlays/*`, `distillate/filters/*` или vendored upstream пересобирайте `distillate/*`, generated `rules/*.list`, anti-ad module refs, `INCY/*`.
 
