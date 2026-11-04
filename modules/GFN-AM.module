@@ -1,21 +1,60 @@
 #!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/GFN-AM.module
 #!icon=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/icons/GFN-AM.png
 #!name=20_01 · GFN Direct
-#!desc=Правила GFN/AM для прямого доступа (DIRECT).
+#!desc=2026.11.04.1 · Каталог, авторизация и запуск GFN через KZ/UA/AM; игровой поток DIRECT.
+
+# Обновление: добавьте модуль по URL из #!url, затем обновляйте в Config → Modules.
+# Автообновление модулей включается отдельно в настройках Shadowrocket.
+# Перед включением добавьте хотя бы один узел Казахстана, Украины или Армении.
+# Используйте маршрутизацию «Конфигурация»; модуль должен быть выше Anti-Advertising.
 
 [General]
+# Реальные DNS-ответы для GFN/NVIDIA вместо Fake IP: сохраняем адреса игровых серверов.
 always-real-ip = *.nvidiagrid.net,*.geforcenow.com,*.nvidia.com
+# Не добавляйте 37.186.111.0/24 в tun-excluded-routes: на тех же IP работает HTTPS API.
+# Иначе API обойдёт правила GFN Region и снова увидит страну прямого подключения.
+
+[Proxy Group]
+# Отдельный пул для региональных проверок; общая группа PROXY может выбрать другую страну.
+# Фильтр собирает узлы KZ/UA/AM по именам, кодам и флагам из добавленных подписок.
+# Проверка сайта GFN.AM выполняется через узлы каждые 180 секунд, timeout — 7 секунд.
+# Выбранный узел и его фактическую страну проверьте в группе GFN Region.
+GFN Region = url-test,policy-regex-filter=(?i)(?:\bKazakhstan\b|Казахстан|\bKZ\b|🇰🇿|\bUkraine\b|Украина|Україна|\bUA\b|🇺🇦|\bArmenia\b|Армения|Вірменія|Հայաստան|\bAM\b|🇦🇲),interval=180,tolerance=100,url=https://gfn.am/favicon.ico,timeout=7
 
 [Rule]
-# 1. Стриминговые серверы (IP-CIDR)
+# 1. Авторизация GFN.AM — через тот же региональный пул, что каталог и запуск.
+DOMAIN,oauth.gfn.am,GFN Region
+
+# 2. Каталог игр и служебные проверки NVIDIA/GFN — через KZ/UA/AM.
+# Эти точные домены проверяются раньше широких DIRECT-правил в конце модуля.
+DOMAIN,apps.gxn.nvidia.com,GFN Region
+DOMAIN,public.games.geforce.com,GFN Region
+DOMAIN,api.gdn.nvidia.com,GFN Region
+DOMAIN,pcs.geforcenow.com,GFN Region
+
+# 3. HTTPS API запуска сессии на игровых хостах — через KZ/UA/AM только на порту 443.
+# На остальных портах этих же хостов игровой трафик остаётся DIRECT.
+AND,((DOMAIN,am-west.gcs.geforcenow.nvidiagrid.net),(DST-PORT,443)),GFN Region
+AND,((DOMAIN,npa-gcs-evn-01.gcs.geforcenow.nvidiagrid.net),(DST-PORT,443)),GFN Region
+
+# 4. Игровой трафик подсети GFN.AM — напрямую, после точных HTTPS-правил выше.
+# no-resolve запрещает дополнительный DNS-запрос ради сопоставления этого IP-правила.
 IP-CIDR,37.186.111.0/24,DIRECT,no-resolve
+
+# 5. Дополнительное точечное DIRECT-исключение, сохранённое из прежнего модуля.
+# Оно не выбирает регион GFN; модуль Apple Proxy при необходимости ставится выше.
 IP-CIDR,17.253.150.10/32,DIRECT
 
+# 6. Сохранённые служебные исключения: сервисы Google идут напрямую.
 DOMAIN,optimizationguide-pa.googleapis.com,DIRECT
 DOMAIN,signaler-pa.clients6.google.com,DIRECT
+
+# Диагностические события Microsoft и Datadog также идут DIRECT.
+# Расположение выше Anti-Advertising даёт этим исключениям приоритет над блокировкой.
 DOMAIN-SUFFIX,events.data.microsoft.com,DIRECT
 DOMAIN-SUFFIX,browser-intake-datadoghq.com,DIRECT
 
+# 7. Остальные домены NVIDIA/GFN — напрямую; региональные исключения уже обработаны выше.
 DOMAIN-KEYWORD,geforce,DIRECT
 DOMAIN-KEYWORD,geforcenow,DIRECT
 DOMAIN-KEYWORD,nvidia,DIRECT

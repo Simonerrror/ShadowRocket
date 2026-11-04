@@ -251,6 +251,81 @@ class ShadowrocketProfilesTests(unittest.TestCase):
         self.assertEqual("9.9.9.9, 149.112.112.112, 77.88.8.8", base_general["dns-server"])
         self.assertEqual(base_general["dns-server"], custom_general["dns-server"])
         self.assertEqual(base_general["fallback-dns-server"], custom_general["fallback-dns-server"])
+
+    def test_gfn_catalog_and_session_use_region_pool_while_stream_stays_direct(self) -> None:
+        from ipaddress import ip_address, ip_network
+
+        module = REPO_ROOT / "modules/GFN-AM.module"
+        rules = section_lines(module, "Rule")
+        exclusions = key_values(module, "General").get("tun-excluded-routes", "")
+
+        def route(host: str, address: str, port: int) -> str | None:
+            if any(ip_address(address) in ip_network(cidr.strip())
+                   for cidr in exclusions.split(",") if cidr.strip()):
+                return "DIRECT"
+            for rule in rules:
+                if rule.startswith("AND,"):
+                    match = re.fullmatch(r"AND,\(\(DOMAIN,([^,]+)\),\(DST-PORT,(\d+)\)\),([^,]+)", rule)
+                    self.assertIsNotNone(match, f"Unsupported compound rule: {rule}")
+                    domain, wanted_port, policy = match.groups()
+                    matches = host == domain and port == int(wanted_port)
+                else:
+                    kind, pattern, policy, *_ = rule.split(",")
+                    if kind == "DOMAIN":
+                        matches = host == pattern
+                    elif kind == "DOMAIN-SUFFIX":
+                        matches = host == pattern or host.endswith("." + pattern)
+                    elif kind == "DOMAIN-KEYWORD":
+                        matches = pattern in host
+                    elif kind == "IP-CIDR":
+                        matches = ip_address(address) in ip_network(pattern)
+                    else:
+                        self.fail(f"Unsupported rule type in GFN module: {kind}")
+                if matches:
+                    return policy
+            return None
+
+        cases = [
+            ("oauth.gfn.am", "203.0.113.9", 443, "GFN Region"),
+            ("apps.gxn.nvidia.com", "203.0.113.10", 443, "GFN Region"),
+            ("public.games.geforce.com", "203.0.113.11", 443, "GFN Region"),
+            ("api.gdn.nvidia.com", "203.0.113.12", 443, "GFN Region"),
+            ("pcs.geforcenow.com", "203.0.113.13", 443, "GFN Region"),
+            ("am-west.gcs.geforcenow.nvidiagrid.net", "37.186.111.142", 443, "GFN Region"),
+            ("npa-gcs-evn-01.gcs.geforcenow.nvidiagrid.net", "37.186.111.142", 443, "GFN Region"),
+            ("am-west.gcs.geforcenow.nvidiagrid.net", "37.186.111.142", 322, "DIRECT"),
+            ("npa-gcs-evn-01.gcs.geforcenow.nvidiagrid.net", "37.186.111.142", 49005, "DIRECT"),
+            ("37-186-111-142.gcs.geforcenow.nvidiagrid.net", "37.186.111.142", 322, "DIRECT"),
+            ("", "37.186.111.142", 49005, "DIRECT"),
+            ("login.nvidia.com", "203.0.113.14", 443, "DIRECT"),
+            ("example.org", "203.0.113.15", 443, None),
+        ]
+        for host, address, port, expected in cases:
+            with self.subTest(host=host, address=address, port=port):
+                self.assertEqual(route(host, address, port), expected)
+
+    def test_gfn_region_pool_selects_only_kazakhstan_ukraine_and_armenia(self) -> None:
+        group = key_values(REPO_ROOT / "modules/GFN-AM.module", "Proxy Group")["GFN Region"]
+        options = group.split(",")
+        self.assertEqual(options[0], "url-test")
+        self.assertIn("url=https://gfn.am/favicon.ico", options)
+        self.assertTrue(all("=" in option for option in options[1:]))
+        pattern = next(option.split("=", 1)[1] for option in options
+                       if option.startswith("policy-regex-filter="))
+        # Synthetic display names; no provider-specific names from real subscriptions.
+        accepted = ["KAZAKHSTAN synthetic VLESS", "Казахстан AWG", "KZ 1", "🇰🇿 VLESS",
+                    "Ukraine VLESS", "Украина TT", "Україна AWG", "UA 2", "🇺🇦 VLESS",
+                    "Armenia TT", "Армения VLESS", "Вірменія AWG", "Հայաստան 1", "AM 3", "🇦🇲 TT"]
+        rejected = ["Britain synthetic VLESS", "Germany VLESS", "Russia VLESS", "Belarus TT",
+                    "🇷🇺 AWG", "🇧🇾 VLESS", "USA synthetic", "PROXY", "DIRECT", "AUTO-SPEED",
+                    "AMAZON USA", "KZOO Germany", "GUAM", "MANUAL-PROXY"]
+        for name in accepted:
+            with self.subTest(node=name, expected="allowed"):
+                self.assertIsNotNone(re.search(pattern, name))
+        for name in rejected:
+            with self.subTest(node=name, expected="excluded"):
+                self.assertIsNone(re.search(pattern, name))
+
     def test_gfn_and_ru_real_ip_settings_are_separate(self) -> None:
         module = REPO_ROOT / "modules" / "GFN-AM.module"
         self.assertEqual(

@@ -59,6 +59,48 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/apple_pr
 
 Список доменов и диапазонов основан на [требованиях Apple для корпоративных сетей](https://support.apple.com/en-us/101555).
 
+### Каталог GFN через прокси, игровой поток напрямую
+
+Модуль `modules/GFN-AM.module` направляет запросы каталога и определения региона
+к `apps.gxn.nvidia.com`, `public.games.geforce.com`, `api.gdn.nvidia.com` и
+`pcs.geforcenow.com`, а также авторизацию `oauth.gfn.am` через отдельную
+группу `GFN Region`. Группа собирает узлы Казахстана, Украины и Армении
+по названиям, отдельным кодам стран и флагам из добавленных подписок.
+Автоматический выбор проверяет `https://gfn.am/favicon.ico` каждые 180 секунд.
+Общая политика `PROXY` для этих запросов не используется.
+Точные правила группы имеют приоритет перед общими правилами NVIDIA/GFN `DIRECT`.
+
+Добавьте узлы хотя бы одной из трёх стран перед включением модуля.
+Проверьте состав и выбранный узел группы **GFN Region** в Shadowrocket.
+Включите модуль и маршрутизацию **Config / Конфигурация**.
+HTTPS-запросы выдачи сессий на порту 443 к `am-west.gcs.geforcenow.nvidiagrid.net`
+и `npa-gcs-evn-01.gcs.geforcenow.nvidiagrid.net` также используют **GFN Region**.
+Остальные соединения с игровыми серверами и диапазоном `37.186.111.0/24`
+используют `DIRECT`. Диапазон не исключается из TUN: серверы API и игрового
+потока используют одни IP-адреса, поэтому маршруты разделяются правилами.
+Остальные исключения `DIRECT` сохраняются. Переключать VPN во время сессии не требуется.
+
+Постоянный адрес обновления модуля:
+
+```text
+https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/GFN-AM.module
+```
+
+Добавляйте модуль по этому URL или через ссылку импорта ниже. Заголовок `#!url`
+содержит тот же адрес. После публикации новой версии выполните обновление модуля
+в **Config → Modules**. Автоматическое обновление модулей включается отдельно
+в настройках Shadowrocket; наличие `#!url` само по себе его не включает.
+Версия отображается в описании модуля: `2026.11.04.1`.
+Пояснения прямо в модуле описывают назначение групп правил и порядок их применения.
+
+
+Проверьте поиск игры после повторного открытия GeForce NOW.
+Запустите игру и проверьте журнал Shadowrocket: запросы каталога должны
+использовать **GFN Region** с узлом разрешённой страны, а соединения с
+игровым сервером — `DIRECT`.
+Если выдача сессии завершается ошибкой региона, проверьте выбранный узел
+**GFN Region** и адрес неудачного запроса.
+
 ### WeChat напрямую
 
 Если при активном VPN в WeChat не загружаются сообщения, изображения или
@@ -105,7 +147,7 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_adver
 | 15_01 · Apple Proxy | `modules/apple_proxy.module` | Сервисы Apple через выбранную политику PROXY |
 | 15_02 · OpenAI USA | `modules/openai_usa.module` | OpenAI через автоматический выбор среди узлов USA из всех подписок |
 | 15_03 · Twitch PL-RS | `modules/twitch_poland.module` | Twitch через автоматический выбор польских и сербских узлов из всех подписок |
-| 20_01 · GFN Direct | `modules/GFN-AM.module` | NVIDIA/GFN и связанные исключения DIRECT |
+| 20_01 · GFN Direct | `modules/GFN-AM.module` | Каталог и авторизация через GFN Region (KZ/UA/AM); игровые серверы DIRECT |
 | 20_02 · WeChat Direct | `modules/wechat_direct.module` | WeChat и его CDN через DIRECT |
 | 90 · Anti-Advertising | `modules/anti_advertising.module` | Общая блокировка после сервисных исключений |
 
