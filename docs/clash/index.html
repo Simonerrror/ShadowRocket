@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-0e4HgWWYSRvqyrrBnURW+mpTQ45+DYBTmx+yfeBjqlQ='; style-src 'sha256-BhEVl8u/XRu0Be0WBIQSukSyZIG3aus10zzQdcC+1as='; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; worker-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-0e4HgWWYSRvqyrrBnURW+mpTQ45+DYBTmx+yfeBjqlQ='; style-src 'sha256-0PV01WmQz3FkpeT393OXfvfhzeiIKzqi4aEufsXWZ9s='; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; worker-src 'none'">
 <meta name="referrer" content="no-referrer">
 <title>Личный конфиг · FlClash / Clash Mi</title>
 <meta name="description" content="Соберите конфиг FlClash или Clash Mi из своих подписок. Обработка в браузере без отправки данных на сервер.">
@@ -12,10 +12,12 @@
 a{color:#d7fd80}input[type=file]{font-family:system-ui}input[type=file]::file-selector-button{background:#34422b;color:#eef5e7;border:0;border-radius:5px;padding:8px;margin-right:12px;cursor:pointer}button:disabled{opacity:.6;cursor:wait}.details-body ol{line-height:1.8}.details-body li+li{margin-top:7px}
 
 .actions{flex-wrap:wrap}.actions button[type=submit]{min-width:190px}
+.site-nav{display:flex;flex-wrap:wrap;gap:6px;margin:20px 0 0}.site-nav a{display:block;padding:9px 10px;border:1px solid #36402f;border-radius:999px;color:#c7d3ba;text-decoration:none;font-size:12px;font-weight:600;line-height:1.3}.site-nav a:hover{background:#26351b}.site-nav a[aria-current="page"]{background:#d7fd80;border-color:#d7fd80;color:#1a2510}.intro{padding-top:32px}
 </style>
 </head>
-<body><main>
-<header><a class="brand" href="../">◈ <span>ЛИЧНЫЙ КОНФИГ</span></a><span class="badge">FlClash / Clash Mi</span></header>
+<body><main id="generator">
+<header><a class="brand" href="https://simonerrror.github.io/ShadowRocket/">🥔 <span>MotivatoPotato</span></a><span class="badge">FlClash / Clash Mi</span></header>
+<nav aria-label="Разделы сайта" class="site-nav"><a href="https://simonerrror.github.io/ShadowRocket/">Главная</a><a href="https://simonerrror.github.io/ShadowRocket/#shadowrocket">Shadowrocket</a><a href="#generator" aria-current="page">Clash</a><a href="https://simonerrror.github.io/ShadowRocket/#incy">INCY</a></nav>
 <div class="intro"><p class="eyebrow">ВАШИ ПОДПИСКИ. ВАШ КОНФИГ.</p><h1>Соберите всё<br>в один <em>YAML.</em></h1><p class="lead">Добавьте подписки, ссылки или файлы нужных протоколов. Скачайте готовый файл для выбранного клиента — все данные обрабатываются в этой вкладке.</p></div>
 <p><button type="button" class="secondary" id="download-offline">Скачать офлайн-генератор</button></p>
 <p class="hint">Можно скачать чистую HTML-страницу и открыть без сети до ввода своих данных.</p>

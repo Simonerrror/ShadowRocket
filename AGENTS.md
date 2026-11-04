@@ -2,6 +2,8 @@
 
 ## Lessons
 
+- When adding or changing a public page, keep a visible route to the main hub and the shared section navigation; verify cross-page links and preserve offline generation and its CSP.
+
 - When updating Clash routing or DNS defaults, derive both the public template and browser outputs from `scripts/build_clash_config.py`; rebuild the standalone page and check both client outputs instead of maintaining a second baseline in JavaScript.
 
 - When adding or renaming a module, apply the numbering contract in [Порядок модулей](docs/shadowrocket-modules.md#порядок-модулей) to its `#!name`, documentation and any site button. Verify all modules and displayed buttons with the existing numbering tests; do not introduce a separate sequence on the site.

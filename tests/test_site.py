@@ -20,18 +20,36 @@ class Page(HTMLParser):
         self.links: dict[str, str] = {}
         self.ids: set[str] = set()
         self.assets: list[str] = []
+        self.navigation: list[dict[str, str]] = []
+        self._in_navigation = False
+        self._nav_link = None
         self.feed(text)
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
+        if tag == "nav" and attrs.get("aria-label") == "Разделы сайта":
+            self._in_navigation = True
         if "id" in attrs:
             self.ids.add(attrs["id"])
         if tag == "a":
             self.links[attrs.get("id", attrs["href"])] = attrs["href"]
+            if self._in_navigation:
+                self._nav_link = {"href": attrs["href"], "label": "", "current": attrs.get("aria-current", "")}
+                self.navigation.append(self._nav_link)
         if tag == "img":
             self.assets.append(attrs["src"])
         if tag == "link" and attrs.get("rel") == "icon":
             self.assets.append(attrs["href"])
+
+    def handle_data(self, data):
+        if self._nav_link is not None:
+            self._nav_link["label"] += data
+
+    def handle_endtag(self, tag):
+        if tag == "a":
+            self._nav_link = None
+        elif tag == "nav":
+            self._in_navigation = False
 
 
 class PublicSiteTests(unittest.TestCase):
@@ -39,6 +57,27 @@ class PublicSiteTests(unittest.TestCase):
     def setUpClass(cls):
         cls.html = (ROOT / "docs/index.html").read_text()
         cls.page = Page(cls.html)
+
+    def test_shared_navigation_connects_all_sections_from_both_pages(self):
+        targets = {"Главная": "", "Shadowrocket": "#shadowrocket", "Clash": "clash/", "INCY": "#incy"}
+        for relative, active in (("", "Главная"), ("clash/", "Clash")):
+            html = (ROOT / "docs" / relative / "index.html").read_text()
+            page = Page(html)
+            self.assertEqual([link["label"] for link in page.navigation], list(targets))
+            self.assertEqual([link["label"] for link in page.navigation if link["current"] == "page"], [active])
+            for link in page.navigation:
+                destination = urlsplit(urljoin(SITE_URL + relative, link["href"]))
+                expected = urlsplit(urljoin(SITE_URL, targets[link["label"]]))
+                self.assertEqual((destination.scheme, destination.netloc, destination.path),
+                                 (expected.scheme, expected.netloc, expected.path))
+                if expected.fragment:
+                    self.assertEqual(destination.fragment, expected.fragment)
+                if destination.fragment:
+                    target_path = destination.path.removeprefix("/ShadowRocket/")
+                    target = Page((ROOT / "docs" / target_path / "index.html").read_text())
+                    self.assertIn(destination.fragment, target.ids)
+            first_action = html.index("<form") if relative else html.index("Добавить в Shadowrocket")
+            self.assertLess(html.index('<nav aria-label="Разделы сайта"'), first_action)
 
     def test_generated_page_is_current_and_embeds_both_incy_profiles(self):
         default = read_deeplink(ROOT / "INCY/DEFAULT.DEEPLINK")
