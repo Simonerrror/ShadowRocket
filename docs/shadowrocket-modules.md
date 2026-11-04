@@ -195,8 +195,6 @@ DOMAIN-KEYWORD, DOMAIN-SUFFIX и IP-CIDR правила. Остальные пр
 | Порядок | Модуль | Импорт |
 |---|---|---|
 | 01_01 | DNS Override Example | [Текст примера для локальной копии](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/dns_override.module) |
-| 10_01 | Tailscale Direct | [Добавить](https://simonerrror.github.io/ShadowRocket/#module-tailscale-direct) |
-| 10_02 | Tailscale Tailnet | [Добавить](https://simonerrror.github.io/ShadowRocket/#module-tailscale-tailnet) |
 | 15_01 | Apple Proxy | [Добавить](https://simonerrror.github.io/ShadowRocket/#module-apple) |
 | 15_02 | OpenAI USA | [Добавить](https://simonerrror.github.io/ShadowRocket/#module-openai) |
 | 15_03 | Twitch No Advertise | [Добавить](https://simonerrror.github.io/ShadowRocket/#module-twitch) |

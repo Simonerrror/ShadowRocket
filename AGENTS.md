@@ -2,6 +2,8 @@
 
 ## Lessons
 
+- When arranging the public hub, keep each client’s main action visible before optional catalogs and instructions; use section anchors in the hub menu with scroll spacing. Exclude personal Tailscale modules from the site catalog.
+
 - When adding or changing a public page, keep a visible route to the main hub and the shared section navigation; verify cross-page links and preserve offline generation and its CSP.
 
 - When updating Clash routing or DNS defaults, derive both the public template and browser outputs from `scripts/build_clash_config.py`; rebuild the standalone page and check both client outputs instead of maintaining a second baseline in JavaScript.

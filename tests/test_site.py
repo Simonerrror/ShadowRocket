@@ -23,14 +23,23 @@ class Page(HTMLParser):
         self.navigation: list[dict[str, str]] = []
         self._in_navigation = False
         self._nav_link = None
+        self.disclosures = {}
+        self._details = []
         self.feed(text)
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
+        if tag == "details":
+            disclosure = {"open": "open" in attrs, "ids": set()}
+            self._details.append(disclosure)
+            if "id" in attrs:
+                self.disclosures[attrs["id"]] = disclosure
         if tag == "nav" and attrs.get("aria-label") == "Разделы сайта":
             self._in_navigation = True
         if "id" in attrs:
             self.ids.add(attrs["id"])
+            for disclosure in self._details:
+                disclosure["ids"].add(attrs["id"])
         if tag == "a":
             self.links[attrs.get("id", attrs["href"])] = attrs["href"]
             if self._in_navigation:
@@ -50,6 +59,8 @@ class Page(HTMLParser):
             self._nav_link = None
         elif tag == "nav":
             self._in_navigation = False
+        elif tag == "details":
+            self._details.pop()
 
 
 class PublicSiteTests(unittest.TestCase):
@@ -59,7 +70,7 @@ class PublicSiteTests(unittest.TestCase):
         cls.page = Page(cls.html)
 
     def test_shared_navigation_connects_all_sections_from_both_pages(self):
-        targets = {"Главная": "", "Shadowrocket": "#shadowrocket", "Clash": "clash/", "INCY": "#incy"}
+        targets = {"Главная": "", "Shadowrocket": "#shadowrocket", "Clash": "#clash", "INCY": "#incy"}
         for relative, active in (("", "Главная"), ("clash/", "Clash")):
             html = (ROOT / "docs" / relative / "index.html").read_text()
             page = Page(html)
@@ -67,7 +78,8 @@ class PublicSiteTests(unittest.TestCase):
             self.assertEqual([link["label"] for link in page.navigation if link["current"] == "page"], [active])
             for link in page.navigation:
                 destination = urlsplit(urljoin(SITE_URL + relative, link["href"]))
-                expected = urlsplit(urljoin(SITE_URL, targets[link["label"]]))
+                target = "clash/#generator" if relative and link["label"] == "Clash" else targets[link["label"]]
+                expected = urlsplit(urljoin(SITE_URL, target))
                 self.assertEqual((destination.scheme, destination.netloc, destination.path),
                                  (expected.scheme, expected.netloc, expected.path))
                 if expected.fragment:
@@ -87,7 +99,7 @@ class PublicSiteTests(unittest.TestCase):
         self.assertEqual(self.page.links["incy-ru"], ru)
         self.assertNotIn("{{", self.html)
 
-    def test_buttons_import_the_public_config_and_all_numbered_modules_directly(self):
+    def test_buttons_import_the_public_config_and_selected_numbered_modules_directly(self):
         self.assertIn(f"shadowrocket://config/add/{PUBLIC}/shadowrocket.conf", self.page.links.values())
         buttons = re.findall(r'<a id="module-[^"]+" class="button" href="([^"]+)"><span><span class="num">([^<]+)</span>([^<]+)<small', self.html)
         shown = {}
@@ -103,11 +115,22 @@ class PublicSiteTests(unittest.TestCase):
             shown[filename] = f"{number} · {name}"
             numbers.append(number)
         actual = {p.name: re.search(r"^#!name=(.+)$", p.read_text(), re.M)[1]
-                  for p in (ROOT / "modules").glob("*.module")}
+                  for p in (ROOT / "modules").glob("*.module")
+                  if p.name not in {"tailscale_direct.module", "tailscale_tailnet.module"}}
         self.assertEqual(shown, actual)
         self.assertEqual(numbers, sorted(set(numbers)))
         self.assertTrue(numbers[0].startswith("01_"))
         self.assertTrue(numbers[-1].startswith("90_"))
+
+    def test_optional_catalog_is_collapsed_and_personal_modules_are_not_published(self):
+        catalog = self.page.disclosures.get("modules")
+        self.assertIsNotNone(catalog, "Module catalog must be a disclosure")
+        self.assertFalse(catalog["open"])
+        self.assertIn("module-apple", catalog["ids"])
+        self.assertIn("module-dns-example", catalog["ids"])
+        self.assertNotIn("tailscale", self.html.lower())
+        self.assertIn("clash-generator", self.page.links)
+        self.assertEqual(self.page.links["clash-generator"], "./clash/")
 
     def test_images_and_favicon_work_under_the_project_path(self):
         self.assertTrue((ROOT / "docs/.nojekyll").is_file())

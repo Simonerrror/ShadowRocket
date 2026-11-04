@@ -65,7 +65,10 @@ class ShadowrocketProfilesTests(unittest.TestCase):
         self.assertTrue(names[0].endswith(" · DNS Override Example"))
         self.assertTrue(names[-1].endswith(" · Anti-Advertising"))
         imports = re.findall(r"^\| (\d{2}_\d{2}) \| ([^|]+?) \| \[", docs, re.M)
-        self.assertEqual([f"{number} · {name}" for number, name in imports], names)
+        public_names = [name for name, path in documented if path not in {
+            "modules/tailscale_direct.module", "modules/tailscale_tailnet.module",
+        }]
+        self.assertEqual([f"{number} · {name}" for number, name in imports], public_names)
 
     def test_apple_module_routes_the_external_service_list_through_proxy(self) -> None:
         from ipaddress import ip_address, ip_network
