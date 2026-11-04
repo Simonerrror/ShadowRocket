@@ -9,3 +9,5 @@ XKeen/singles/*/*.json
 XKeen/diagnostics/*/*.json
 AGENTS.local.md
 /docs/superpowers/
+site/clash/node_modules/
+site/clash/generated/

@@ -19,13 +19,7 @@ DEFAULT_PROVIDER_EXCLUDE_FILTER = ""
 DEFAULT_HEALTHCHECK_URL = "https://www.youtube.com/favicon.ico"
 DEFAULT_HEALTHCHECK_INTERVAL = 780
 RULE_PROVIDER_INTERVAL = 86400
-SHADOWROCKET_MANUAL_SUBSCRIPTION_FILTER = r"(?i)^(?!.*\bWL\b)(?!.*\bSS\b).*$"
-SHADOWROCKET_AUTO_SUBSCRIPTION_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\b(?:VLESS|TT|Naive|NV|MR|AWG(?:2|3\.1)?)\b.*$"
-SHADOWROCKET_WL_SUBSCRIPTION_FILTER = r"(?i)\bWL\b"
-MIHOMO_MANUAL_SUBSCRIPTION_EXCLUDE_FILTER = r"(?i)\b(?:WL|SS)\b"
-MIHOMO_AUTO_SUBSCRIPTION_FILTER = r"(?i)\b(?:VLESS|TT|Naive|NV|MR|AWG(?:2|3\.1)?)\b"
 MIHOMO_AUTO_SUBSCRIPTION_EXCLUDE_FILTER = r"(?i)Russia|Belarus|Ukraine|\bWL\b"
-MIHOMO_WL_FILTER = r"(?i)\bWL\b"
 FAKE_IP_FILTER = [
     "+.lan",
     "+.local",
@@ -198,63 +192,26 @@ def render_rule_providers(rule_lines: list[str]) -> tuple[list[str], list[str]]:
 
 
 def render_proxy_groups(groups: list[GroupSpec]) -> tuple[list[str], list[str]]:
-    warnings: list[str] = []
-    rendered: list[str] = ["proxy-groups:"]
-
-    for group in groups:
-        rendered.extend(
-            [
-                f"  - name: {group.name}",
-                f"    type: {group.group_type}",
-            ]
-        )
-
-        regex_filter = group.attrs.get("policy-regex-filter")
-        if regex_filter:
-            rendered.extend(["    use:", "      - Main-Sub"])
-            if regex_filter == SHADOWROCKET_MANUAL_SUBSCRIPTION_FILTER:
-                rendered.append(f"    exclude-filter: {yaml_quote(MIHOMO_MANUAL_SUBSCRIPTION_EXCLUDE_FILTER)}")
-            elif regex_filter == SHADOWROCKET_AUTO_SUBSCRIPTION_FILTER:
-                rendered.append(f"    filter: {yaml_quote(MIHOMO_AUTO_SUBSCRIPTION_FILTER)}")
-                rendered.append(f"    exclude-filter: {yaml_quote(MIHOMO_AUTO_SUBSCRIPTION_EXCLUDE_FILTER)}")
-            elif regex_filter == SHADOWROCKET_WL_SUBSCRIPTION_FILTER:
-                rendered.append(f"    filter: {yaml_quote(MIHOMO_WL_FILTER)}")
-            else:
-                rendered.append(f"    filter: {yaml_quote(regex_filter)}")
-        elif not group.members:
-            rendered.extend(["    use:", "      - Main-Sub"])
-
-        if group.members:
-            rendered.append("    proxies:")
-            for member in group.members:
-                rendered.append(f"      - {member}")
-
-        if group.group_type in {"url-test", "fallback"}:
-            url = group.attrs.get("url", DEFAULT_HEALTHCHECK_URL)
-            rendered.append(f"    url: {yaml_quote(url)}")
-            if "interval" in group.attrs:
-                rendered.append(f"    interval: {group.attrs['interval']}")
-            if group.group_type == "url-test" and "tolerance" in group.attrs:
-                rendered.append(f"    tolerance: {group.attrs['tolerance']}")
-            if "timeout" in group.attrs:
-                warnings.append(f"{group.name}: Clash builder ignores Shadowrocket timeout={group.attrs['timeout']}")
-
-        unsupported_keys = set(group.attrs) - {"policy-regex-filter", "use", "url", "interval", "tolerance", "timeout"}
-        if "policy-select-name" in unsupported_keys:
-            warnings.append(f"{group.name}: Clash builder ignores policy-select-name={group.attrs['policy-select-name']}")
-            unsupported_keys.remove("policy-select-name")
-        for key in sorted(unsupported_keys):
-            warnings.append(f"{group.name}: unsupported proxy-group option {key}={group.attrs[key]}")
-
-        rendered.append("")
-
-    if rendered and rendered[-1] == "":
-        rendered.pop()
-    return rendered, warnings
+    auto = next((group for group in groups if group.name == "AUTO-SPEED" and group.group_type == "url-test"), None)
+    if auto is None:
+        raise ValueError("The source profile must define AUTO-SPEED as url-test")
+    lines = [
+        "proxy-groups:",
+        "  - name: Режим",
+        "    type: url-test",
+        "    use:",
+        "      - Main-Sub",
+        f"    exclude-filter: {yaml_quote(MIHOMO_AUTO_SUBSCRIPTION_EXCLUDE_FILTER)}",
+        f"    url: {yaml_quote(auto.attrs.get('url', DEFAULT_HEALTHCHECK_URL))}",
+        f"    interval: {auto.attrs.get('interval', '180')}",
+        f"    tolerance: {auto.attrs.get('tolerance', '100')}",
+    ]
+    warnings = ["Режим: Clash builder ignores Shadowrocket timeout=" + auto.attrs["timeout"]] if "timeout" in auto.attrs else []
+    return lines, warnings
 
 
 def normalize_rule_target(target: str) -> str:
-    return target.strip()
+    return "Режим" if target.strip() == "PROXY" else target.strip()
 
 
 def render_rules(rule_lines: list[str]) -> tuple[list[str], list[str]]:
@@ -323,7 +280,6 @@ def build_config(conf_path: Path, subscription_url: str) -> tuple[str, list[str]
     warnings: list[str] = []
 
     dns_servers = parse_csv(general.get("dns-server", "77.88.8.8,8.8.8.8"))
-    fallback_dns = parse_csv(general.get("fallback-dns-server", "tls://77.88.8.8,tls://8.8.8.8"))
     ipv6_enabled = parse_bool(general.get("ipv6", "false"), default=False)
     healthcheck_url = derive_healthcheck_url(groups)
     rule_providers_block, provider_warnings = render_rule_providers(rule_lines)
@@ -336,7 +292,7 @@ def build_config(conf_path: Path, subscription_url: str) -> tuple[str, list[str]
     lines = [
         "# CLASH VERGE REV (MIHOMO) CONFIG",
         "# AUTO-GENERATED FROM shadowrocket.conf",
-        "# Derived routing truth: proxy groups, rule-providers, rules",
+        "# Shared routing rules; one automatic Mihomo pool",
         "",
         "port: 7890",
         "socks-port: 7891",
@@ -358,7 +314,8 @@ def build_config(conf_path: Path, subscription_url: str) -> tuple[str, list[str]
         "# 2. DNS (Fake-IP)",
         "dns:",
         "  enable: true",
-        "  listen: 0.0.0.0:1053",
+        "  listen: 127.0.0.1:1053",
+        "  use-hosts: true",
         f"  ipv6: {'true' if ipv6_enabled else 'false'}",
         "  enhanced-mode: fake-ip",
         "  fake-ip-range: 198.18.0.1/16",
@@ -368,15 +325,13 @@ def build_config(conf_path: Path, subscription_url: str) -> tuple[str, list[str]
     lines.extend(
         [
             "  default-nameserver:",
-            *(f"    - {server}" for server in dns_servers),
+            "    - 1.1.1.1",
+            "    - 8.8.8.8",
+            "  proxy-server-nameserver:",
+            "    - https://1.1.1.1/dns-query",
+            "    - https://8.8.8.8/dns-query",
             "  nameserver:",
             *(f"    - {server}" for server in dns_servers),
-            "  fallback:",
-            *(f"    - {server}" for server in fallback_dns),
-            "  fallback-filter:",
-            "    geoip: false",
-            "    ipcidr:",
-            "      - 0.0.0.0/0",
             "",
             "# 3. PROVIDERS",
             "proxy-providers:",

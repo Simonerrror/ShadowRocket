@@ -25,6 +25,7 @@ GENERATED_MODULES = {
 GENERATED_FILES = {
     "clash_config.yaml",
     "docs/index.html",
+    "docs/clash/index.html",
     "distillate/summary.json",
     "INCY/DEFAULT.JSON",
     "INCY/DEFAULT.DEEPLINK",

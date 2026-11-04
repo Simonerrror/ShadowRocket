@@ -1,6 +1,6 @@
 # CLASH VERGE REV (MIHOMO) CONFIG
 # AUTO-GENERATED FROM shadowrocket.conf
-# Derived routing truth: proxy groups, rule-providers, rules
+# Shared routing rules; one automatic Mihomo pool
 
 port: 7890
 socks-port: 7891
@@ -22,7 +22,8 @@ tun:
 # 2. DNS (Fake-IP)
 dns:
   enable: true
-  listen: 0.0.0.0:1053
+  listen: 127.0.0.1:1053
+  use-hosts: true
   ipv6: false
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
@@ -40,21 +41,15 @@ dns:
     - "time.android.com"
     - "*.ntp.org"
   default-nameserver:
-    - 9.9.9.9
-    - 149.112.112.112
-    - 77.88.8.8
+    - 1.1.1.1
+    - 8.8.8.8
+  proxy-server-nameserver:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
   nameserver:
     - 9.9.9.9
     - 149.112.112.112
     - 77.88.8.8
-  fallback:
-    - 9.9.9.9
-    - 149.112.112.112
-    - 77.88.8.8
-  fallback-filter:
-    geoip: false
-    ipcidr:
-      - 0.0.0.0/0
 
 # 3. PROVIDERS
 proxy-providers:
@@ -112,45 +107,25 @@ rule-providers:
 
 # 5. PROXY GROUPS
 proxy-groups:
-  - name: MANUAL-PROXY
-    type: select
-    use:
-      - Main-Sub
-    exclude-filter: "(?i)\\b(?:WL|SS)\\b"
-
-  - name: AUTO-SPEED
+  - name: Режим
     type: url-test
     use:
       - Main-Sub
-    filter: "(?i)\\b(?:VLESS|TT|Naive|NV|MR|AWG(?:2|3\\.1)?)\\b"
     exclude-filter: "(?i)Russia|Belarus|Ukraine|\\bWL\\b"
     url: "https://www.youtube.com/favicon.ico"
     interval: 180
     tolerance: 100
 
-  - name: WL
-    type: select
-    use:
-      - Main-Sub
-    filter: "(?i)\\bWL\\b"
-
-  - name: PROXY
-    type: select
-    proxies:
-      - AUTO-SPEED
-      - MANUAL-PROXY
-      - WL
-
 # 6. RULES
 rules:
   - RULE-SET,torrent_block,REJECT
   - RULE-SET,whitelist_direct,DIRECT
-  - RULE-SET,greylist_proxy,PROXY
-  - RULE-SET,microsoft,PROXY
-  - RULE-SET,domains_community,PROXY
+  - RULE-SET,greylist_proxy,Режим
+  - RULE-SET,microsoft,Режим
+  - RULE-SET,domains_community,Режим
   - DOMAIN-SUFFIX,ru,DIRECT
   - DOMAIN-SUFFIX,xn--p1ai,DIRECT
   - DOMAIN-SUFFIX,su,DIRECT
   - GEOIP,RU,DIRECT
   - GEOIP,private,DIRECT
-  - MATCH,PROXY
+  - MATCH,Режим

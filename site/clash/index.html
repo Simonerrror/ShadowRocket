@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; worker-src 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Личный конфиг · FlClash / Clash Mi</title>
+<meta name="description" content="Соберите конфиг FlClash или Clash Mi из своих подписок. Обработка в браузере без отправки данных на сервер.">
+<link rel="stylesheet" href="./style.css"><script type="module" src="./app.mjs"></script>
+</head>
+<body><main>
+<header><a class="brand" href="../">◈ <span>ЛИЧНЫЙ КОНФИГ</span></a><span class="badge">FlClash / Clash Mi</span></header>
+<div class="intro"><p class="eyebrow">ВАШИ ПОДПИСКИ. ВАШ КОНФИГ.</p><h1>Соберите всё<br>в один <em>YAML.</em></h1><p class="lead">Добавьте подписки, ссылки или файлы нужных протоколов. Скачайте готовый файл для выбранного клиента — все данные обрабатываются в этой вкладке.</p></div>
+<p><button type="button" class="secondary" id="download-offline">Скачать офлайн-генератор</button></p>
+<p class="hint">Можно скачать чистую HTML-страницу и открыть без сети до ввода своих данных.</p>
+<section class="workspace" aria-label="Сборка конфига">
+<form autocomplete="off">
+<div class="step"><span>01</span><h2>Подписки</h2></div>
+<label for="subscription-main">VLESS и остальные протоколы · по одной подписке на строку</label>
+<textarea id="subscription-main" rows="3" placeholder="https://vpn.example/subscription" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
+<label for="subscription-hysteria">Hysteria2</label>
+<input id="subscription-hysteria" type="url" placeholder="https://vpn.example/hysteria2" autocomplete="off" autocapitalize="off" spellcheck="false">
+<p class="hint">Нужны ссылки с выдачей Clash/Mihomo. После импорта их обновляет выбранное приложение.</p>
+<div class="step"><span>02</span><h2>Дополнительные протоколы</h2></div>
+<label for="protocol-files">Файлы протоколов · необязательно</label>
+<input id="protocol-files" type="file" multiple accept=".yaml,.yml,.json,.conf,.ovpn,.zip">
+<p id="protocol-files-status" class="hint" aria-live="polite">Файлы не выбраны.</p>
+<p class="hint">WG и AWG — .conf; OpenVPN — .ovpn; любой поддерживаемый протокол — Mihomo YAML/JSON. Можно выбрать ZIP с набором файлов. Всего — до 100 файлов и 16 МиБ после распаковки.</p>
+<details><summary>Как подготовить TrustTunnel и AWG</summary><div class="details-body"><p class="hint">В кабинете своего провайдера скачайте TrustTunnel в формате Mihomo YAML/JSON, а WG/AWG — в формате .conf или ZIP. Файлы выберите выше. Сайт не запрашивает их у провайдера.</p></div></details>
+<details><summary>Отдельные ссылки на узлы <span>необязательно</span></summary><div class="details-body">
+<label for="links">VLESS, Trojan, SS, Hysteria2, WG, AWG, TT или Mieru · по одной на строку</label>
+<textarea id="links" rows="3" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="vless://…&#10;trojan://…&#10;ss://…"></textarea>
+<p class="hint">Ссылки на подписки укажите в первых двух полях. HTTPS-ссылку на файл сначала скачайте самостоятельно.</p>
+</div></details>
+<details><summary>Настройка Clash Mi</summary><p class="hint">Для TLS Global Fingerprint выберите «Не переопределять» в настройках ядра приложения.</p></details><div class="step"><span>03</span><h2>DNS</h2></div>
+
+<label for="dns">Свой DNS-over-HTTPS · необязательно</label>
+<input id="dns" type="url" placeholder="https://dns.example/dns-query" autocomplete="off" autocapitalize="off" spellcheck="false">
+<p class="hint">Если оставить поле пустым, используются публичные DNS основного конфига Shadowrocket. Достаточно добавить хотя бы один источник узлов; остальные поля можно пропустить.</p>
+<details><summary>Smart DNS для Gemini <span>необязательно</span></summary><div class="details-body">
+<label for="smart-dns">Адрес Smart DNS-over-HTTPS</label><input id="smart-dns" type="url" placeholder="https://smart-dns.example/dns-query" autocomplete="off" spellcheck="false">
+<label for="relay">IPv4 релея Smart DNS</label><input id="relay" inputmode="decimal" placeholder="Адрес от вашего сервиса Smart DNS" autocomplete="off" spellcheck="false">
+<p class="hint">Gemini и служебные домены пойдут через VPN к релею. Если IP не указан, адрес определит Smart DNS. Обычный DNS не заменяет Smart DNS-релей.</p>
+</div></details>
+<div class="actions"><button type="submit" name="client" value="flclash">Скачать для FlClash / Mihomo <span>↗</span></button><button type="submit" name="client" value="clashmi">Скачать для Clash Mi <span>↗</span></button><button type="reset" class="secondary">Очистить</button></div>
+<p id="status" role="status" aria-live="polite"></p>
+</form>
+<aside><div class="privacy-mark">↳</div><h2>Остаётся у вас</h2><p>Ссылки и файлы остаются в памяти вкладки и в скачанном YAML. Страница не сохраняет их и не передаёт на сервер.</p><p class="hint">Сетевые соединения и отправка форм запрещены политикой CSP. Ни аккаунта, ни аналитики, ни постоянного хранилища.</p><p class="hint">Скачайте HTML до ввода данных. Откройте его без сети и соберите YAML. Данные загрузит VPN-клиент после импорта.</p><p class="hint">Проверяйте версию и <a href="https://github.com/Simonerrror/ShadowRocket/tree/main/site/clash" rel="noreferrer noopener" target="_blank">исходный код</a>. CSP не защищает от расширений браузера или подмены самой страницы на хостинге.</p><div class="divider"></div><p class="eyebrow">ЧТО ДАЛЬШЕ</p><ol><li>Скачайте YAML.</li><li>Откройте профили выбранного приложения.</li><li>Импортируйте локальный файл.</li><li>Выберите профиль и подключитесь.</li></ol><p class="hint">Подписки обновляет приложение. При изменении файлов или отдельных узлов соберите YAML повторно.</p></aside>
+</section><footer><span>Без аккаунта · Без хранения ссылок · Без аналитики</span><span>Собирается в вашем браузере ↗</span></footer>
+</main><noscript>Для локальной сборки конфига включите JavaScript.</noscript></body></html>

@@ -17,6 +17,7 @@ ACTION_PINS = (
     "actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff",
     "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
     "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+    "actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e",
 )
 
 
@@ -72,7 +73,10 @@ class WorkflowHardeningTests(unittest.TestCase):
                     self.assertIn(pin, combined)
         self.assertNotRegex(combined, r"uses: actions/[^@]+@v\d")
         content = DEPLOY_WORKFLOW.read_text(encoding="utf-8")
-        self.assertNotIn("npm ", content)
+        self.assertIn('node-version: "22.17.1"', content)
+        self.assertIn("npm ci --ignore-scripts --prefix site/clash", content)
+        self.assertIn("npm audit --include=dev --audit-level=high --prefix site/clash", content)
+        self.assertIn("npm test --prefix site/clash", content)
         self.assertIn("permissions:\n  contents: read", content)
         self.assertIn("persist-credentials: false", content)
 
@@ -82,7 +86,7 @@ class WorkflowHardeningTests(unittest.TestCase):
         deploy = content.split("  deploy:", 1)[1]
         for required in (
             "push:", "pull_request:", "workflow_dispatch:", "workflow_run:",
-            'workflows: ["Sync rule lists"]', "python3 scripts/build_site.py",
+            'workflows: ["Sync rule lists"]', "python3 scripts/build_site.py", "python3 scripts/build_clash_page.py",
             "git diff --exit-code", "python3 -m unittest discover -s tests",
         ):
             with self.subTest(required=required):
@@ -111,6 +115,10 @@ class WorkflowHardeningTests(unittest.TestCase):
         self.assertIn("python3 scripts/build_site.py", verify)
         self.assertIn(generated, sync)
         self.assertTrue(is_allowed_publish_path(generated))
+        self.assertTrue(is_allowed_publish_path("docs/clash/index.html"))
+        self.assertIn("docs/clash/index.html", sync)
+        self.assertIn("python3 scripts/build_clash_page.py", verify)
+        self.assertIn("python3 scripts/build_clash_page.py", deploy)
         for content in (sync, verify):
             with self.subTest(content="workflow build"):
                 self.assertIn("python3 scripts/build_incy_routing.py", content)
@@ -143,6 +151,7 @@ class WorkflowHardeningTests(unittest.TestCase):
             "modules/anti_advertising.module",
             "clash_config.yaml",
             "docs/index.html",
+            "docs/clash/index.html",
             "INCY/DEFAULT.JSON",
             "INCY/DEFAULT.DEEPLINK",
             "INCY/RU-VPN.JSON",

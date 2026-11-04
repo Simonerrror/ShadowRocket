@@ -4,6 +4,9 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import base64
+import hashlib
+import re
 from pathlib import Path
 
 from scripts.build_site import (
@@ -22,6 +25,24 @@ VALID_INCY_ADD = "incy://routing/add/eyJOYW1lIjoiZGVmYXVsdCJ9"
 
 
 class SiteBuildTests(unittest.TestCase):
+    def test_clash_page_is_self_contained_and_has_network_blocking_csp(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        output = root / "docs/clash/index.html"
+        self.assertTrue(output.is_file(), "build_clash_page.py must produce the offline Clash generator")
+        html = output.read_text()
+        self.assertNotRegex(html, r'<script[^>]+src=|<link[^>]+rel="stylesheet"')
+        policy = re.search(r'http-equiv="Content-Security-Policy" content="([^"]+)"', html)[1]
+        for directive in ("default-src 'none'", "connect-src 'none'", "form-action 'none'", "worker-src 'none'"):
+            self.assertIn(directive, policy)
+        self.assertNotIn("'unsafe-inline'", policy)
+        self.assertNotIn("'unsafe-eval'", policy)
+        for tag in ("script", "style"):
+            parts = re.findall(fr"<{tag}(?: [^>]*)?>([\s\S]*?)</{tag}>", html)
+            self.assertEqual(len(parts), 1)
+            digest = base64.b64encode(hashlib.sha256(parts[0].encode()).digest()).decode()
+            self.assertIn(f"{tag}-src 'sha256-{digest}'", policy)
+        self.assertIn('id="download-offline"', html)
+
     def test_template_requires_each_incy_button_once(self) -> None:
         for template in ('{{INCY_DEFAULT}}', '{{INCY_DEFAULT}}{{INCY_RU}}{{INCY_RU}}'):
             with self.subTest(template=template):

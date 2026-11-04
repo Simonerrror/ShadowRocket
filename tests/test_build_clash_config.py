@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import re
 import unittest
 
@@ -12,10 +11,7 @@ from scripts.build_clash_config import (
 )
 
 
-EXPECTED_MIHOMO_MANUAL_EXCLUDE_FILTER = r"(?i)\b(?:WL|SS)\b"
-EXPECTED_MIHOMO_AUTO_FILTER = r"(?i)\b(?:VLESS|TT|Naive|NV|MR|AWG(?:2|3\.1)?)\b"
 EXPECTED_MIHOMO_AUTO_EXCLUDE_FILTER = r"(?i)Russia|Belarus|Ukraine|\bWL\b"
-EXPECTED_MIHOMO_WL_FILTER = r"(?i)\bWL\b"
 
 
 class BuildClashConfigTests(unittest.TestCase):
@@ -45,60 +41,30 @@ class BuildClashConfigTests(unittest.TestCase):
         self.assertEqual("- RULE-SET,torrent_block,REJECT", first)
         self.assertIn("rules/torrent_block.list", content)
 
-    def test_manual_proxy_excludes_wl_and_ss_from_the_subscription(self) -> None:
+    def test_latest_template_uses_one_visible_automatic_pool(self) -> None:
         content, warnings = build_config(DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL)
-        provider = content.split("  Main-Sub:", 1)[1].split("# 4. RULE PROVIDERS", 1)[0]
-        self.assertNotIn("    filter:", provider)
-        self.assertNotIn("    exclude-filter:", provider)
-        manual_group = content.split("  - name: MANUAL-PROXY", 1)[1].split("  - name:", 1)[0]
-
-        self.assertIn("    use:\n      - Main-Sub", manual_group)
-        self.assertIn(f"    exclude-filter: {yaml_quote(EXPECTED_MIHOMO_MANUAL_EXCLUDE_FILTER)}", manual_group)
-        self.assertNotIn("    filter:", manual_group)
+        self.assertEqual(re.findall(r"^  - name: (.+)$", content, re.MULTILINE), ["Режим"])
+        group = content.split("  - name: Режим\n", 1)[1].split("# 6. RULES", 1)[0]
+        self.assertIn("    type: url-test", group)
+        self.assertIn("    use:\n      - Main-Sub", group)
+        self.assertIn('    url: "https://www.youtube.com/favicon.ico"', group)
+        self.assertIn("    interval: 180", group)
+        self.assertIn("    tolerance: 100", group)
+        self.assertNotIn("    proxies:", group)
+        self.assertNotIn("    filter:", group)
+        self.assertNotIn("hidden: true", group)
+        self.assertIn(f"    exclude-filter: {yaml_quote(EXPECTED_MIHOMO_AUTO_EXCLUDE_FILTER)}", group)
+        self.assertIn("MATCH,Режим", content)
         self.assertNotIn("unsupported proxy-group option use=true", "\n".join(warnings))
 
-    def test_auto_speed_is_the_only_automatic_proxy_group(self) -> None:
-        content, _warnings = build_config(DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL)
-        self.assertIn("  - name: AUTO-SPEED", content)
-        self.assertNotIn("AUTO-STABILITY", content)
-        speed_group = content.split("  - name: AUTO-SPEED", 1)[1].split("  - name:", 1)[0]
-        proxy_group = content.split("  - name: PROXY", 1)[1].split("# 6. RULES", 1)[0]
+    def test_latest_dns_uses_loopback_hosts_and_separate_node_resolvers(self) -> None:
+        content, _ = build_config(DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL)
+        self.assertIn("  listen: 127.0.0.1:1053", content)
+        self.assertIn("  use-hosts: true", content)
+        self.assertIn("  proxy-server-nameserver:\n    - https://1.1.1.1/dns-query\n    - https://8.8.8.8/dns-query", content)
+        self.assertIn("  default-nameserver:\n    - 1.1.1.1\n    - 8.8.8.8", content)
+        self.assertNotIn("  fallback-filter:", content)
 
-        self.assertIn("    type: url-test", speed_group)
-        self.assertIn('    url: "https://www.youtube.com/favicon.ico"', speed_group)
-        self.assertIn("    interval: 180", speed_group)
-        self.assertIn("    tolerance: 100", speed_group)
-        for group in (speed_group,):
-            self.assertIn(f"    filter: {yaml_quote(EXPECTED_MIHOMO_AUTO_FILTER)}", group)
-            self.assertIn(f"    exclude-filter: {yaml_quote(EXPECTED_MIHOMO_AUTO_EXCLUDE_FILTER)}", group)
-        self.assertIn("      - MANUAL-PROXY", proxy_group)
-        self.assertIn("      - AUTO-SPEED", proxy_group)
-        self.assertIn("      - WL", proxy_group)
-        self.assertNotIn("      - GOOGLE", proxy_group)
-        self.assertNotIn("      - DIRECT", proxy_group)
-
-        accepted = ("Germany AWG", "Poland AWG2", "🇩🇪 Германия AWG3.1")
-        rejected = (
-            "Russia AWG",
-            "Belarus AWG2",
-            "Ukraine AWG3.1",
-            "Germany AWG3.1 WL",
-            "Germany AWG20",
-            "Germany DRAWG",
-            "Germany AWG3.10",
-        )
-        for group in (speed_group,):
-            filter_line = next(line for line in group.splitlines() if line.startswith("    filter: "))
-            exclude_line = next(line for line in group.splitlines() if line.startswith("    exclude-filter: "))
-            generated_filter = re.compile(json.loads(filter_line.split(": ", 1)[1]))
-            generated_exclude_filter = re.compile(json.loads(exclude_line.split(": ", 1)[1]))
-            selected = lambda name: generated_filter.search(name) and not generated_exclude_filter.search(name)
-            self.assertTrue(all(selected(name) for name in accepted))
-            self.assertTrue(all(not selected(name) for name in rejected))
-
-        wl_group = content.split("  - name: WL", 1)[1].split("  - name:", 1)[0]
-        self.assertIn("    type: select", wl_group)
-        self.assertIn(f"    filter: {yaml_quote(EXPECTED_MIHOMO_WL_FILTER)}", wl_group)
 
 
 if __name__ == "__main__":

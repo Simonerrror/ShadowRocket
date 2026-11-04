@@ -2,6 +2,8 @@
 
 ## Lessons
 
+- When updating Clash routing or DNS defaults, derive both the public template and browser outputs from `scripts/build_clash_config.py`; rebuild the standalone page and check both client outputs instead of maintaining a second baseline in JavaScript.
+
 - When adding or renaming a module, apply the numbering contract in [Порядок модулей](docs/shadowrocket-modules.md#порядок-модулей) to its `#!name`, documentation and any site button. Verify all modules and displayed buttons with the existing numbering tests; do not introduce a separate sequence on the site.
 
 ## Область и границы
@@ -33,10 +35,11 @@ allowlist Gemini, списки russia_extended/voice_ports и модуль Twitc
 | `scripts/build_distillate.py` | Генерирует списки, агрегаты, summary и compiled-геоданные |
 | `scripts/build_incy_routing.py` | Генерирует оба профиля INCY и SHA-256 sidecar геоданных |
 | `scripts/build_site.py` | Встраивает проверенные INCY deeplink в `docs/index.html` |
+| `scripts/build_clash_page.py` | Собирает автономный генератор Clash в `docs/clash/index.html` |
 | `site/index.html` | Исходник страницы с прямыми ссылками импорта |
 | `docs/index.html`, `docs/images/`, `docs/favicon.svg` | Публикуемая страница GitHub Pages и её ресурсы |
 
-Generated-файлы не правьте вручную: `docs/index.html`, `clash_config.yaml`, `INCY/*.JSON`,
+Generated-файлы не правьте вручную: `docs/index.html`, `docs/clash/index.html`, `clash_config.yaml`, `INCY/*.JSON`,
 `INCY/*.DEEPLINK`, `distillate/text/**`, `distillate/dat/**`, summary и списки
 с заголовком `Generated from distillate/manifest.json`.
 В `anti_advertising.module` сохраняйте ручной заголовок; ссылки на чанки
@@ -84,6 +87,7 @@ python3 scripts/build_distillate.py --skip-compiled
 python3 scripts/build_clash_config.py
 python3 scripts/build_incy_routing.py
 python3 scripts/build_site.py
+python3 scripts/build_clash_page.py
 ```
 
 `--skip-compiled` не обновляет бинарные геоданные. Если изменился их состав,
@@ -98,9 +102,16 @@ python3 scripts/build_site.py
 общего генератора, выходов или CI выполните весь набор:
 
 ```sh
+npm test --prefix site/clash
 python3 -m unittest discover -s tests
 python3 -m compileall -q scripts tests
 ```
+
+Для генератора Clash используйте закреплённые зависимости `site/clash/package-lock.json`
+и установку `npm ci --ignore-scripts --prefix site/clash`; перед публикацией выполните
+`npm audit --include=dev --audit-level=high --prefix site/clash`. Пользовательские
+входы не включаются в сборку. Сетевые соединения формы запрещены CSP;
+проверяйте обе кнопки в браузере на синтетических данных и отсутствие запросов.
 
 Проверяйте воспроизводимость пересборки и `git diff --check`.
 Тесты генератора доказывают его контракт, а не работу VPN-клиента. Для заявления

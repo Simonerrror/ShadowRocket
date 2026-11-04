@@ -61,9 +61,11 @@ python3 scripts/build_distillate.py --skip-compiled
 python3 scripts/build_clash_config.py
 python3 scripts/build_incy_routing.py
 python3 scripts/build_site.py
+python3 scripts/build_clash_page.py
 ```
 
-После пересборки выполните `python3 -m unittest discover -s tests -v` и
+После пересборки выполните `npm test --prefix site/clash`,
+`python3 -m unittest discover -s tests -v` и
 `python3 -m compileall -q scripts tests`, затем проверьте diff.
 Генераторы INCY должны остановиться при отсутствии обязательных текстовых входов;
 не заменяйте отсутствующие файлы пустыми ради прохождения сборки.
@@ -118,7 +120,8 @@ Go и сетевого доступа; новые зависимости про�
 проверенные INCY deeplink и создаёт `docs/index.html`.
 Кнопки Shadowrocket содержат прямые ссылки импорта. Изображения и favicon
 используют относительные пути, чтобы работать под `/ShadowRocket/`.
-`docs/.nojekyll` отключает обработку Jekyll. Node, npm и внешние секреты для сайта не нужны.
+`docs/.nojekyll` отключает обработку Jekyll. Для страницы ссылок достаточно Python. Автономный генератор Clash собирается
+из `site/clash/` с закреплёнными YAML/esbuild; в браузере Node/npm и внешние секреты не нужны.
 
 После изменения страницы или INCY запустите `python3 scripts/build_site.py`
 и Python-тесты. `deploy-pages.yml` проверяет воспроизводимость и запрашивает
