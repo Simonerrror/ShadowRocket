@@ -131,8 +131,9 @@ python3 -m compileall -q scripts tests
 ради обычной очистки текущего дерева.
 
 Сайт публикуется штатным GitHub Pages из `main/docs` по адресу
-`https://simonerrror.github.io/ShadowRocket/`. `deploy-pages.yml` проверяет сборку
-и запрашивает публикацию текущей проверенной ревизии `main`. После успешного
+`https://simonerrror.github.io/ShadowRocket/`. `deploy-pages.yml` проверяет сборку. Обычный push публикует сам Pages;
+API-запрос используется только для ручного запуска и `workflow_run`,
+чтобы не отменять автоматическую публикацию повторной сборкой той же ревизии. После успешного
 `Sync rule lists` он запускается отдельно через `workflow_run`.
 Страница содержит прямые `shadowrocket://` и `incy://` ссылки; DNS Example
 открывает публичный текст для локальной копии. Приватные подписки сюда не подключайте.

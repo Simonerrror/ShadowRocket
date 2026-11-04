@@ -26,9 +26,9 @@ python3 -m unittest discover -s tests
 в `docs/images/` и `docs/favicon.svg`; пути в HTML относительные.
 
 В настройках Pages выберите `Deploy from a branch`, ветку `main`, каталог `/docs`.
-GitHub публикует страницу штатным механизмом Pages. `deploy-pages.yml`
-проверяет сборку перед запросом публикации; после успешного `Sync rule lists`
-запрашивает пересборку отдельно. Cloudflare для сайта не используется.
+Обычный push публикуется штатным механизмом Pages; `deploy-pages.yml`
+проверяет сборку и не дублирует публикацию. Он запрашивает пересборку только
+при ручном запуске или после успешного `Sync rule lists`. Cloudflare для сайта не используется.
 
 ## Локальный генератор Clash
 

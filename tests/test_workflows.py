@@ -95,6 +95,7 @@ class WorkflowHardeningTests(unittest.TestCase):
         self.assertNotIn("GH_TOKEN", verify)
         self.assertIn("verified_sha: ${{ steps.capture_verified_sha.outputs.verified_sha }}", verify)
         self.assertIn("git rev-parse HEAD", verify)
+        self.assertNotIn("github.event_name == 'push'", deploy)
         self.assertIn("needs: verify", deploy)
         self.assertIn("VERIFIED_SHA: ${{ needs.verify.outputs.verified_sha }}", deploy)
         self.assertIn('test "$latest_sha" = "$VERIFIED_SHA"', deploy)
