@@ -37,7 +37,7 @@ jobs:
           python3 scripts/build_distillate.py --skip-compiled
           python3 scripts/build_clash_config.py --conf shadowrocket.conf
           python3 scripts/build_incy_routing.py
-          python3 scripts/build_potato_link_worker.py
+          python3 scripts/build_site.py
 
       - name: Run tests
         run: |

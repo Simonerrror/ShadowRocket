@@ -48,6 +48,25 @@ def key_values(path: Path, section: str) -> dict[str, str]:
 
 
 class ShadowrocketProfilesTests(unittest.TestCase):
+    def test_all_module_names_and_imports_follow_the_documented_numbering(self) -> None:
+        docs = (REPO_ROOT / "docs/shadowrocket-modules.md").read_text()
+        documented = re.findall(r"^\| ([^|]+?) \| `(modules/[^`]+\.module)` \|", docs, re.M)
+        actual = {}
+        for module in (REPO_ROOT / "modules").glob("*.module"):
+            names = re.findall(r"^#!name=(.+)$", module.read_text(), re.M)
+            self.assertEqual(len(names), 1, module.name)
+            actual[f"modules/{module.name}"] = names[0]
+        self.assertEqual(actual, {path: name for name, path in documented})
+        names = [name for name, _ in documented]
+        for name in names:
+            self.assertRegex(name, r"^\d{2}_\d{2} · .+$")
+        numbers = [name.split(" · ", 1)[0] for name in names]
+        self.assertEqual(numbers, sorted(set(numbers)))
+        self.assertTrue(names[0].endswith(" · DNS Override Example"))
+        self.assertTrue(names[-1].endswith(" · Anti-Advertising"))
+        imports = re.findall(r"^\| (\d{2}_\d{2}) \| ([^|]+?) \| \[", docs, re.M)
+        self.assertEqual([f"{number} · {name}" for number, name in imports], names)
+
     def test_apple_module_routes_the_external_service_list_through_proxy(self) -> None:
         from ipaddress import ip_address, ip_network
 
@@ -132,6 +151,7 @@ class ShadowrocketProfilesTests(unittest.TestCase):
 
     def test_twitch_routes_streams_and_selects_polish_and_serbian_nodes(self) -> None:
         module = REPO_ROOT / "modules/twitch_poland.module"
+        self.assertIn("#!name=15_03 · Twitch No Advertise", module.read_text().splitlines())
         options = key_values(module, "Proxy Group")["Twitch PL-RS"].split(",")
         self.assertEqual(options[0], "url-test")
         self.assertIn("interval=180", options)

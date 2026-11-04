@@ -15,8 +15,8 @@
   [RU-VPN.DEEPLINK](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/INCY/RU-VPN.DEEPLINK)
 - RU-VPN, JSON:
   [RU-VPN.JSON](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/INCY/RU-VPN.JSON)
-- Кликабельный DEFAULT: [potato-link/incy](https://potato-link.motivato-potato.workers.dev/incy)
-- Кликабельный RU-VPN: [potato-link/incy/ru](https://potato-link.motivato-potato.workers.dev/incy/ru)
+- Кликабельный DEFAULT: [Добавить DEFAULT](https://simonerrror.github.io/ShadowRocket/#incy-default)
+- Кликабельный RU-VPN: [Добавить RU-VPN](https://simonerrror.github.io/ShadowRocket/#incy-ru)
 
 Deeplink имеет вид `incy://routing/onadd/<standard-base64-compact-json>`.
 Для одноразового добавления без активации генератор поддерживает режим `add`.
@@ -38,8 +38,8 @@ Deeplink имеет вид `incy://routing/onadd/<standard-base64-compact-json>`
 
 ```bash
 python3 scripts/build_incy_routing.py
-python3 scripts/build_potato_link_worker.py
+python3 scripts/build_site.py
 ```
 
-Генератор самостоятельно строит профили из distillate. Worker предоставляет
-страницу ссылок на `/`, импорт INCY на `/incy` и `/incy/ru`.
+Генератор самостоятельно строит профили из distillate. Сборка сайта встраивает
+оба deeplink в кнопки на GitHub Pages; промежуточный сервер не нужен.

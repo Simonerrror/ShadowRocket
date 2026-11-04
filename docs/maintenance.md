@@ -60,7 +60,7 @@ Fallback policy:
 python3 scripts/build_distillate.py --skip-compiled
 python3 scripts/build_clash_config.py
 python3 scripts/build_incy_routing.py
-python3 scripts/build_potato_link_worker.py
+python3 scripts/build_site.py
 ```
 
 После пересборки выполните `python3 -m unittest discover -s tests -v` и
@@ -81,7 +81,7 @@ Go и сетевого доступа; новые зависимости про�
 - Для проверенного резкого изменения количества правил ручной запуск поддерживает `allow_large_diff`; пустые обязательные категории, неверный формат и запрещённые пути этот флаг не разрешает.
 - При ошибке или аномалии workflow создаёт GitHub issue со ссылкой на run, поэтому уведомление приходит через стандартные GitHub notifications/email.
 - `.github/workflows/verify-release.yml` — read-only проверка cached rebuild и тестов; она ничего не коммитит.
-- INCY-профили относятся к shared routing-артефактам; при изменении входов генератор и Worker-пакет пересобираются вместе.
+- INCY-профили относятся к shared routing-артефактам; при изменении входов профили и страница GitHub Pages пересобираются вместе.
 
 Политика изменений:
 - Изменение групп `MANUAL-PROXY`, `WL` и auto-фильтра — **shared**: синхронизировано в `shadowrocket.conf` и `shadowrocket_custom.conf`; custom-only поля `[General]` сохранены.
@@ -112,12 +112,21 @@ Go и сетевого доступа; новые зависимости про�
 
 ## Проверка публикации
 
-Перед публикацией проверяйте также devDependencies инструмента Wrangler.
-Worker использует точный npm override `undici: 7.30.1`, поскольку Miniflare
-в Wrangler 4.151.0 закрепляет уязвимую версию 7.29.1. Override устраняет
-GHSA-4qv8-2p9j-2685, GHSA-f72v-6w45-q472 и GHSA-xjj6-f33q-929c.
-Установка выполняется по lockfile с `npm ci --ignore-scripts`; проверка
-`npm audit --audit-level=high` остаётся обязательной до deploy.
+Сайт публикуется штатным GitHub Pages из `main/docs`:
+[открыть сайт](https://simonerrror.github.io/ShadowRocket/).
+Исходник страницы — `site/index.html`; `scripts/build_site.py` встраивает
+проверенные INCY deeplink и создаёт `docs/index.html`.
+Кнопки Shadowrocket содержат прямые ссылки импорта. Изображения и favicon
+используют относительные пути, чтобы работать под `/ShadowRocket/`.
+`docs/.nojekyll` отключает обработку Jekyll. Node, npm и внешние секреты для сайта не нужны.
+
+После изменения страницы или INCY запустите `python3 scripts/build_site.py`
+и Python-тесты. `deploy-pages.yml` проверяет воспроизводимость и запрашивает
+штатную сборку Pages через GitHub API. После успешного `Sync rule lists`
+он также запускается через `workflow_run`, поскольку коммит с `GITHUB_TOKEN`
+сам не инициирует публикацию Pages. Pull request выполняет только проверки.
+Публикация допускается для проверенной текущей ревизии `main`.
+
 Pre-push hook сообщает только путь и категорию совпадения; содержимое
 подозрительных строк в журнал не выводится.
 Старая Gemini allowlist-связка и списки russia_extended/voice_ports удалены.

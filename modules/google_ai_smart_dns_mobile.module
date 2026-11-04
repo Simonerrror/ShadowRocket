@@ -1,4 +1,4 @@
-#!name=Google AI — Smart DNS (Mobile)
+#!name=20_03 · Google AI Smart DNS
 #!desc=Для мобильного Shadowrocket в связке со Smart DNS: Google AI и googleapis.com — DIRECT, youtubei.googleapis.com — PROXY. DNS настраивается отдельно.
 #!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/google_ai_smart_dns_mobile.module
 

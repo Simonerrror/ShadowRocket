@@ -9,7 +9,7 @@ from scripts.validate_publish_paths import is_allowed_publish_path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SYNC_WORKFLOW = REPO_ROOT / ".github/workflows/sync-lists.yml"
 VERIFY_WORKFLOW = REPO_ROOT / ".github/workflows/verify-release.yml"
-DEPLOY_WORKFLOW = REPO_ROOT / ".github/workflows/deploy-potato-link.yml"
+DEPLOY_WORKFLOW = REPO_ROOT / ".github/workflows/deploy-pages.yml"
 
 ACTION_PINS = (
     "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
@@ -17,7 +17,6 @@ ACTION_PINS = (
     "actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff",
     "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
     "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
-    "actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e",
 )
 
 
@@ -73,57 +72,43 @@ class WorkflowHardeningTests(unittest.TestCase):
                     self.assertIn(pin, combined)
         self.assertNotRegex(combined, r"uses: actions/[^@]+@v\d")
         content = DEPLOY_WORKFLOW.read_text(encoding="utf-8")
-        self.assertIn('node-version: "22.17.1"', content)
+        self.assertNotIn("npm ", content)
         self.assertIn("permissions:\n  contents: read", content)
         self.assertIn("persist-credentials: false", content)
 
-    def test_potato_link_workflow_verifies_before_trusted_deploy(self) -> None:
+    def test_pages_workflow_verifies_before_requesting_a_native_build(self) -> None:
         content = DEPLOY_WORKFLOW.read_text(encoding="utf-8")
         verify = content.split("  verify:", 1)[1].split("  deploy:", 1)[0]
         deploy = content.split("  deploy:", 1)[1]
-
         for required in (
-            "push:",
-            "pull_request:",
-            "workflow_dispatch:",
-            "workflow_run:",
-            'workflows: ["Sync rule lists"]',
-            "npm ci --ignore-scripts",
-            "python3 scripts/build_potato_link_worker.py",
-            "git diff --exit-code",
-            "npm run deploy:dry",
+            "push:", "pull_request:", "workflow_dispatch:", "workflow_run:",
+            'workflows: ["Sync rule lists"]', "python3 scripts/build_site.py",
+            "git diff --exit-code", "python3 -m unittest discover -s tests",
         ):
             with self.subTest(required=required):
                 self.assertIn(required, content)
-        self.assertNotIn("CLOUDFLARE_API_TOKEN", verify)
-        self.assertIn(
-            "verified_sha: ${{ steps.capture_verified_sha.outputs.verified_sha }}",
-            verify,
-        )
-        self.assertIn("id: capture_verified_sha", verify)
+        self.assertNotIn("pages: write", verify)
+        self.assertNotIn("GH_TOKEN", verify)
+        self.assertIn("verified_sha: ${{ steps.capture_verified_sha.outputs.verified_sha }}", verify)
         self.assertIn("git rev-parse HEAD", verify)
         self.assertIn("needs: verify", deploy)
-        self.assertIn("ref: ${{ needs.verify.outputs.verified_sha }}", deploy)
-        self.assertNotIn("ref: main", deploy)
+        self.assertIn("VERIFIED_SHA: ${{ needs.verify.outputs.verified_sha }}", deploy)
+        self.assertIn('test "$latest_sha" = "$VERIFIED_SHA"', deploy)
         self.assertIn("github.event.workflow_run.conclusion == 'success'", deploy)
         self.assertIn("github.ref == 'refs/heads/main'", deploy)
-        self.assertIn(
-            "CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}",
-            deploy,
-        )
-        self.assertIn(
-            "CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}",
-            deploy,
-        )
+        self.assertIn("pages: write", deploy)
+        self.assertIn("GH_TOKEN: ${{ github.token }}", deploy)
+        self.assertIn('gh api --method POST "repos/$GITHUB_REPOSITORY/pages/builds"', deploy)
+        self.assertNotIn("CLOUDFLARE", content)
 
     def test_release_workflows_rebuild_and_cover_published_routing_artifacts(self) -> None:
         sync = SYNC_WORKFLOW.read_text(encoding="utf-8")
         verify = VERIFY_WORKFLOW.read_text(encoding="utf-8")
         deploy = DEPLOY_WORKFLOW.read_text(encoding="utf-8")
-        generated = "cloudflare/potato-link/dist/destinations.js"
+        generated = "docs/index.html"
 
-        self.assertIn("python3 scripts/build_potato_link_worker.py", sync)
-        self.assertIn("python3 scripts/build_potato_link_worker.py", verify)
+        self.assertIn("python3 scripts/build_site.py", sync)
+        self.assertIn("python3 scripts/build_site.py", verify)
         self.assertIn(generated, sync)
         self.assertTrue(is_allowed_publish_path(generated))
         for content in (sync, verify):
@@ -157,6 +142,7 @@ class WorkflowHardeningTests(unittest.TestCase):
             "rules/anti_advertising.04.list",
             "modules/anti_advertising.module",
             "clash_config.yaml",
+            "docs/index.html",
             "INCY/DEFAULT.JSON",
             "INCY/DEFAULT.DEEPLINK",
             "INCY/RU-VPN.JSON",

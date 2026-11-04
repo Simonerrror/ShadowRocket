@@ -1,6 +1,6 @@
 #!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_advertising.module
 #!icon=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/icons/anti_advertising.png
-#!name=90 · Anti-Advertising
+#!name=90_01 · Anti-Advertising
 #!desc=Блокировщик рекламы и трекеров через единый rule-set список репозитория (REJECT).
 
 [Rule]

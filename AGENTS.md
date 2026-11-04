@@ -1,5 +1,9 @@
 # ShadowRocket: карта работы
 
+## Lessons
+
+- When adding or renaming a module, apply the numbering contract in [Порядок модулей](docs/shadowrocket-modules.md#порядок-модулей) to its `#!name`, documentation and any site button. Verify all modules and displayed buttons with the existing numbering tests; do not introduce a separate sequence on the site.
+
 ## Область и границы
 
 Этот файл регулирует публичный Git-репозиторий `ShadowRocket/`.
@@ -9,7 +13,7 @@
 Не копируйте эти правила сюда и не расширяйте ими полномочия пользователя.
 
 Публичные результаты проекта: конфиги Shadowrocket, модули, generated-конфиг
-Mihomo, профили маршрутизации INCY и сайт ссылок в Cloudflare Worker.
+Mihomo, профили маршрутизации INCY и сайт ссылок на GitHub Pages.
 Поддержка HAPP и аварийного whitelist-профиля прекращена. Старые updater и
 allowlist Gemini, списки russia_extended/voice_ports и модуль Twitch Direct удалены.
 Не возвращайте их как запасные пути. `whitelist_direct` остаётся действующим
@@ -28,11 +32,11 @@ allowlist Gemini, списки russia_extended/voice_ports и модуль Twitc
 | `scripts/build_clash_config.py` | Генерирует `clash_config.yaml` из основного профиля |
 | `scripts/build_distillate.py` | Генерирует списки, агрегаты, summary и compiled-геоданные |
 | `scripts/build_incy_routing.py` | Генерирует оба профиля INCY и SHA-256 sidecar геоданных |
-| `scripts/build_potato_link_worker.py` | Встраивает INCY deeplink в `cloudflare/potato-link/dist/destinations.js` |
-| `cloudflare/potato-link/public/` | Статический сайт, изображения и favicon |
-| `cloudflare/potato-link/src/worker.js` | Единая карта публичных импортов и раздача сайта |
+| `scripts/build_site.py` | Встраивает проверенные INCY deeplink в `docs/index.html` |
+| `site/index.html` | Исходник страницы с прямыми ссылками импорта |
+| `docs/index.html`, `docs/images/`, `docs/favicon.svg` | Публикуемая страница GitHub Pages и её ресурсы |
 
-Generated-файлы не правьте вручную: `clash_config.yaml`, `INCY/*.JSON`,
+Generated-файлы не правьте вручную: `docs/index.html`, `clash_config.yaml`, `INCY/*.JSON`,
 `INCY/*.DEEPLINK`, `distillate/text/**`, `distillate/dat/**`, summary и списки
 с заголовком `Generated from distillate/manifest.json`.
 В `anti_advertising.module` сохраняйте ручной заголовок; ссылки на чанки
@@ -67,10 +71,10 @@ Generated-файлы не правьте вручную: `clash_config.yaml`, `I
 
 Сначала определите изменённого владельца, затем обновляйте его выходы:
 
-- Основной профиль → Clash YAML и INCY → embedded destinations Worker.
+- Основной профиль → Clash YAML и INCY → страница GitHub Pages.
 - Manifest, overlay, filter или upstream → distillate, generated rule lists,
-  anti-ad ссылки и геоданные → INCY → embedded destinations.
-- Модуль или текст сайта → затронутые модульные/Worker проверки; весь каскад
+  anti-ad ссылки и геоданные → INCY → страница GitHub Pages.
+- Модуль или текст сайта → затронутые модульные проверки и тесты сайта; весь каскад
   не запускается без изменения его входов.
 
 Кэшированная локальная сборка, без обновления upstream и загрузки компиляторов:
@@ -79,7 +83,7 @@ Generated-файлы не правьте вручную: `clash_config.yaml`, `I
 python3 scripts/build_distillate.py --skip-compiled
 python3 scripts/build_clash_config.py
 python3 scripts/build_incy_routing.py
-python3 scripts/build_potato_link_worker.py
+python3 scripts/build_site.py
 ```
 
 `--skip-compiled` не обновляет бинарные геоданные. Если изменился их состав,
@@ -96,12 +100,8 @@ python3 scripts/build_potato_link_worker.py
 ```sh
 python3 -m unittest discover -s tests
 python3 -m compileall -q scripts tests
-npm test --prefix cloudflare/potato-link
 ```
 
-Для Worker дополнительно выполните `npm run deploy:dry --prefix cloudflare/potato-link`.
-Аудит зависимостей должен включать devDependencies: Wrangler исполняется с
-полномочиями публикации. Установка — по lockfile, без lifecycle-скриптов по умолчанию.
 Проверяйте воспроизводимость пересборки и `git diff --check`.
 Тесты генератора доказывают его контракт, а не работу VPN-клиента. Для заявления
 о рабочем импорте, TUN, DNS или воспроизведении нужен соответствующий runtime-тест.
@@ -119,17 +119,17 @@ npm test --prefix cloudflare/potato-link
 Сохраняйте независимые локальные изменения. История Git не переписывается
 ради обычной очистки текущего дерева.
 
-Сайт публикует workflow `deploy-potato-link.yml` с GitHub Secrets. В корне Worker
-находится страница; `/sr/config` и `/sr/modules/<имя>` импортируют Shadowrocket,
-`/incy` и `/incy/ru` — маршрутизацию INCY. Приватные подписки сюда не подключайте.
-Не храните Cloudflare API-токены в Wrangler config или файлах сайта.
-При прямом deploy сначала проверьте действующую авторизацию Wrangler.
+Сайт публикуется штатным GitHub Pages из `main/docs` по адресу
+`https://simonerrror.github.io/ShadowRocket/`. `deploy-pages.yml` проверяет сборку
+и запрашивает публикацию текущей проверенной ревизии `main`. После успешного
+`Sync rule lists` он запускается отдельно через `workflow_run`.
+Страница содержит прямые `shadowrocket://` и `incy://` ссылки; DNS Example
+открывает публичный текст для локальной копии. Приватные подписки сюда не подключайте.
+Подробности сборки принадлежат [site/README.md](site/README.md).
 
-После публикации проверьте CI и публичный результат: новую метку изменённого
-профиля, содержимое списка или страницу и маршруты импорта. Успешный deploy
-не доказывает отсутствие редирект-цикла или доступность ресурсов страницы.
-Проверяйте корень Assets без переписывания на `/index.html`: Cloudflare может
-канонизировать его обратно в `/`.
+После публикации проверьте CI, публичную страницу, относительные пути к ресурсам
+под `/ShadowRocket/` и соответствие ссылок актуальным конфигам и INCY deeplink.
+Успешная публикация не доказывает импорт или работу VPN-клиента.
 
 ## Связанные инструкции
 

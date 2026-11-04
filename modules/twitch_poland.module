@@ -1,9 +1,12 @@
-#!name=15_03 · Twitch PL-RS
-#!desc=Twitch, чат и видео через польские и сербские узлы из всех подписок. Автоматический выбор сервера.
+#!name=15_03 · Twitch No Advertise
+#!desc=Просмотр Twitch без рекламы через польские и сербские узлы из всех подписок. Автоматический выбор сервера.
 
 #!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/twitch_poland.module
 
 [Proxy Group]
+# Польша и Сербия выбраны как регионы для просмотра без рекламы.
+# Показ рекламы зависит от кампаний Twitch и может измениться.
+# Группа автоматически выбирает доступный узел этих стран из всех подписок.
 Twitch PL-RS = url-test,policy-regex-filter=(?i)(?:\bPoland\b|Польша|\bPL\b|🇵🇱|\bSerbia\b|Сербия|\bRS\b|🇷🇸),interval=180,tolerance=100,url=https://www.twitch.tv/favicon.ico,timeout=7
 
 [Rule]

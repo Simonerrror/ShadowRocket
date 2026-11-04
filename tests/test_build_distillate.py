@@ -31,7 +31,7 @@ class BuildDistillateSafetyTests(unittest.TestCase):
                 "\n".join(
                     [
                         "#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/anti_advertising.module",
-                        "#!name=90 · Anti-Advertising",
+                        "#!name=90_01 · Anti-Advertising",
                         "#!desc=Keep this generated module header.",
                         "",
                         "[Rule]",
@@ -61,6 +61,7 @@ class BuildDistillateSafetyTests(unittest.TestCase):
                 first_result,
             )
             self.assertIn("# manual exception mentions anti_advertising.example", first_result)
+            self.assertIn("#!name=90_01 · Anti-Advertising", first_result)
             self.assertIn("DOMAIN-SUFFIX,anti_advertising.example,DIRECT", first_result)
             self.assertIn("rules/other.list,REJECT", first_result)
             self.assertEqual(first_result.count("RULE-SET, https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_advertising."), 2)

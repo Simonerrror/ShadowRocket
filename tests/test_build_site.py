@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.build_potato_link_worker import (
+from scripts.build_site import (
     MAX_DEEPLINK_LENGTH,
-    build_module,
+    build_page,
     read_deeplink,
     validate_deeplink,
 )
@@ -19,15 +21,31 @@ VALID_INCY_RU = "incy://routing/onadd/eyJOYW1lIjoicnUifQ=="
 VALID_INCY_ADD = "incy://routing/add/eyJOYW1lIjoiZGVmYXVsdCJ9"
 
 
-class PotatoLinkBuildTests(unittest.TestCase):
-    def test_build_module_embeds_only_incy_destinations(self) -> None:
-        module = build_module(
-            VALID_INCY_DEFAULT,
-            VALID_INCY_RU,
-        )
+class SiteBuildTests(unittest.TestCase):
+    def test_template_requires_each_incy_button_once(self) -> None:
+        for template in ('{{INCY_DEFAULT}}', '{{INCY_DEFAULT}}{{INCY_RU}}{{INCY_RU}}'):
+            with self.subTest(template=template):
+                with self.assertRaisesRegex(ValueError, "exactly one"):
+                    build_page(template, VALID_DEFAULT, VALID_RU)
 
-        self.assertIn(f'incyDefault: "{VALID_INCY_DEFAULT}"', module)
-        self.assertIn(f'incyRu: "{VALID_INCY_RU}"', module)
+    def test_cli_renders_html_instead_of_a_worker_module(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            template = root / "template.html"
+            default = root / "default.DEEPLINK"
+            ru = root / "ru.DEEPLINK"
+            output = root / "index.html"
+            template.write_text('<a href="{{INCY_DEFAULT}}">Default</a><a href="{{INCY_RU}}">RU</a>')
+            default.write_text(VALID_DEFAULT)
+            ru.write_text(VALID_RU)
+            result = subprocess.run([
+                sys.executable, "scripts/build_site.py", "--template", str(template),
+                "--incy-default-input", str(default), "--incy-ru-input", str(ru),
+                "--output", str(output),
+            ], cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(output.read_text(),
+                             f'<a href="{VALID_DEFAULT}">Default</a><a href="{VALID_RU}">RU</a>')
 
     def test_read_deeplink_accepts_one_trailing_lf(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

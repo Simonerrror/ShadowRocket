@@ -6,6 +6,13 @@
 В нём нет URL обновления. Создайте локальную копию и впишите свои адреса по
 [инструкции DNS](dns-override.md); повторно импортировать образец поверх неё не нужно.
 
+### Google AI через Smart DNS
+
+Для Gemini используйте `modules/google_ai_smart_dns_mobile.module` вместе с
+DNS Override Example. Адрес Smart DNS задайте в локальной копии.
+Установка и порядок этих модулей описаны в [инструкции DNS](dns-override.md).
+Расположите DNS Override Example первым, а Google AI Smart DNS — выше Anti-Advertising.
+
 ### OpenAI через США
 
 Модуль `modules/openai_usa.module` направляет существующий список
@@ -17,15 +24,15 @@
 **Config / Конфигурация**. Расположите модуль выше GFN Direct и
 Anti-Advertising, чтобы пересекающиеся правила OpenAI применялись первыми.
 
-### Twitch через Польшу и Сербию
+### Twitch No Advertise
 
-Модуль `modules/twitch_poland.module` направляет Twitch, чат и видеопотоки
+Модуль `Twitch No Advertise` (`modules/twitch_poland.module`) направляет Twitch, чат и видеопотоки
 из списка `rules/twitch.list` через группу `Twitch PL-RS`.
 Группа автоматически выбирает узел из всех подписок по названиям `Poland`,
 `Польша`, `Serbia`, `Сербия`, отдельным кодам `PL`/`RS` или флагам 🇵🇱/🇷🇸. Проверка — каждые 180 секунд.
 Добавьте польские или сербские узлы в Shadowrocket перед включением модуля.
 
-Сербия добавлена как дополнительный регион для проверки рекламы и доступности.
+Польша и Сербия выбраны как регионы для просмотра без рекламы; её показ может измениться.
 Отсутствие рекламы зависит от рекламных кампаний Twitch и не гарантируется.
 URL-тест обращается к `https://www.twitch.tv/favicon.ico` через проверяемый узел.
 Он проверяет доступность Twitch и время отклика, а не скорость видеопотока.
@@ -140,26 +147,38 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_adver
 Модуль работает в дополнение к любому активному конфигу и не заменяет его.
 ## Порядок модулей
 
-Префиксы в `#!name` обозначают уровень и порядок внутри уровня. Выставьте этот
-порядок в Config → Modules; проверьте итоговые правила после компиляции.
+Все модули используют имя вида `NN_MM · Название`: `NN` — уровень,
+`MM` — порядок внутри уровня. Уровни: `01` — ручной DNS, `10` — Tailscale,
+`15` — сервисные прокси, `20` — сервисные исключения, `90` — блокировка рекламы.
+Номер закреплён за модулем и одинаков в `#!name`, таблицах и кнопках сайта.
+Номера не зависят от набора включённых модулей; пропуски допустимы.
+При переименовании сохраняйте номер, при добавлении используйте свободный номер
+подходящего уровня и обновляйте таблицы и кнопку, если она есть на сайте.
+
+Выставьте модули в Config → Modules по возрастанию номера сверху вниз.
+Само имя не переставляет модули в приложении. Проверьте итоговые правила после компиляции.
 
 | Имя | Файл | Назначение |
 |---|---|---|
+| 01_01 · DNS Override Example | `modules/dns_override.module` | Локальная копия с ручными DNS; без URL обновления |
 | 10_01 · Tailscale Direct | `modules/tailscale_direct.module` | Официальный клиент Tailscale |
 | 10_02 · Tailscale Tailnet | `modules/tailscale_tailnet.module` | Встроенный Tailscale Shadowrocket |
 | 15_01 · Apple Proxy | `modules/apple_proxy.module` | Сервисы Apple через выбранную политику PROXY |
 | 15_02 · OpenAI USA | `modules/openai_usa.module` | OpenAI через автоматический выбор среди узлов USA из всех подписок |
-| 15_03 · Twitch PL-RS | `modules/twitch_poland.module` | Twitch через автоматический выбор польских и сербских узлов из всех подписок |
+| 15_03 · Twitch No Advertise | `modules/twitch_poland.module` | Просмотр Twitch без рекламы через автоматический выбор польских и сербских узлов из всех подписок |
 | 20_01 · GFN Direct | `modules/GFN-AM.module` | Каталог и авторизация через GFN Region (KZ/UA/AM); игровые серверы DIRECT |
 | 20_02 · WeChat Direct | `modules/wechat_direct.module` | WeChat и его CDN через DIRECT |
-| 90 · Anti-Advertising | `modules/anti_advertising.module` | Общая блокировка после сервисных исключений |
+| 20_03 · Google AI Smart DNS | `modules/google_ai_smart_dns_mobile.module` | Google AI через DIRECT со Smart DNS из локальной копии DNS Override Example |
+| 90_01 · Anti-Advertising | `modules/anti_advertising.module` | Общая блокировка после сервисных исключений |
 
 Включайте только один модуль уровня 10. Сервисные исключения уровня 20 имеют
 приоритет перед анти-рекламой, включая разрешённую ими телеметрию.
-Префикс 20_03 зарезервирован для будущего решения Google/Gemini.
+Google AI Smart DNS (`20_03`) расположен после GFN Direct (`20_01`) и WeChat Direct (`20_02`),
+но выше Anti-Advertising (`90_01`). Настройка DNS описана в [инструкции DNS](dns-override.md).
 
-При переходе удалите ранее установленные Anti-Advertising Custom и оба модуля
-Gemini из приложения: удаление файлов из репозитория не удаляет загруженные копии.
+При переходе удалите ранее установленные Anti-Advertising Custom,
+Gemini Personal Outbound и Gemini Smart DNS Proxy из приложения. Действующий
+Google AI Smart DNS сохраните. Удаление файлов из репозитория не удаляет загруженные копии.
 Обновите оставшиеся модули и добавьте Tailscale Direct, если используете официальный клиент.
 GFN уже покрывает NVIDIA/GFN-исключения удалённого Custom через существующие
 DOMAIN-KEYWORD, DOMAIN-SUFFIX и IP-CIDR правила. Остальные правила Custom
@@ -170,13 +189,18 @@ DOMAIN-KEYWORD, DOMAIN-SUFFIX и IP-CIDR правила. Остальные пр
 ## Ссылки для импорта
 
 Откройте ссылку на устройстве с установленным Shadowrocket. Если встроенный браузер мессенджера не открывает приложение, используйте Safari. После импорта выставьте порядок по номерам.
-Для Apple Proxy добавьте прямую ссылку на файл через **Config → Modules → Add**.
+Кнопки «Добавить» находятся на сайте GitHub Pages. DNS Override Example
+открывает текст для локальной копии и не выполняет удалённый импорт.
 
 | Порядок | Модуль | Импорт |
 |---|---|---|
-| 10_01 | Tailscale Direct | [Добавить](https://potato-link.motivato-potato.workers.dev/sr/modules/tailscale-direct) |
-| 10_02 | Tailscale Tailnet | [Добавить](https://potato-link.motivato-potato.workers.dev/sr/modules/tailscale-tailnet) |
-| 15_01 | Apple Proxy | [Файл модуля](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/apple_proxy.module) |
-| 20_01 | GFN Direct | [Добавить](https://potato-link.motivato-potato.workers.dev/sr/modules/gfn) |
-| 20_02 | WeChat Direct | [Добавить](https://potato-link.motivato-potato.workers.dev/sr/modules/wechat) |
-| 90 | Anti-Advertising | [Добавить](https://potato-link.motivato-potato.workers.dev/sr/modules/anti-advertising) |
+| 01_01 | DNS Override Example | [Текст примера для локальной копии](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/dns_override.module) |
+| 10_01 | Tailscale Direct | [Добавить](https://simonerrror.github.io/ShadowRocket/#module-tailscale-direct) |
+| 10_02 | Tailscale Tailnet | [Добавить](https://simonerrror.github.io/ShadowRocket/#module-tailscale-tailnet) |
+| 15_01 | Apple Proxy | [Добавить](https://simonerrror.github.io/ShadowRocket/#module-apple) |
+| 15_02 | OpenAI USA | [Добавить](https://simonerrror.github.io/ShadowRocket/#module-openai) |
+| 15_03 | Twitch No Advertise | [Добавить](https://simonerrror.github.io/ShadowRocket/#module-twitch) |
+| 20_01 | GFN Direct | [Добавить](https://simonerrror.github.io/ShadowRocket/#module-gfn) |
+| 20_02 | WeChat Direct | [Добавить](https://simonerrror.github.io/ShadowRocket/#module-wechat) |
+| 20_03 | Google AI Smart DNS | [Добавить](https://simonerrror.github.io/ShadowRocket/#module-google-ai) |
+| 90_01 | Anti-Advertising | [Добавить](https://simonerrror.github.io/ShadowRocket/#module-anti-advertising) |
