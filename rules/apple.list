@@ -1,0 +1,36 @@
+# Apple: домены и сети сервисов.
+# Ручной список; политика задаётся в modules/apple_proxy.module.
+
+# Доменные суффиксы
+DOMAIN-SUFFIX,apple
+DOMAIN-SUFFIX,apple.com
+DOMAIN-SUFFIX,apple.com.cn
+DOMAIN-SUFFIX,aaplimg.com
+DOMAIN-SUFFIX,cdn-apple.com
+DOMAIN-SUFFIX,apple-cloudkit.com
+DOMAIN-SUFFIX,apple-livephotoskit.com
+DOMAIN-SUFFIX,apple-dns.net
+DOMAIN-SUFFIX,apple-mapkit.com
+DOMAIN-SUFFIX,axm-usercontent-apple.com
+DOMAIN-SUFFIX,appleschoolcontent.com
+DOMAIN-SUFFIX,apzones.com
+DOMAIN-SUFFIX,icloud.com
+DOMAIN-SUFFIX,icloud.com.cn
+DOMAIN-SUFFIX,icloud-content.com
+DOMAIN-SUFFIX,me.com
+DOMAIN-SUFFIX,mac.com
+DOMAIN-SUFFIX,itunes.com
+DOMAIN-SUFFIX,itunes.net
+DOMAIN-SUFFIX,mzstatic.com
+
+# Отдельные домены
+DOMAIN,appldnld.apple.com.edgesuite.net
+DOMAIN,apple-relay.cloudflare.com
+DOMAIN,apple-relay.fastly-edge.com
+DOMAIN,cp4.cloudflare.com
+
+# Сети Apple
+IP-CIDR,17.0.0.0/8,no-resolve
+IP-CIDR6,2403:300::/32,no-resolve
+IP-CIDR6,2620:149::/32,no-resolve
+IP-CIDR6,2a01:b740::/32,no-resolve

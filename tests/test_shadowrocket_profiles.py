@@ -48,6 +48,52 @@ def key_values(path: Path, section: str) -> dict[str, str]:
 
 
 class ShadowrocketProfilesTests(unittest.TestCase):
+    def test_apple_module_routes_the_external_service_list_through_proxy(self) -> None:
+        from ipaddress import ip_address, ip_network
+
+        self.assertEqual(section_lines(REPO_ROOT / "modules/apple_proxy.module", "Rule"), [
+            "RULE-SET,https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/apple.list,PROXY",
+        ])
+        rules = [line.strip().split(",")
+                 for line in (REPO_ROOT / "rules/apple.list").read_text().splitlines()
+                 if line.strip() and not line.lstrip().startswith("#")]
+        for fields in rules:
+            self.assertIn(fields[0], {"DOMAIN", "DOMAIN-SUFFIX", "IP-CIDR", "IP-CIDR6"})
+            self.assertNotIn("PROXY", fields)
+            self.assertNotIn("DIRECT", fields)
+            self.assertEqual(fields[2:], ["no-resolve"] if fields[0].startswith("IP-CIDR") else [])
+
+        def route(host: str, address: str) -> str | None:
+            for kind, pattern, *_ in rules:
+                if kind == "DOMAIN":
+                    matches = host == pattern
+                elif kind == "DOMAIN-SUFFIX":
+                    matches = host == pattern or host.endswith("." + pattern)
+                else:
+                    matches = ip_address(address) in ip_network(pattern)
+                if matches:
+                    return "PROXY"
+            return None
+
+        cases = [
+            ("music.apple.com", "203.0.113.1", "PROXY"),
+            ("www.icloud.com", "203.0.113.2", "PROXY"),
+            ("download.mzstatic.com", "203.0.113.3", "PROXY"),
+            ("appldnld.apple.com.edgesuite.net", "203.0.113.4", "PROXY"),
+            ("apple-relay.cloudflare.com", "203.0.113.5", "PROXY"),
+            ("", "17.253.150.10", "PROXY"),
+            ("", "2403:300::1", "PROXY"),
+            ("", "2620:149::1", "PROXY"),
+            ("", "2a01:b740::1", "PROXY"),
+            ("example.org", "203.0.113.6", None),
+            ("apple.com.example.org", "203.0.113.7", None),
+            ("", "18.0.0.1", None),
+            ("", "2403:301::1", None),
+        ]
+        for host, address, expected in cases:
+            with self.subTest(host=host, address=address):
+                self.assertEqual(route(host, address), expected)
+
     def test_com_x_and_subdomains_use_the_shared_direct_whitelist(self) -> None:
         rules = (REPO_ROOT / "rules/whitelist_direct.list").read_text().splitlines()
         self.assertIn("DOMAIN-SUFFIX,com-x.life", rules)
