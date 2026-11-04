@@ -4,6 +4,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 class DNSOverrideTests(unittest.TestCase):
+    def test_dns_override_is_an_example_without_an_update_source(self):
+        text = (ROOT / 'modules/dns_override.module').read_text()
+        metadata = dict(line[2:].split('=', 1) for line in text.splitlines()
+                        if line.startswith('#!') and '=' in line)
+        self.assertIn('Example', metadata['name'])
+        self.assertNotIn('url', metadata)
+        self.assertNotRegex(text, r'(?m)^\s*update-url\s*=')
+
     def test_override_provides_manual_dns_fields_without_arguments(self):
         text = (ROOT / 'modules/dns_override.module').read_text()
         general = text.split('[General]', 1)[1]

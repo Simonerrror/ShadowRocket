@@ -1,10 +1,10 @@
 # Модули Shadowrocket
 
-### Private DNS Override
+### DNS Override Example
 
-Модуль `modules/private_dns_override.module` подставляет аргумент `DNS` в
-`dns-server`, `fallback-dns-server` и `direct-dns-server`. Перед включением
-задайте адрес DNS в параметрах модуля. `dns-direct-system` установлен в `false`.
+`modules/dns_override.module` — пример для локального заполнения DNS и Smart DNS.
+В нём нет URL обновления. Создайте локальную копию и впишите свои адреса по
+[инструкции DNS](dns-override.md); повторно импортировать образец поверх неё не нужно.
 
 ### OpenAI через США
 

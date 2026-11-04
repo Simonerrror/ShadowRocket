@@ -1,16 +1,27 @@
-# DNS Override
+# DNS Override Example
 
-После импорта откройте Config → Modules → DNS Override и редактор текста модуля.
-Впишите адреса после знака `=`:
+Это пример для создания локального модуля с вашими адресами DNS. В примере нет
+`#!url` и `update-url`: он не задаёт источник обновления поверх пользовательских значений.
 
-- `dns-server` — основной DNS: можно указать свой приватный адрес вместо `9.9.9.9`.
-- `direct-dns-server` — Smart DNS для прямых запросов. Заполните до включения модуля.
+## Создание локальной копии
 
-Аргументы не используются. Персональные адреса вписываются только в локальную
-копию в Shadowrocket. При повторном импорте проверьте, сохранились ли они.
+1. Откройте [текст примера](https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/dns_override.module)
+   и скопируйте его содержимое.
+2. Откройте **Config → Modules → Новый модуль** и вставьте текст.
+3. Впишите адреса после знака `=`:
+   - `dns-server` — основной DNS; при необходимости замените `9.9.9.9` своим адресом.
+   - `direct-dns-server` — ваш Smart DNS для прямых запросов; заполните перед включением.
+4. Сохраните модуль и поставьте его первым в списке.
+5. Включите локальную копию.
+
+Аргументы не используются. Персональные адреса остаются в локальном модуле.
+Не импортируйте публичный пример повторно поверх заполненной копии.
+Если в уже настроенном модуле осталась строка `#!url=...`, удалите только её,
+сохранив свои адреса DNS.
+
 Резервный `fallback-dns-server` остаётся из активного конфига.
 Smart DNS применяется ко всем прямым доменным правилам, а не только к Gemini.
-Для Gemini используйте также модуль Google AI Smart DNS.
+Для Gemini используйте также отдельный модуль Google AI Smart DNS.
 
 Модуль Google AI Smart DNS направляет `waa-pa.clients6.google.com`,
 `geminiweb-pa.clients6.google.com` и `ogads-pa.clients6.google.com` через
@@ -23,9 +34,7 @@ DNS для этих запросов задаёт `direct-dns-server`.
 
 https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/google_ai_smart_dns_mobile.module
 
-Для уже добавленного модуля выполните обновление в Config → Modules.
-Его заголовок `#!url` содержит ту же ссылку.
+Для уже добавленного Google AI Smart DNS выполните обновление в Config → Modules.
+Его заголовок `#!url` содержит ту же ссылку; это отдельный обновляемый модуль.
 
-Установите DNS Override самым верхним в списке модулей.
-
-https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/dns_override.module
+Установите локальный DNS Override Example самым верхним в списке модулей.

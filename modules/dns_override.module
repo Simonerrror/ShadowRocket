@@ -1,6 +1,8 @@
-#!name=01 · DNS Override
-#!desc=Перед включением откройте текст модуля и впишите Smart DNS после direct-dns-server =. Основной DNS можно заменить своим приватным.
-#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/dns_override.module
+#!name=01 · DNS Override Example
+#!desc=Example: создайте локальный модуль из этого текста и впишите свои DNS. URL обновления отсутствует.
+
+# Локальный пример: персональные адреса DNS задаются только в вашей копии.
+# Не импортируйте этот образец повторно поверх уже заполненного модуля.
 
 [General]
 # Основной DNS: замените адрес своим приватным DNS при необходимости.
