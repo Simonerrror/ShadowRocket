@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-c7Ud2fz2wiFd5CrBlbramYCLPqnIasJEeh4kvRdOnHU='; style-src 'sha256-5NlXRHu5hTDJtsdL2oZOxOBzbYCzauYyFztGZiQhRvc='; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; worker-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-/25bu1S6ow8iuI9e4H/Ye9p1CFoSXOPzLrDrFJed8as='; style-src 'sha256-5NlXRHu5hTDJtsdL2oZOxOBzbYCzauYyFztGZiQhRvc='; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; worker-src 'none'">
 <meta name="referrer" content="no-referrer">
 <title>AWG → Shadowrocket · Локальный конвертер</title>
-<meta name="description" content="Преобразуйте AmneziaWG .conf в ссылку для Shadowrocket прямо в браузере. Без отправки файла и ключей на сервер.">
+<meta name="description" content="Преобразуйте .conf, .vpn и ZIP с AmneziaWG в ссылки для Shadowrocket прямо в браузере. Без отправки файла и ключей на сервер.">
 <style>:root{color-scheme:light;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#293027;background:#f4f2ec;font-synthesis:none}*{box-sizing:border-box}body{margin:0}main{max-width:1100px;margin:auto;padding:32px 36px}header{display:flex;align-items:center;justify-content:space-between;gap:20px}.brand{display:flex;gap:12px;align-items:center;color:#354d32;text-decoration:none;font-size:30px}.brand span{font-size:20px;letter-spacing:-.5px;font-weight:700;color:#293027}.badge{font-size:12px;border:1px solid #d8ddce;border-radius:30px;padding:9px 14px;color:#616b59}.intro{padding:24px 0}.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.8px;color:#616b59}h1{font-size:clamp(32px,5vw,48px);line-height:1.06;letter-spacing:-1.5px;margin:20px 0}h1 em{color:#354d32;font-style:normal}.lead{max-width:520px;color:#616b59;line-height:1.7;font-size:16px}.workspace{display:grid;grid-template-columns:minmax(0,1fr) 300px;border:1px solid #d8ddce;border-radius:16px;overflow:hidden;background:#fffef9}form{padding:30px}aside{padding:32px;background:#ecefe5;border-left:1px solid #d8ddce}.step{display:flex;gap:12px;align-items:center;margin:0 0 20px}.step:not(:first-child){margin-top:28px}.step span{font-size:10px;border:1px solid #b5c0a8;padding:5px;border-radius:5px;color:#354d32}h2{font-size:18px;margin:0;font-weight:600}label{display:block;font-size:13px;color:#293027;margin:16px 0 10px}input,textarea{width:100%;border:1px solid #b5c0a8;border-radius:9px;background:#fffef9;color:#293027;padding:14px;font:13px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;resize:vertical}textarea{min-height:132px}input::placeholder,textarea::placeholder{color:#6c7562}input:focus,textarea:focus{outline:2px solid #354d32;outline-offset:2px}.hint{font-size:12px;color:#616b59;line-height:1.7;margin:10px 0}details{margin-top:24px;border-top:1px solid #d8ddce;border-bottom:1px solid #d8ddce;padding:17px 0}summary{cursor:pointer;font-size:13px;color:#293027}summary span{font-size:11px;color:#616b59;margin-left:10px}.details-body{padding-top:5px}.actions{display:flex;gap:14px;align-items:center;margin-top:28px}button{cursor:pointer;font:600 14px/1.4 system-ui;border:0;border-radius:9px;padding:15px 20px;background:#354d32;color:#fffef9}button[type=submit]{flex:1;display:flex;justify-content:space-between;align-items:center}button:hover{background:#263d24}button.secondary{background:transparent;color:#354d32;border:1px solid #b5c0a8}button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #354d32;outline-offset:4px}#status{font-size:13px;line-height:1.6;color:#354d32;margin:15px 0 0;min-height:20px;overflow-wrap:anywhere}.privacy-mark{font-size:45px;color:#354d32;margin:6px 0 28px}aside p{color:#535e49;font-size:14px;line-height:1.85}.divider{height:1px;background:#d8ddce;margin:30px 0}ol{padding-left:19px;font-size:13px;color:#535e49;line-height:2.25}footer{display:flex;justify-content:space-between;gap:20px;color:#616b59;font-size:11px;line-height:1.7;padding:24px 0}noscript{display:block;padding:20px;text-align:center}@media(max-width:760px){main{padding:22px 18px}.intro{padding-top:24px}h1{letter-spacing:-1.8px}.workspace{grid-template-columns:1fr}form{padding:23px}aside{border-left:0;border-top:1px solid #d8ddce;padding:24px}.privacy-mark{display:none}footer{flex-direction:column;gap:4px}.badge{font-size:10px;padding:7px 9px}.brand span{font-size:10px;letter-spacing:1px}}@media(prefers-reduced-motion:no-preference){button{transition:background .15s}}
 
 a{color:#354d32}input[type=file]{font-family:system-ui}input[type=file]::file-selector-button{background:#e9eedc;color:#293027;border:0;border-radius:5px;padding:8px;margin-right:12px;cursor:pointer}button:disabled{opacity:.6;cursor:wait}.details-body ol{line-height:1.8}.details-body li+li{margin-top:7px}
@@ -20,26 +20,82 @@ a{color:#354d32}input[type=file]{font-family:system-ui}input[type=file]::file-se
 <body><main id="converter">
 <header><a class="brand" href="https://simonerrror.github.io/ShadowRocket/">🥔 <span>MotivatoPotato</span></a><span class="badge">AWG → Shadowrocket</span></header>
 <nav aria-label="Разделы сайта" class="site-nav"><a href="https://simonerrror.github.io/ShadowRocket/">Главная</a><a href="https://simonerrror.github.io/ShadowRocket/#shadowrocket">Shadowrocket</a><a href="https://simonerrror.github.io/ShadowRocket/#clash">Clash</a><a href="https://simonerrror.github.io/ShadowRocket/#incy">INCY</a></nav>
-<div class="intro"><p class="eyebrow">ФАЙЛ ОСТАЁТСЯ У ВАС</p><h1>Из AWG .conf —<br>в <em>Shadowrocket.</em></h1><p class="lead">Выберите конфиг AmneziaWG. Получите ссылку для импорта в Shadowrocket. Преобразование выполняется в этой вкладке.</p></div>
+<div class="intro"><p class="eyebrow">ФАЙЛ ОСТАЁТСЯ У ВАС</p><h1>Из файлов AWG —<br>в <em>Shadowrocket.</em></h1><p class="lead">Выберите .conf, .vpn или ZIP с профилями AmneziaWG. Передайте весь набор в Shadowrocket одним действием. Преобразование выполняется в этой вкладке.</p></div>
 <section class="workspace" aria-label="Преобразование AWG">
 <form autocomplete="off">
-<div class="step"><span>01</span><h2>Выберите файл</h2></div>
-<label for="config-file">Конфиг AmneziaWG · .conf</label>
-<input id="config-file" type="file" accept=".conf" aria-describedby="file-hint">
-<p id="file-hint" class="hint">Один профиль с одним Peer, до 64 КиБ. AWG1, AWG2 и поля AWG3 / 3.1.</p>
-<div class="actions"><button type="submit">Создать ссылку <span aria-hidden="true">↗</span></button><button type="reset" class="secondary">Очистить</button></div>
+<div class="step"><span>01</span><h2>Выберите файлы</h2></div>
+<label for="config-file">Профили AmneziaWG · .conf, .vpn, ZIP</label>
+<input id="config-file" type="file" multiple accept=".conf,.vpn,.zip" aria-describedby="file-hint">
+<p id="file-hint" class="hint">До 100 профилей. .conf — до 64 КиБ, .vpn — до 2 МиБ, ZIP — до 8 МиБ; весь набор — до 16 МиБ. ZIP может содержать папки с .conf и .vpn.</p>
+<div class="actions"><button id="convert" type="submit">Преобразовать файлы <span aria-hidden="true">↗</span></button><button type="reset" class="secondary">Очистить</button></div>
 <p id="status" role="status" aria-live="polite"></p>
 <div id="result" hidden>
 <div class="step"><span>02</span><h2>Импортируйте в Shadowrocket</h2></div>
-<label for="output">Готовая ссылка wg://</label>
+<label for="output">Готовые ссылки wg:// · по одной на профиль</label>
 <textarea id="output" rows="5" readonly autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
-<div class="actions"><a id="open-sr" class="launch">Открыть в Shadowrocket ↗</a><button id="copy" type="button">Скопировать ссылку</button><button id="download" type="button" class="secondary">Скачать TXT</button></div>
-<p class="hint">Нажмите «Открыть в Shadowrocket» и подтвердите добавление узла в приложении. Можно также импортировать ссылку из буфера обмена. Ссылка содержит приватный ключ.</p>
+<div class="actions"><a id="open-sr" class="launch">Открыть в Shadowrocket ↗</a><button id="copy" type="button">Скопировать весь список</button><button id="download" type="button" class="secondary">Скачать TXT</button></div>
+<p class="hint">Для набора кнопка копирует все ссылки и открывает SR. Подтвердите импорт в приложении и разрешите чтение буфера. Если автораспознавание выключено, нажмите «Вставить» в SR. Ссылки содержат приватные ключи.</p>
 </div>
 </form>
-<aside><div class="privacy-mark">↳</div><h2>Только в браузере</h2><p>Файл и ключи не передаются на сервер. Нет аккаунта, аналитики и постоянного хранилища. Сетевые запросы страницы запрещены.</p><p class="hint">GitHub Pages отдаёт статическую страницу. Обработка начинается на вашем устройстве после выбора файла.</p><div class="divider"></div><h2>Можно без сети</h2><p>Скачайте чистую HTML-копию. Откройте её без подключения к интернету и преобразуйте свой файл.</p><button type="button" class="secondary" id="download-offline">Скачать офлайн-конвертер</button><p class="hint">Копия не содержит выбранного файла или готовой ссылки.</p><details><summary>Формат и исходники</summary><p class="hint">Неизвестные поля, несколько Peer и отдельные маршруты AllowedIPs отклоняются. Для новых полей нужна версия Shadowrocket с их поддержкой.</p><p class="hint"><a href="https://github.com/Simonerrror/ShadowRocket/tree/main/site/awg" target="_blank" rel="noreferrer noopener">Исходный код ↗</a></p></details></aside>
+<aside><div class="privacy-mark">↳</div><h2>Только в браузере</h2><p>Файлы и ключи не передаются на сервер. Нет аккаунта, аналитики и постоянного хранилища. Сетевые запросы страницы запрещены.</p><p class="hint">GitHub Pages отдаёт статическую страницу. Обработка начинается на вашем устройстве после выбора файлов.</p><div class="divider"></div><h2>Можно без сети</h2><p>Скачайте чистую HTML-копию. Откройте её без подключения к интернету и преобразуйте свой набор файлов.</p><button type="button" class="secondary" id="download-offline">Скачать офлайн-конвертер</button><p class="hint">Копия не содержит выбранных файлов или готовых ссылок.</p><details><summary>Формат и исходники</summary><p class="hint">Неизвестные поля, несколько Peer в одном .conf и отдельные маршруты AllowedIPs отклоняются. Для новых полей нужна версия Shadowrocket с их поддержкой.</p><p class="hint"><a href="https://github.com/Simonerrror/ShadowRocket/tree/main/site/awg" target="_blank" rel="noreferrer noopener">Исходный код ↗</a></p></details></aside>
 </section><footer><span>Без загрузки файлов на сервер · Без аналитики</span><a href="https://simonerrror.github.io/ShadowRocket/#shadowrocket">К разделу Shadowrocket ↗</a></footer>
-</main><noscript>Для локального преобразования включите JavaScript.</noscript><script type="module">// Browser port of the maintained AWG → Shadowrocket conversion contract.
+</main><noscript>Для локального преобразования включите JavaScript.</noscript><script type="module">// ZIP stays in memory. No extraction to disk; stored/deflated profile entries only.
+function crc32(data) {
+  let crc=0xffffffff;
+  for(const byte of data) {crc^=byte; for(let i=0;i<8;i++) crc=(crc>>>1)^((crc&1)?0xedb88320:0);}
+  return (crc^0xffffffff)>>>0;
+}
+// Bound actual output, not just the size declared by an untrusted container.
+async function inflateProfile(body, format, limit) {
+  let reader;
+  try {
+    reader = new Blob([body]).stream().pipeThrough(new DecompressionStream(format)).getReader();
+    const chunks=[]; let length=0;
+    while (true) {
+      const {done,value}=await reader.read(); if(done) break;
+      length+=value.length;
+      if(length>limit) { await reader.cancel(); throw new Error(); }
+      chunks.push(value);
+    }
+    const result=new Uint8Array(length); let offset=0;
+    for(const chunk of chunks) { result.set(chunk,offset); offset+=chunk.length; }
+    return result;
+  } catch {
+    throw new Error('Не удалось распаковать профиль: проверьте файл, размер и поддержку сжатия в браузере.');
+  } finally { reader?.releaseLock(); }
+}
+async function unpackProfileZip(buffer, {extensions=/\.(?:conf|ovpn|ya?ml|json)$/i, binary=false} = {}) {
+  const data=new Uint8Array(buffer), view=new DataView(data.buffer,data.byteOffset,data.byteLength);
+  const fail=()=>{throw new Error('Некорректный ZIP: нужны файлы профилей без шифрования, до 100 файлов; размер распакованного набора — до 16 МиБ.');};
+  if(data.length>8*1024*1024 || data.length<22) fail();
+  let end=-1;
+  for(let i=data.length-22;i>=Math.max(0,data.length-65557);i--) if(view.getUint32(i,true)===0x06054b50 && i+22+view.getUint16(i+20,true)===data.length) {end=i;break;}
+  if(end<0 || view.getUint16(end+4,true)!==0 || view.getUint16(end+6,true)!==0) fail();
+  const count=view.getUint16(end+10,true), size=view.getUint32(end+12,true), start=view.getUint32(end+16,true);
+  if(!count || count>200 || view.getUint16(end+8,true)!==count || start+size!==end) fail();
+  const result=[]; let offset=start,total=0;
+  for(let n=0;n<count;n++) {
+    if(offset+46>end || view.getUint32(offset,true)!==0x02014b50) fail();
+    const flags=view.getUint16(offset+8,true), method=view.getUint16(offset+10,true), crc=view.getUint32(offset+16,true), compressed=view.getUint32(offset+20,true), raw=view.getUint32(offset+24,true), nameLen=view.getUint16(offset+28,true), extraLen=view.getUint16(offset+30,true), commentLen=view.getUint16(offset+32,true), local=view.getUint32(offset+42,true);
+    if(offset+46+nameLen+extraLen+commentLen>end || view.getUint16(offset+34,true)!==0) fail();
+    const name=new TextDecoder('utf-8',{fatal:true}).decode(data.slice(offset+46,offset+46+nameLen));
+    offset+=46+nameLen+extraLen+commentLen;
+    if(name.endsWith('/') || name.startsWith('__MACOSX/') || name.split('/').at(-1).startsWith('._') || name.split('/').at(-1)==='.DS_Store') continue;
+    const entryLimit=/\.conf$/i.test(name)?65536:2*1024*1024;
+    total+=raw;
+    if(!extensions.test(name) || name.includes('..') || flags&1 || ![0,8].includes(method) || raw>entryLimit || total>16*1024*1024 || !raw || result.length>=100 || local+30>start || view.getUint32(local,true)!==0x04034b50) fail();
+    const localName=view.getUint16(local+26,true), localExtra=view.getUint16(local+28,true), content=local+30+localName+localExtra;
+    if(content+compressed>start || view.getUint16(local+8,true)!==method || view.getUint16(local+6,true)!==flags || new TextDecoder('utf-8',{fatal:true}).decode(data.slice(local+30,local+30+localName))!==name) fail();
+    let body=data.slice(content,content+compressed);
+    if(method===8) body=await inflateProfile(body, 'deflate-raw', Math.min(entryLimit,raw));
+    if(body.length!==raw || crc32(body)!==crc) fail();
+    result.push({name:name.split('/').at(-1), ...(binary ? {data:body} : {text:new TextDecoder('utf-8',{fatal:true}).decode(body)})});
+  }
+  if(offset!==end || !result.length) fail();
+  return result;
+}
+
+// Browser port of the maintained AWG → Shadowrocket conversion contract.
 // Only pure conversion lives here; no I/O, storage, or network APIs.
 const legacy = ['Jc','Jmin','Jmax','S1','S2','H1','H2','H3','H4'];
 const awg2 = ['Jc','Jmin','Jmax','S1','S2','S3','S4','H1','H2','H3','H4','I1','I2','I3','I4','I5'];
@@ -179,6 +235,98 @@ function convertConf(text, filename = 'profile.conf') {
 }
 
 
+const VPN_LIMIT = 2 * 1024 * 1024;
+const TOTAL_LIMIT = 16 * 1024 * 1024;
+const failInput = message => { throw new Error(message); };
+const textBytes = text => new TextEncoder().encode(text).length;
+function decodeText(data) {
+  try { return new TextDecoder('utf-8', {fatal:true}).decode(data).trim(); }
+  catch { failInput('Некорректный UTF-8 в профиле.'); }
+}
+function jsonObject(text) {
+  let data;
+  try { data = JSON.parse(text); } catch { failInput('Некорректный JSON Amnezia.'); }
+  if (!data || typeof data !== 'object' || Array.isArray(data)) failInput('Некорректный контейнер Amnezia.');
+  return data;
+}
+async function uncompressVpn(data) {
+  if (data.byteLength < 6) failInput('Некорректный сжатый .vpn.');
+  const expected = new DataView(data.buffer,data.byteOffset,data.byteLength).getUint32(0);
+  if (!expected || expected > VPN_LIMIT) failInput('Распакованный .vpn должен быть не больше 2 МиБ.');
+  const body = await inflateProfile(data.subarray(4), 'deflate', expected);
+  if (body.length !== expected) failInput('Неверная длина сжатого .vpn.');
+  return jsonObject(decodeText(body));
+}
+async function vpnData(data) {
+  let text;
+  try { text = new TextDecoder('utf-8', {fatal:true}).decode(data).trim(); } catch {}
+  if (text?.startsWith('{')) return jsonObject(text);
+  if (text && /^(?:vpn:\/\/)?[A-Za-z0-9_-]+={0,2}$/.test(text)) {
+    const encoded = text.replace(/^vpn:\/\//, '').replace(/-/g,'+').replace(/_/g,'/');
+    try { data = Uint8Array.from(atob(encoded),c=>c.charCodeAt(0)); }
+    catch { failInput('Некорректная кодировка .vpn.'); }
+    if (data[0] === 123) return jsonObject(decodeText(data));
+  }
+  return uncompressVpn(data);
+}
+async function vpnProfiles(data, filename) {
+  const root = await vpnData(data);
+  if (!Array.isArray(root.containers) || root.containers.length > 100) failInput('В .vpn нет допустимого списка контейнеров Amnezia.');
+  const profiles=[];
+  for (const container of root.containers) {
+    if (!container || typeof container !== 'object' || !/^amnezia-awg(?:2)?$/.test(container.container)) continue;
+    const value = container.awg?.last_config;
+    const last = typeof value === 'string' ? jsonObject(value) : value;
+    if (!last || typeof last.config !== 'string' || textBytes(last.config) > 65536)
+      failInput('В .vpn нет готового клиентского AWG .conf. Экспортируйте подключение AWG, а не доступ к серверу.');
+    const stem = typeof root.description === 'string' && root.description.trim()
+      ? root.description.trim() : filename.replace(/\.vpn$/i,'');
+    profiles.push({name:stem + (profiles.length ? ` ${profiles.length+1}` : '') + '.conf',text:last.config});
+  }
+  if (!profiles.length) failInput('В .vpn нет клиентских профилей AWG.');
+  return profiles;
+}
+
+async function convertFiles(files) {
+  if (!files.length || files.length > 100) failInput('Выберите от 1 до 100 файлов .conf, .vpn или ZIP.');
+  if (files.reduce((sum,file)=>sum+file.size,0) > TOTAL_LIMIT) failInput('Выбранный набор больше 16 МиБ.');
+  const links=[], seen=new Set(); let expanded=0, configs=0;
+  for (const [index,file] of files.entries()) {
+    try {
+      const limit = /\.zip$/i.test(file.name) ? 8*1024*1024 : /\.vpn$/i.test(file.name) ? VPN_LIMIT : 65536;
+      if (!/\.(?:conf|vpn|zip)$/i.test(file.name) || file.size > limit)
+        failInput('Нужны .conf до 64 КиБ, .vpn до 2 МиБ или ZIP до 8 МиБ.');
+      let buffer;
+      try { buffer = await file.arrayBuffer(); } catch { failInput('Не удалось прочитать файл.'); }
+      if (buffer.byteLength > limit) failInput('Превышен размер файла.');
+      const entries = /\.zip$/i.test(file.name)
+        ? await unpackProfileZip(buffer,{extensions:/\.(?:conf|vpn)$/i,binary:true})
+        : [{name:file.name,data:new Uint8Array(buffer)}];
+      for (const entry of entries) {
+        expanded += entry.data.byteLength;
+        if (expanded > TOTAL_LIMIT) failInput('Распакованный набор больше 16 МиБ.');
+        const profiles = /\.vpn$/i.test(entry.name) ? await vpnProfiles(entry.data,entry.name)
+          : [{name:entry.name,text:decodeText(entry.data)}];
+        for (const profile of profiles) {
+          configs += textBytes(profile.text);
+          if (configs > TOTAL_LIMIT || links.length >= 100) failInput('Допускается до 100 профилей и 16 МиБ конфигов.');
+          const link = convertConf(profile.text,profile.name);
+          const identity = link.split('#')[0];
+          if (seen.has(identity)) failInput('Один AWG-профиль выбран несколько раз.');
+          seen.add(identity); links.push(link);
+        }
+      }
+    } catch (error) {
+      // Only our converter messages can include field names; never echo parser input.
+      const detail = error instanceof Error && !['SyntaxError','TypeError','RangeError'].includes(error.name)
+        ? error.message : 'Некорректный профиль или архив.';
+      failInput(`Файл ${index+1}: ${detail}`);
+    }
+  }
+  return links;
+}
+
+
 // Capture the pristine standalone document before the user selects a file.
 const offlineHTML = '<!doctype html>\n' + document.documentElement.outerHTML;
 const form = document.querySelector('form');
@@ -187,9 +335,10 @@ const result = document.getElementById('result');
 const output = document.getElementById('output');
 const status = document.getElementById('status');
 const openSR = document.getElementById('open-sr');
-let revision = 0;
+const submitButton = document.getElementById('convert');
+let revision = 0, links = [];
 function clear() {
-  revision += 1;
+  revision += 1; links = []; submitButton.disabled = false;
   output.value = ''; openSR.removeAttribute('href'); result.hidden = true; status.textContent = '';
 }
 function download(text, filename, type) {
@@ -205,34 +354,43 @@ window.addEventListener('pagehide', () => { form.reset(); });
 form.addEventListener('submit', async event => {
   event.preventDefault(); clear();
   const current = revision;
-  const file = fileInput.files[0];
-  if (!file) { status.textContent = 'Выберите файл .conf.'; return; }
-  if (!/\.conf$/i.test(file.name) || file.size > 65536) {
-    status.textContent = 'Нужен файл .conf размером до 64 КиБ.'; return;
-  }
-  let text;
-  try { text = new TextDecoder('utf-8', {fatal:true}).decode(await file.arrayBuffer()); }
-  catch { if (current === revision) status.textContent = 'Не удалось прочитать UTF-8 файл .conf.'; return; }
-  if (current !== revision) return;
+  submitButton.disabled = true;
+  status.textContent = 'Преобразую файлы…';
   try {
-    output.value = convertConf(text, file.name);
-    openSR.href = 'shadowrocket://add/' + output.value;
+    const converted = await convertFiles([...fileInput.files]);
+    if (current !== revision) return;
+    links = converted;
+    output.value = links.join('\n');
+    openSR.href = links.length === 1 ? 'shadowrocket://add/' + links[0] : 'shadowrocket://';
+    openSR.textContent = links.length === 1 ? 'Открыть в Shadowrocket ↗' : 'Добавить весь набор в Shadowrocket ↗';
     result.hidden = false;
-    status.textContent = 'Ссылка готова. Откройте её в Shadowrocket или скопируйте.';
-  } catch (error) { status.textContent = error.message; }
+    status.textContent = `Готово профилей: ${links.length}. Можно передать весь набор в Shadowrocket.`;
+  } catch (error) { if (current === revision) status.textContent = error.message; }
+  finally { if (current === revision) submitButton.disabled = false; }
 });
-document.getElementById('copy').addEventListener('click', async () => {
+async function copyOutput() {
   const current = revision;
-  if (!output.value) return;
+  if (!output.value) return false;
   try {
     await navigator.clipboard.writeText(output.value);
-    if (current === revision) status.textContent = 'Ссылка скопирована.';
+    if (current !== revision) return false;
+    status.textContent = `Скопировано профилей: ${links.length}.`;
+    return true;
   } catch {
-    if (current !== revision) return;
-    output.focus(); output.select();
-    status.textContent = 'Браузер не разрешил копирование. Скопируйте выделенную ссылку вручную.';
+    if (current === revision) {
+      output.focus(); output.select();
+      status.textContent = 'Браузер не разрешил копирование. Скопируйте весь выделенный список вручную и вставьте в SR.';
+    }
+    return false;
   }
+}
+openSR.addEventListener('click', async event => {
+  if (!links.length) { event.preventDefault(); return; }
+  if (links.length === 1) return; // Direct node URI, no clipboard permission needed.
+  event.preventDefault();
+  if (await copyOutput()) window.location.assign('shadowrocket://');
 });
+document.getElementById('copy').addEventListener('click', copyOutput);
 document.getElementById('download').addEventListener('click', () => {
   if (output.value) download(output.value + '\n', 'shadowrocket-awg.txt', 'text/plain;charset=utf-8');
 });

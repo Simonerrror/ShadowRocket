@@ -1,4 +1,4 @@
-import {convertConf} from './converter.mjs';
+import {convertFiles} from './inputs.mjs';
 
 // Capture the pristine standalone document before the user selects a file.
 const offlineHTML = '<!doctype html>\n' + document.documentElement.outerHTML;
@@ -8,9 +8,10 @@ const result = document.getElementById('result');
 const output = document.getElementById('output');
 const status = document.getElementById('status');
 const openSR = document.getElementById('open-sr');
-let revision = 0;
+const submitButton = document.getElementById('convert');
+let revision = 0, links = [];
 function clear() {
-  revision += 1;
+  revision += 1; links = []; submitButton.disabled = false;
   output.value = ''; openSR.removeAttribute('href'); result.hidden = true; status.textContent = '';
 }
 function download(text, filename, type) {
@@ -26,34 +27,43 @@ window.addEventListener('pagehide', () => { form.reset(); });
 form.addEventListener('submit', async event => {
   event.preventDefault(); clear();
   const current = revision;
-  const file = fileInput.files[0];
-  if (!file) { status.textContent = 'Выберите файл .conf.'; return; }
-  if (!/\.conf$/i.test(file.name) || file.size > 65536) {
-    status.textContent = 'Нужен файл .conf размером до 64 КиБ.'; return;
-  }
-  let text;
-  try { text = new TextDecoder('utf-8', {fatal:true}).decode(await file.arrayBuffer()); }
-  catch { if (current === revision) status.textContent = 'Не удалось прочитать UTF-8 файл .conf.'; return; }
-  if (current !== revision) return;
+  submitButton.disabled = true;
+  status.textContent = 'Преобразую файлы…';
   try {
-    output.value = convertConf(text, file.name);
-    openSR.href = 'shadowrocket://add/' + output.value;
+    const converted = await convertFiles([...fileInput.files]);
+    if (current !== revision) return;
+    links = converted;
+    output.value = links.join('\n');
+    openSR.href = links.length === 1 ? 'shadowrocket://add/' + links[0] : 'shadowrocket://';
+    openSR.textContent = links.length === 1 ? 'Открыть в Shadowrocket ↗' : 'Добавить весь набор в Shadowrocket ↗';
     result.hidden = false;
-    status.textContent = 'Ссылка готова. Откройте её в Shadowrocket или скопируйте.';
-  } catch (error) { status.textContent = error.message; }
+    status.textContent = `Готово профилей: ${links.length}. Можно передать весь набор в Shadowrocket.`;
+  } catch (error) { if (current === revision) status.textContent = error.message; }
+  finally { if (current === revision) submitButton.disabled = false; }
 });
-document.getElementById('copy').addEventListener('click', async () => {
+async function copyOutput() {
   const current = revision;
-  if (!output.value) return;
+  if (!output.value) return false;
   try {
     await navigator.clipboard.writeText(output.value);
-    if (current === revision) status.textContent = 'Ссылка скопирована.';
+    if (current !== revision) return false;
+    status.textContent = `Скопировано профилей: ${links.length}.`;
+    return true;
   } catch {
-    if (current !== revision) return;
-    output.focus(); output.select();
-    status.textContent = 'Браузер не разрешил копирование. Скопируйте выделенную ссылку вручную.';
+    if (current === revision) {
+      output.focus(); output.select();
+      status.textContent = 'Браузер не разрешил копирование. Скопируйте весь выделенный список вручную и вставьте в SR.';
+    }
+    return false;
   }
+}
+openSR.addEventListener('click', async event => {
+  if (!links.length) { event.preventDefault(); return; }
+  if (links.length === 1) return; // Direct node URI, no clipboard permission needed.
+  event.preventDefault();
+  if (await copyOutput()) window.location.assign('shadowrocket://');
 });
+document.getElementById('copy').addEventListener('click', copyOutput);
 document.getElementById('download').addEventListener('click', () => {
   if (output.value) download(output.value + '\n', 'shadowrocket-awg.txt', 'text/plain;charset=utf-8');
 });

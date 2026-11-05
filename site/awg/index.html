@@ -6,29 +6,29 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; worker-src 'none'">
 <meta name="referrer" content="no-referrer">
 <title>AWG → Shadowrocket · Локальный конвертер</title>
-<meta name="description" content="Преобразуйте AmneziaWG .conf в ссылку для Shadowrocket прямо в браузере. Без отправки файла и ключей на сервер.">
+<meta name="description" content="Преобразуйте .conf, .vpn и ZIP с AmneziaWG в ссылки для Shadowrocket прямо в браузере. Без отправки файла и ключей на сервер.">
 <!-- STYLES -->
 </head>
 <body><main id="converter">
 <header><a class="brand" href="https://simonerrror.github.io/ShadowRocket/">🥔 <span>MotivatoPotato</span></a><span class="badge">AWG → Shadowrocket</span></header>
 <nav aria-label="Разделы сайта" class="site-nav"><a href="https://simonerrror.github.io/ShadowRocket/">Главная</a><a href="https://simonerrror.github.io/ShadowRocket/#shadowrocket">Shadowrocket</a><a href="https://simonerrror.github.io/ShadowRocket/#clash">Clash</a><a href="https://simonerrror.github.io/ShadowRocket/#incy">INCY</a></nav>
-<div class="intro"><p class="eyebrow">ФАЙЛ ОСТАЁТСЯ У ВАС</p><h1>Из AWG .conf —<br>в <em>Shadowrocket.</em></h1><p class="lead">Выберите конфиг AmneziaWG. Получите ссылку для импорта в Shadowrocket. Преобразование выполняется в этой вкладке.</p></div>
+<div class="intro"><p class="eyebrow">ФАЙЛ ОСТАЁТСЯ У ВАС</p><h1>Из файлов AWG —<br>в <em>Shadowrocket.</em></h1><p class="lead">Выберите .conf, .vpn или ZIP с профилями AmneziaWG. Передайте весь набор в Shadowrocket одним действием. Преобразование выполняется в этой вкладке.</p></div>
 <section class="workspace" aria-label="Преобразование AWG">
 <form autocomplete="off">
-<div class="step"><span>01</span><h2>Выберите файл</h2></div>
-<label for="config-file">Конфиг AmneziaWG · .conf</label>
-<input id="config-file" type="file" accept=".conf" aria-describedby="file-hint">
-<p id="file-hint" class="hint">Один профиль с одним Peer, до 64 КиБ. AWG1, AWG2 и поля AWG3 / 3.1.</p>
-<div class="actions"><button type="submit">Создать ссылку <span aria-hidden="true">↗</span></button><button type="reset" class="secondary">Очистить</button></div>
+<div class="step"><span>01</span><h2>Выберите файлы</h2></div>
+<label for="config-file">Профили AmneziaWG · .conf, .vpn, ZIP</label>
+<input id="config-file" type="file" multiple accept=".conf,.vpn,.zip" aria-describedby="file-hint">
+<p id="file-hint" class="hint">До 100 профилей. .conf — до 64 КиБ, .vpn — до 2 МиБ, ZIP — до 8 МиБ; весь набор — до 16 МиБ. ZIP может содержать папки с .conf и .vpn.</p>
+<div class="actions"><button id="convert" type="submit">Преобразовать файлы <span aria-hidden="true">↗</span></button><button type="reset" class="secondary">Очистить</button></div>
 <p id="status" role="status" aria-live="polite"></p>
 <div id="result" hidden>
 <div class="step"><span>02</span><h2>Импортируйте в Shadowrocket</h2></div>
-<label for="output">Готовая ссылка wg://</label>
+<label for="output">Готовые ссылки wg:// · по одной на профиль</label>
 <textarea id="output" rows="5" readonly autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
-<div class="actions"><a id="open-sr" class="launch">Открыть в Shadowrocket ↗</a><button id="copy" type="button">Скопировать ссылку</button><button id="download" type="button" class="secondary">Скачать TXT</button></div>
-<p class="hint">Нажмите «Открыть в Shadowrocket» и подтвердите добавление узла в приложении. Можно также импортировать ссылку из буфера обмена. Ссылка содержит приватный ключ.</p>
+<div class="actions"><a id="open-sr" class="launch">Открыть в Shadowrocket ↗</a><button id="copy" type="button">Скопировать весь список</button><button id="download" type="button" class="secondary">Скачать TXT</button></div>
+<p class="hint">Для набора кнопка копирует все ссылки и открывает SR. Подтвердите импорт в приложении и разрешите чтение буфера. Если автораспознавание выключено, нажмите «Вставить» в SR. Ссылки содержат приватные ключи.</p>
 </div>
 </form>
-<aside><div class="privacy-mark">↳</div><h2>Только в браузере</h2><p>Файл и ключи не передаются на сервер. Нет аккаунта, аналитики и постоянного хранилища. Сетевые запросы страницы запрещены.</p><p class="hint">GitHub Pages отдаёт статическую страницу. Обработка начинается на вашем устройстве после выбора файла.</p><div class="divider"></div><h2>Можно без сети</h2><p>Скачайте чистую HTML-копию. Откройте её без подключения к интернету и преобразуйте свой файл.</p><button type="button" class="secondary" id="download-offline">Скачать офлайн-конвертер</button><p class="hint">Копия не содержит выбранного файла или готовой ссылки.</p><details><summary>Формат и исходники</summary><p class="hint">Неизвестные поля, несколько Peer и отдельные маршруты AllowedIPs отклоняются. Для новых полей нужна версия Shadowrocket с их поддержкой.</p><p class="hint"><a href="https://github.com/Simonerrror/ShadowRocket/tree/main/site/awg" target="_blank" rel="noreferrer noopener">Исходный код ↗</a></p></details></aside>
+<aside><div class="privacy-mark">↳</div><h2>Только в браузере</h2><p>Файлы и ключи не передаются на сервер. Нет аккаунта, аналитики и постоянного хранилища. Сетевые запросы страницы запрещены.</p><p class="hint">GitHub Pages отдаёт статическую страницу. Обработка начинается на вашем устройстве после выбора файлов.</p><div class="divider"></div><h2>Можно без сети</h2><p>Скачайте чистую HTML-копию. Откройте её без подключения к интернету и преобразуйте свой набор файлов.</p><button type="button" class="secondary" id="download-offline">Скачать офлайн-конвертер</button><p class="hint">Копия не содержит выбранных файлов или готовых ссылок.</p><details><summary>Формат и исходники</summary><p class="hint">Неизвестные поля, несколько Peer в одном .conf и отдельные маршруты AllowedIPs отклоняются. Для новых полей нужна версия Shadowrocket с их поддержкой.</p><p class="hint"><a href="https://github.com/Simonerrror/ShadowRocket/tree/main/site/awg" target="_blank" rel="noreferrer noopener">Исходный код ↗</a></p></details></aside>
 </section><footer><span>Без загрузки файлов на сервер · Без аналитики</span><a href="https://simonerrror.github.io/ShadowRocket/#shadowrocket">К разделу Shadowrocket ↗</a></footer>
 </main><noscript>Для локального преобразования включите JavaScript.</noscript><!-- SCRIPT --></body></html>

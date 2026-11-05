@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Build the browser-only AWG converter without third-party dependencies."""
+import re
 from pathlib import Path
 
 from build_clash_page import csp_hash
@@ -10,9 +11,12 @@ OUTPUT = ROOT / 'docs/awg/index.html'
 
 
 def build_page() -> str:
-    converter = (SOURCE / 'converter.mjs').read_text().replace('export function convertConf', 'function convertConf')
-    app = (SOURCE / 'app.mjs').read_text().replace("import {convertConf} from './converter.mjs';\n", '')
-    javascript = converter + '\n' + app
+    sources = [ROOT / 'site/clash/src/archive.mjs', SOURCE / 'converter.mjs',
+               SOURCE / 'inputs.mjs', SOURCE / 'app.mjs']
+    # Only these local modules are inlined; no runtime imports or network loaders.
+    javascript = '\n'.join(re.sub(r'^import .+;\n', '', path.read_text(), flags=re.M)
+                             .replace('export async function ', 'async function ')
+                             .replace('export function ', 'function ') for path in sources)
     css = (ROOT / 'site/clash/style.css').read_text() + (SOURCE / 'style.css').read_text()
     html = (SOURCE / 'index.html').read_text()
     if '</script' in javascript.lower() or '</style' in css.lower():
