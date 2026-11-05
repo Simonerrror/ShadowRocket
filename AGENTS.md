@@ -2,7 +2,7 @@
 
 ## Lessons
 
-- When generating Shadowrocket node names, end the name with the canonical protocol suffix AWG, TT or NV; normalize existing suffixes without duplication and use the same name in the encoded link, selector and TXT.
+- When generating Shadowrocket node names, preserve the detected AWG version in the final suffix (AWG2 or AWG3.1), and use TT or NV for those protocols; normalize existing suffixes without duplication and use the same name in the encoded link, selector and TXT.
 
 - When arranging the public hub, keep each client’s main action visible before optional catalogs and instructions; use section anchors in the hub menu with scroll spacing. Exclude personal Tailscale modules from the site catalog.
 

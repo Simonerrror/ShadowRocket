@@ -48,7 +48,7 @@ test('AWG2 link preserves keys, IPs and obfuscation with a Unicode title', () =>
     jc:'4', jmin:'40', jmax:'70', s1:'12', s2:'13', s3:'14', s4:'15',
     h1:'1-3', h2:'4', h3:'5', h4:'6', i1:'<t>', i2:'<r 15>', i3:'<rc 10>', i4:'<rd 4>', i5:'<b 0x1234>',
   });
-  assert.equal(decodeURIComponent(link.hash.slice(1)), '🇳🇱 Тест_nl AWG');
+  assert.equal(decodeURIComponent(link.hash.slice(1)), '🇳🇱 Тест_nl AWG2');
 });
 
 test('AWG1 retains its fields without invented AWG2 fields', () => {
@@ -73,7 +73,7 @@ test('AWG3.1 preserves extended fields and normalizes boolean flags', () => {
   assert.equal(obfs.max_handshake_attempts, '5-8');
   assert.equal(obfs.random_trailers, 'true');
   assert.equal(obfs.disable_cookies, 'false');
-  assert.ok(decodeURIComponent(link.hash).endsWith(' AWG'));
+  assert.ok(decodeURIComponent(link.hash).endsWith(' AWG3.1'));
 });
 
 test('optional peer fields and DNS stay absent; IPv6 endpoint is supported', () => {
@@ -114,9 +114,9 @@ test('invalid or unrepresentable input fails without echoing the supplied value'
   });
 });
 
-test('AWG filename markers are normalized to one final AWG suffix',()=>{
+test('AWG filename markers are replaced by the detected version without duplication',()=>{
   for(const name of ['Germany AWG','Germany AWG2','Germany AWG3.1 AWG','Germany TT','Germany AVG']) {
     const title=decodeURIComponent(new URL(convertConf(profile,name+'.conf')).hash.slice(1));
-    assert.equal(title,'Germany AWG');
+    assert.equal(title,'Germany AWG2');
   }
 });
