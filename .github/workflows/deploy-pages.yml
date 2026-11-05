@@ -12,6 +12,7 @@ on:
       - "INCY/RU-VPN.DEEPLINK"
       - "scripts/build_site.py"
       - "scripts/build_clash_page.py"
+      - "scripts/build_awg_page.py"
       - "scripts/build_clash_config.py"
       - "clash_config.yaml"
       - "tests/**"
@@ -25,6 +26,7 @@ on:
       - "INCY/RU-VPN.DEEPLINK"
       - "scripts/build_site.py"
       - "scripts/build_clash_page.py"
+      - "scripts/build_awg_page.py"
       - "scripts/build_clash_config.py"
       - "clash_config.yaml"
       - "tests/**"
@@ -81,6 +83,7 @@ jobs:
         run: |
           python3 scripts/build_site.py
           python3 scripts/build_clash_page.py
+          python3 scripts/build_awg_page.py
 
       - name: Verify generated page is current
         run: git diff --exit-code
@@ -88,6 +91,7 @@ jobs:
       - name: Run public tests
         run: |
           npm test --prefix site/clash
+          node --test site/awg/test/*.test.mjs
           python3 -m unittest discover -s tests
           python3 -m compileall -q scripts tests
 

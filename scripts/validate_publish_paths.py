@@ -26,6 +26,7 @@ GENERATED_FILES = {
     "clash_config.yaml",
     "docs/index.html",
     "docs/clash/index.html",
+    "docs/awg/index.html",
     "distillate/summary.json",
     "INCY/DEFAULT.JSON",
     "INCY/DEFAULT.DEEPLINK",

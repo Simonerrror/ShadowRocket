@@ -40,10 +40,12 @@ allowlist Gemini, списки russia_extended/voice_ports и модуль Twitc
 | `scripts/build_incy_routing.py` | Генерирует оба профиля INCY и SHA-256 sidecar геоданных |
 | `scripts/build_site.py` | Встраивает проверенные INCY deeplink в `docs/index.html` |
 | `scripts/build_clash_page.py` | Собирает автономный генератор Clash в `docs/clash/index.html` |
+| `scripts/build_awg_page.py` | Собирает автономный конвертер AWG в `docs/awg/index.html` |
+| `site/awg/` | Браузерное преобразование AWG .conf в ссылки Shadowrocket; только синтетические тесты |
 | `site/index.html` | Исходник страницы с прямыми ссылками импорта |
 | `docs/index.html`, `docs/images/`, `docs/favicon.svg` | Публикуемая страница GitHub Pages и её ресурсы |
 
-Generated-файлы не правьте вручную: `docs/index.html`, `docs/clash/index.html`, `clash_config.yaml`, `INCY/*.JSON`,
+Generated-файлы не правьте вручную: `docs/index.html`, `docs/clash/index.html`, `docs/awg/index.html`, `clash_config.yaml`, `INCY/*.JSON`,
 `INCY/*.DEEPLINK`, `distillate/text/**`, `distillate/dat/**`, summary и списки
 с заголовком `Generated from distillate/manifest.json`.
 В `anti_advertising.module` сохраняйте ручной заголовок; ссылки на чанки
@@ -92,6 +94,7 @@ python3 scripts/build_clash_config.py
 python3 scripts/build_incy_routing.py
 python3 scripts/build_site.py
 python3 scripts/build_clash_page.py
+python3 scripts/build_awg_page.py
 ```
 
 `--skip-compiled` не обновляет бинарные геоданные. Если изменился их состав,
@@ -107,6 +110,7 @@ python3 scripts/build_clash_page.py
 
 ```sh
 npm test --prefix site/clash
+node --test site/awg/test/*.test.mjs
 python3 -m unittest discover -s tests
 python3 -m compileall -q scripts tests
 ```

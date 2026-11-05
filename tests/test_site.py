@@ -40,7 +40,7 @@ class Page(HTMLParser):
             self.ids.add(attrs["id"])
             for disclosure in self._details:
                 disclosure["ids"].add(attrs["id"])
-        if tag == "a":
+        if tag == "a" and "href" in attrs:
             self.links[attrs.get("id", attrs["href"])] = attrs["href"]
             if self._in_navigation:
                 self._nav_link = {"href": attrs["href"], "label": "", "current": attrs.get("aria-current", "")}
@@ -69,16 +69,16 @@ class PublicSiteTests(unittest.TestCase):
         cls.html = (ROOT / "docs/index.html").read_text()
         cls.page = Page(cls.html)
 
-    def test_shared_navigation_connects_all_sections_from_both_pages(self):
+    def test_shared_navigation_connects_all_sections_from_all_pages(self):
         targets = {"Главная": "", "Shadowrocket": "#shadowrocket", "Clash": "#clash", "INCY": "#incy"}
-        for relative, active in (("", "Главная"), ("clash/", "Clash")):
+        for relative, active in (("", "Главная"), ("clash/", "Clash"), ("awg/", None)):
             html = (ROOT / "docs" / relative / "index.html").read_text()
             page = Page(html)
             self.assertEqual([link["label"] for link in page.navigation], list(targets))
-            self.assertEqual([link["label"] for link in page.navigation if link["current"] == "page"], [active])
+            self.assertEqual([link["label"] for link in page.navigation if link["current"] == "page"], ([active] if active else []))
             for link in page.navigation:
                 destination = urlsplit(urljoin(SITE_URL + relative, link["href"]))
-                target = "clash/#generator" if relative and link["label"] == "Clash" else targets[link["label"]]
+                target = "clash/#generator" if relative == "clash/" and link["label"] == "Clash" else targets[link["label"]]
                 expected = urlsplit(urljoin(SITE_URL, target))
                 self.assertEqual((destination.scheme, destination.netloc, destination.path),
                                  (expected.scheme, expected.netloc, expected.path))
@@ -129,6 +129,7 @@ class PublicSiteTests(unittest.TestCase):
         self.assertIn("module-apple", catalog["ids"])
         self.assertIn("module-dns-example", catalog["ids"])
         self.assertNotIn("tailscale", self.html.lower())
+        self.assertEqual(self.page.links["awg-converter"], "./awg/")
         self.assertIn("clash-generator", self.page.links)
         self.assertEqual(self.page.links["clash-generator"], "./clash/")
 

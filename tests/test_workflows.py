@@ -117,6 +117,11 @@ class WorkflowHardeningTests(unittest.TestCase):
         self.assertIn(generated, sync)
         self.assertTrue(is_allowed_publish_path(generated))
         self.assertTrue(is_allowed_publish_path("docs/clash/index.html"))
+        self.assertTrue(is_allowed_publish_path("docs/awg/index.html"))
+        for content in (sync, verify, deploy):
+            self.assertIn("python3 scripts/build_awg_page.py", content)
+            self.assertIn("node --test site/awg/test/*.test.mjs", content)
+        self.assertIn("docs/awg/index.html", sync)
         self.assertIn("docs/clash/index.html", sync)
         self.assertIn("python3 scripts/build_clash_page.py", verify)
         self.assertIn("python3 scripts/build_clash_page.py", deploy)

@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-c7Ud2fz2wiFd5CrBlbramYCLPqnIasJEeh4kvRdOnHU='; style-src 'sha256-5NlXRHu5hTDJtsdL2oZOxOBzbYCzauYyFztGZiQhRvc='; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; worker-src 'none'">
+<meta name="referrer" content="no-referrer">
+<title>AWG → Shadowrocket · Локальный конвертер</title>
+<meta name="description" content="Преобразуйте AmneziaWG .conf в ссылку для Shadowrocket прямо в браузере. Без отправки файла и ключей на сервер.">
+<style>:root{color-scheme:light;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#293027;background:#f4f2ec;font-synthesis:none}*{box-sizing:border-box}body{margin:0}main{max-width:1100px;margin:auto;padding:32px 36px}header{display:flex;align-items:center;justify-content:space-between;gap:20px}.brand{display:flex;gap:12px;align-items:center;color:#354d32;text-decoration:none;font-size:30px}.brand span{font-size:20px;letter-spacing:-.5px;font-weight:700;color:#293027}.badge{font-size:12px;border:1px solid #d8ddce;border-radius:30px;padding:9px 14px;color:#616b59}.intro{padding:24px 0}.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.8px;color:#616b59}h1{font-size:clamp(32px,5vw,48px);line-height:1.06;letter-spacing:-1.5px;margin:20px 0}h1 em{color:#354d32;font-style:normal}.lead{max-width:520px;color:#616b59;line-height:1.7;font-size:16px}.workspace{display:grid;grid-template-columns:minmax(0,1fr) 300px;border:1px solid #d8ddce;border-radius:16px;overflow:hidden;background:#fffef9}form{padding:30px}aside{padding:32px;background:#ecefe5;border-left:1px solid #d8ddce}.step{display:flex;gap:12px;align-items:center;margin:0 0 20px}.step:not(:first-child){margin-top:28px}.step span{font-size:10px;border:1px solid #b5c0a8;padding:5px;border-radius:5px;color:#354d32}h2{font-size:18px;margin:0;font-weight:600}label{display:block;font-size:13px;color:#293027;margin:16px 0 10px}input,textarea{width:100%;border:1px solid #b5c0a8;border-radius:9px;background:#fffef9;color:#293027;padding:14px;font:13px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;resize:vertical}textarea{min-height:132px}input::placeholder,textarea::placeholder{color:#6c7562}input:focus,textarea:focus{outline:2px solid #354d32;outline-offset:2px}.hint{font-size:12px;color:#616b59;line-height:1.7;margin:10px 0}details{margin-top:24px;border-top:1px solid #d8ddce;border-bottom:1px solid #d8ddce;padding:17px 0}summary{cursor:pointer;font-size:13px;color:#293027}summary span{font-size:11px;color:#616b59;margin-left:10px}.details-body{padding-top:5px}.actions{display:flex;gap:14px;align-items:center;margin-top:28px}button{cursor:pointer;font:600 14px/1.4 system-ui;border:0;border-radius:9px;padding:15px 20px;background:#354d32;color:#fffef9}button[type=submit]{flex:1;display:flex;justify-content:space-between;align-items:center}button:hover{background:#263d24}button.secondary{background:transparent;color:#354d32;border:1px solid #b5c0a8}button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #354d32;outline-offset:4px}#status{font-size:13px;line-height:1.6;color:#354d32;margin:15px 0 0;min-height:20px;overflow-wrap:anywhere}.privacy-mark{font-size:45px;color:#354d32;margin:6px 0 28px}aside p{color:#535e49;font-size:14px;line-height:1.85}.divider{height:1px;background:#d8ddce;margin:30px 0}ol{padding-left:19px;font-size:13px;color:#535e49;line-height:2.25}footer{display:flex;justify-content:space-between;gap:20px;color:#616b59;font-size:11px;line-height:1.7;padding:24px 0}noscript{display:block;padding:20px;text-align:center}@media(max-width:760px){main{padding:22px 18px}.intro{padding-top:24px}h1{letter-spacing:-1.8px}.workspace{grid-template-columns:1fr}form{padding:23px}aside{border-left:0;border-top:1px solid #d8ddce;padding:24px}.privacy-mark{display:none}footer{flex-direction:column;gap:4px}.badge{font-size:10px;padding:7px 9px}.brand span{font-size:10px;letter-spacing:1px}}@media(prefers-reduced-motion:no-preference){button{transition:background .15s}}
+
+a{color:#354d32}input[type=file]{font-family:system-ui}input[type=file]::file-selector-button{background:#e9eedc;color:#293027;border:0;border-radius:5px;padding:8px;margin-right:12px;cursor:pointer}button:disabled{opacity:.6;cursor:wait}.details-body ol{line-height:1.8}.details-body li+li{margin-top:7px}
+
+.actions{flex-wrap:wrap}.actions button[type=submit]{min-width:190px}
+.site-nav{display:flex;gap:4px;padding:5px;background:#fffef9;border:1px solid #d8ddce;border-radius:12px;margin:20px 0 0}.site-nav a{flex:1;text-align:center;padding:10px 8px;border-radius:8px;color:#293027;text-decoration:none;font-size:13px;font-weight:600;line-height:1.6}.site-nav a:hover{background:#e9eedc}.site-nav a[aria-current="page"]{background:#354d32;color:#fffef9}.intro{padding-top:24px}html{scroll-padding-top:24px}[id]{scroll-margin-top:24px}@media(max-width:600px){.site-nav{gap:0}.site-nav a{font-size:12px;padding:10px 5px}.brand span{font-size:14px;letter-spacing:0}}
+.actions .launch{display:inline-block;text-decoration:none;font:600 14px/1.4 system-ui;border-radius:9px;padding:15px 20px;background:#354d32;color:#fffef9}.actions .launch:hover{background:#263d24}
+#result{margin-top:24px}
+</style>
+</head>
+<body><main id="converter">
+<header><a class="brand" href="https://simonerrror.github.io/ShadowRocket/">🥔 <span>MotivatoPotato</span></a><span class="badge">AWG → Shadowrocket</span></header>
+<nav aria-label="Разделы сайта" class="site-nav"><a href="https://simonerrror.github.io/ShadowRocket/">Главная</a><a href="https://simonerrror.github.io/ShadowRocket/#shadowrocket">Shadowrocket</a><a href="https://simonerrror.github.io/ShadowRocket/#clash">Clash</a><a href="https://simonerrror.github.io/ShadowRocket/#incy">INCY</a></nav>
+<div class="intro"><p class="eyebrow">ФАЙЛ ОСТАЁТСЯ У ВАС</p><h1>Из AWG .conf —<br>в <em>Shadowrocket.</em></h1><p class="lead">Выберите конфиг AmneziaWG. Получите ссылку для импорта в Shadowrocket. Преобразование выполняется в этой вкладке.</p></div>
+<section class="workspace" aria-label="Преобразование AWG">
+<form autocomplete="off">
+<div class="step"><span>01</span><h2>Выберите файл</h2></div>
+<label for="config-file">Конфиг AmneziaWG · .conf</label>
+<input id="config-file" type="file" accept=".conf" aria-describedby="file-hint">
+<p id="file-hint" class="hint">Один профиль с одним Peer, до 64 КиБ. AWG1, AWG2 и поля AWG3 / 3.1.</p>
+<div class="actions"><button type="submit">Создать ссылку <span aria-hidden="true">↗</span></button><button type="reset" class="secondary">Очистить</button></div>
+<p id="status" role="status" aria-live="polite"></p>
+<div id="result" hidden>
+<div class="step"><span>02</span><h2>Импортируйте в Shadowrocket</h2></div>
+<label for="output">Готовая ссылка wg://</label>
+<textarea id="output" rows="5" readonly autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
+<div class="actions"><a id="open-sr" class="launch">Открыть в Shadowrocket ↗</a><button id="copy" type="button">Скопировать ссылку</button><button id="download" type="button" class="secondary">Скачать TXT</button></div>
+<p class="hint">Нажмите «Открыть в Shadowrocket» и подтвердите добавление узла в приложении. Можно также импортировать ссылку из буфера обмена. Ссылка содержит приватный ключ.</p>
+</div>
+</form>
+<aside><div class="privacy-mark">↳</div><h2>Только в браузере</h2><p>Файл и ключи не передаются на сервер. Нет аккаунта, аналитики и постоянного хранилища. Сетевые запросы страницы запрещены.</p><p class="hint">GitHub Pages отдаёт статическую страницу. Обработка начинается на вашем устройстве после выбора файла.</p><div class="divider"></div><h2>Можно без сети</h2><p>Скачайте чистую HTML-копию. Откройте её без подключения к интернету и преобразуйте свой файл.</p><button type="button" class="secondary" id="download-offline">Скачать офлайн-конвертер</button><p class="hint">Копия не содержит выбранного файла или готовой ссылки.</p><details><summary>Формат и исходники</summary><p class="hint">Неизвестные поля, несколько Peer и отдельные маршруты AllowedIPs отклоняются. Для новых полей нужна версия Shadowrocket с их поддержкой.</p><p class="hint"><a href="https://github.com/Simonerrror/ShadowRocket/tree/main/site/awg" target="_blank" rel="noreferrer noopener">Исходный код ↗</a></p></details></aside>
+</section><footer><span>Без загрузки файлов на сервер · Без аналитики</span><a href="https://simonerrror.github.io/ShadowRocket/#shadowrocket">К разделу Shadowrocket ↗</a></footer>
+</main><noscript>Для локального преобразования включите JavaScript.</noscript><script type="module">// Browser port of the maintained AWG → Shadowrocket conversion contract.
+// Only pure conversion lives here; no I/O, storage, or network APIs.
+const legacy = ['Jc','Jmin','Jmax','S1','S2','H1','H2','H3','H4'];
+const awg2 = ['Jc','Jmin','Jmax','S1','S2','S3','S4','H1','H2','H3','H4','I1','I2','I3','I4','I5'];
+const extended = {
+  HeaderProtectionKey:'header_protection_key', ContentPaddingAddition:'content_padding_addition',
+  RekeyAfterTime:'rekey_after_time', RekeyTimeout:'rekey_timeout', RejectAfterTime:'reject_after_time',
+  KeepaliveTimeout:'keepalive_timeout', MaxHandshakeAttempts:'max_handshake_attempts',
+  RandomTrailers:'random_trailers', DisableCookies:'disable_cookies',
+};
+const fail = field => { throw new Error(`Проверьте поле ${field}.`); };
+function uint(value, field, max = 4294967295) {
+  if (!/^[0-9]+$/.test(value) || value.length > String(max).length || Number(value) > max) fail(field);
+  return Number(value);
+}
+function range(value, field, max = 65535) {
+  if (!/^[0-9]+(?:-[0-9]+)?$/.test(value)) fail(field);
+  const [low, high = low] = value.split('-');
+  if (uint(low, field, max) > uint(high, field, max)) fail(field);
+}
+function key(value, field) {
+  try { if (atob(value).length === 32 && btoa(atob(value)) === value) return; } catch {}
+  fail(field);
+}
+function ip(value) {
+  if (value.includes(':')) {
+    if (!/^[0-9a-f:.]+$/i.test(value)) return 0;
+    try { return new URL(`http://[${value}]/`).hostname.startsWith('[') ? 6 : 0; } catch { return 0; }
+  }
+  return /^(?:0|[1-9][0-9]{0,2})(?:\.(?:0|[1-9][0-9]{0,2})){3}$/.test(value)
+    && value.split('.').every(n => Number(n) <= 255) ? 4 : 0;
+}
+function endpoint(value) {
+  const match = /^(\[[^\]]+\]|[^:]+):([0-9]+)$/.exec(value);
+  if (!match || uint(match[2], 'Endpoint', 65535) === 0) fail('Endpoint');
+  const host = match[1];
+  if (host.startsWith('[')) {
+    if (ip(host.slice(1, -1)) !== 6) fail('Endpoint');
+  } else if (host.length > 253 || host.split('.').some(part =>
+    part.length > 63 || !/^[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$/.test(part))) fail('Endpoint');
+  return `${host}:${Number(match[2])}`;
+}
+function parse(text) {
+  if (typeof text !== 'string' || new TextEncoder().encode(text).length > 65536)
+    throw new Error('Размер .conf должен быть не больше 64 КиБ.');
+  const sections = new Map();
+  let section;
+  for (const raw of text.replace(/^\uFEFF/, '').split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line || /^[#;]/.test(line)) continue;
+    if (line.startsWith('[')) {
+      if (!['[Interface]', '[Peer]'].includes(line) || sections.has(line))
+        throw new Error('Нужны одна секция [Interface] и одна [Peer].');
+      section = new Map(); sections.set(line, section); continue;
+    }
+    const entry = /^([A-Za-z][A-Za-z0-9]*)\s*=\s*(.*)$/.exec(line);
+    if (!section || !entry) throw new Error('Некорректный формат .conf.');
+    const [, field, value] = entry;
+    // Never include untrusted field names or values in errors.
+    if (section.has(field)) throw new Error('В .conf повторяется поле.');
+    if (!value || /\$(?:[A-Za-z_]|\{)/.test(value)) throw new Error('В .conf есть пустое значение или шаблон.');
+    section.set(field, value);
+  }
+  if (sections.size !== 2) throw new Error('Нужны одна секция [Interface] и одна [Peer].');
+  return [sections.get('[Interface]'), sections.get('[Peer]')];
+}
+
+function convertConf(text, filename = 'profile.conf') {
+  const [inter, peer] = parse(text);
+  const allowedInterface = new Set(['PrivateKey','Address','DNS','MTU',...awg2,...Object.keys(extended)]);
+  const allowedPeer = new Set(['PublicKey','PresharedKey','AllowedIPs','Endpoint','PersistentKeepalive']);
+  if ([...inter.keys()].some(f => !allowedInterface.has(f)) || [...peer.keys()].some(f => !allowedPeer.has(f)))
+    throw new Error('В .conf есть неподдерживаемое поле. Преобразование остановлено.');
+  const isExtended = [...awg2.filter(f => !legacy.includes(f)),...Object.keys(extended)].some(f => inter.has(f));
+  const fields = isExtended ? awg2 : legacy;
+  for (const f of ['PrivateKey','Address',...fields]) if (!inter.has(f)) fail(f);
+  for (const f of ['PublicKey','AllowedIPs','Endpoint']) if (!peer.has(f)) fail(f);
+  key(inter.get('PrivateKey'), 'PrivateKey'); key(peer.get('PublicKey'), 'PublicKey');
+  if (peer.has('PresharedKey')) key(peer.get('PresharedKey'), 'PresharedKey');
+  uint(inter.get('Jc'), 'Jc');
+  if (uint(inter.get('Jmin'), 'Jmin') > uint(inter.get('Jmax'), 'Jmax')) fail('Jmin/Jmax');
+  for (const f of fields.filter(f => f.startsWith('S'))) uint(inter.get(f), f, 65535);
+  for (const f of ['H1','H2','H3','H4']) {
+    if (isExtended) range(inter.get(f), f, 4294967295); else uint(inter.get(f), f);
+  }
+  for (const f of fields.filter(f => f.startsWith('I'))) {
+    const value = inter.get(f);
+    const tokens = value.match(/<(?:b 0x(?:[0-9a-fA-F]{2})+|(?:r|rc|rd) [0-9]+|t)>/g);
+    if (!tokens || tokens.join('') !== value) fail(f);
+    for (const token of tokens) {
+      const count = /^<(?:r|rc|rd) ([0-9]+)>$/.exec(token);
+      if (count) uint(count[1], f, 65535);
+    }
+  }
+  for (const item of inter.get('Address').split(',')) {
+    const [address, prefix, extra] = item.trim().split('/');
+    const family = ip(address);
+    if (!family || extra !== undefined) fail('Address');
+    if (prefix !== undefined) uint(prefix, 'Address', family === 4 ? 32 : 128);
+  }
+  if (inter.has('DNS') && inter.get('DNS').split(',').some(value => !ip(value.trim()))) fail('DNS');
+  const allowed = peer.get('AllowedIPs').split(',').map(value => value.trim());
+  if (new Set(allowed).size !== allowed.length || !allowed.includes('0.0.0.0/0')
+      || allowed.some(value => !['0.0.0.0/0','::/0'].includes(value)))
+    throw new Error('AllowedIPs: ссылка поддерживает только полный туннель IPv4 или IPv4 + IPv6.');
+  const obfs = Object.fromEntries(fields.map(f => [f.toLowerCase(), inter.get(f)]));
+  for (const [field, mapped] of Object.entries(extended)) {
+    if (!inter.has(field)) continue;
+    let value = inter.get(field);
+    if (field === 'HeaderProtectionKey') {
+      key(value, field);
+      if (['S1','S2','S3','S4'].some(f => Number(inter.get(f)) < 12)) fail('S1–S4');
+    } else if (['RandomTrailers','DisableCookies'].includes(field)) {
+      if (/^(on|true|1)$/i.test(value)) value = 'true';
+      else if (/^(off|false|0)$/i.test(value)) value = 'false';
+      else fail(field);
+    } else range(value, field);
+    obfs[mapped] = value;
+  }
+  const query = {publicKey:peer.get('PublicKey'), privateKey:inter.get('PrivateKey')};
+  if (peer.has('PresharedKey')) query.presharedKey = peer.get('PresharedKey');
+  query.ip = inter.get('Address');
+  if (inter.has('DNS')) query.dns = inter.get('DNS');
+  if (peer.has('PersistentKeepalive')) {
+    uint(peer.get('PersistentKeepalive'), 'PersistentKeepalive', 65535);
+    query.keepalive = peer.get('PersistentKeepalive');
+  }
+  query.obfs = 'amneziawg'; query.obfsParam = JSON.stringify(obfs);
+  if (inter.has('MTU')) { uint(inter.get('MTU'), 'MTU', 65535); query.mtu = inter.get('MTU'); }
+  const version = ['RandomTrailers','DisableCookies'].some(f => inter.has(f)) ? 'AWG3.1'
+    : Object.keys(extended).some(f => inter.has(f)) ? 'AWG3' : isExtended ? 'AWG2' : 'AWG';
+  const stem = String(filename).replace(/\.conf$/i, '').replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 200) || 'profile';
+  const flag = {nl:'🇳🇱',se:'🇸🇪',si:'🇸🇮'}[stem.split('_').at(-1).toLowerCase()];
+  const title = `${flag ? flag + ' ' : ''}${stem} ${version}`;
+  // Match the existing converter's percent encoding rather than form encoding.
+  const encode = value => encodeURIComponent(value).replace(/[!'()*]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+  return `wg://${endpoint(peer.get('Endpoint'))}?${Object.entries(query).map(([k,v]) => `${k}=${encode(v)}`).join('&')}#${encode(title)}`;
+}
+
+
+// Capture the pristine standalone document before the user selects a file.
+const offlineHTML = '<!doctype html>\n' + document.documentElement.outerHTML;
+const form = document.querySelector('form');
+const fileInput = document.getElementById('config-file');
+const result = document.getElementById('result');
+const output = document.getElementById('output');
+const status = document.getElementById('status');
+const openSR = document.getElementById('open-sr');
+let revision = 0;
+function clear() {
+  revision += 1;
+  output.value = ''; openSR.removeAttribute('href'); result.hidden = true; status.textContent = '';
+}
+function download(text, filename, type) {
+  const url = URL.createObjectURL(new Blob([text], {type}));
+  const link = document.createElement('a');
+  link.href = url; link.download = filename;
+  document.body.append(link); link.click(); link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+fileInput.addEventListener('change', clear);
+form.addEventListener('reset', clear);
+window.addEventListener('pagehide', () => { form.reset(); });
+form.addEventListener('submit', async event => {
+  event.preventDefault(); clear();
+  const current = revision;
+  const file = fileInput.files[0];
+  if (!file) { status.textContent = 'Выберите файл .conf.'; return; }
+  if (!/\.conf$/i.test(file.name) || file.size > 65536) {
+    status.textContent = 'Нужен файл .conf размером до 64 КиБ.'; return;
+  }
+  let text;
+  try { text = new TextDecoder('utf-8', {fatal:true}).decode(await file.arrayBuffer()); }
+  catch { if (current === revision) status.textContent = 'Не удалось прочитать UTF-8 файл .conf.'; return; }
+  if (current !== revision) return;
+  try {
+    output.value = convertConf(text, file.name);
+    openSR.href = 'shadowrocket://add/' + output.value;
+    result.hidden = false;
+    status.textContent = 'Ссылка готова. Откройте её в Shadowrocket или скопируйте.';
+  } catch (error) { status.textContent = error.message; }
+});
+document.getElementById('copy').addEventListener('click', async () => {
+  const current = revision;
+  if (!output.value) return;
+  try {
+    await navigator.clipboard.writeText(output.value);
+    if (current === revision) status.textContent = 'Ссылка скопирована.';
+  } catch {
+    if (current !== revision) return;
+    output.focus(); output.select();
+    status.textContent = 'Браузер не разрешил копирование. Скопируйте выделенную ссылку вручную.';
+  }
+});
+document.getElementById('download').addEventListener('click', () => {
+  if (output.value) download(output.value + '\n', 'shadowrocket-awg.txt', 'text/plain;charset=utf-8');
+});
+document.getElementById('download-offline').addEventListener('click', () => {
+  download(offlineHTML, 'awg-shadowrocket-offline.html', 'text/html;charset=utf-8');
+});
+</script></body></html>

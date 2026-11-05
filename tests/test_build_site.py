@@ -26,9 +26,19 @@ VALID_INCY_ADD = "incy://routing/add/eyJOYW1lIjoiZGVmYXVsdCJ9"
 
 class SiteBuildTests(unittest.TestCase):
     def test_clash_page_is_self_contained_and_has_network_blocking_csp(self) -> None:
+        self.check_offline_page("clash")
+
+    def test_awg_page_is_current_self_contained_and_blocks_network(self) -> None:
         root = Path(__file__).resolve().parents[1]
-        output = root / "docs/clash/index.html"
-        self.assertTrue(output.is_file(), "build_clash_page.py must produce the offline Clash generator")
+        before = (root / "docs/awg/index.html").read_bytes()
+        subprocess.run([sys.executable, "scripts/build_awg_page.py"], cwd=root, check=True)
+        self.assertEqual(before, (root / "docs/awg/index.html").read_bytes())
+        self.check_offline_page("awg")
+
+    def check_offline_page(self, name: str) -> None:
+        root = Path(__file__).resolve().parents[1]
+        output = root / "docs" / name / "index.html"
+        self.assertTrue(output.is_file(), "Build the standalone generator before testing")
         html = output.read_text()
         self.assertNotRegex(html, r'<script[^>]+src=|<link[^>]+rel="stylesheet"')
         policy = re.search(r'http-equiv="Content-Security-Policy" content="([^"]+)"', html)[1]

@@ -52,10 +52,12 @@ jobs:
           python3 scripts/build_incy_routing.py
           python3 scripts/build_site.py
           python3 scripts/build_clash_page.py
+          python3 scripts/build_awg_page.py
 
       - name: Run tests
         run: |
           npm test --prefix site/clash
+          node --test site/awg/test/*.test.mjs
           python3 -m unittest discover -s tests -v
           python3 -m compileall -q scripts tests
 
