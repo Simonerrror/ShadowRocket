@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Build the browser-only AWG converter without third-party dependencies."""
-import re
+"""Build the offline Shadowrocket converter with the shared reviewed toolchain."""
+import subprocess
+import tempfile
 from pathlib import Path
 
 from build_clash_page import csp_hash
@@ -11,12 +12,17 @@ OUTPUT = ROOT / 'docs/awg/index.html'
 
 
 def build_page() -> str:
-    sources = [ROOT / 'site/clash/src/archive.mjs', SOURCE / 'converter.mjs',
-               SOURCE / 'inputs.mjs', SOURCE / 'app.mjs']
-    # Only these local modules are inlined; no runtime imports or network loaders.
-    javascript = '\n'.join(re.sub(r'^import .+;\n', '', path.read_text(), flags=re.M)
-                             .replace('export async function ', 'async function ')
-                             .replace('export function ', 'function ') for path in sources)
+    shared = ROOT / 'site/clash'
+    esbuild = shared / 'node_modules/esbuild/bin/esbuild'
+    if not esbuild.is_file():
+        raise RuntimeError('Install the reviewed exact dependencies from site/clash/package-lock.json')
+    with tempfile.TemporaryDirectory(prefix='shadowrocket-page-') as directory:
+        bundle = Path(directory) / 'app.js'
+        subprocess.run([str(esbuild), str(SOURCE / 'app.mjs'), '--bundle', '--minify',
+                        '--format=iife', '--platform=browser', '--target=es2022',
+                        '--legal-comments=inline', f'--outfile={bundle}', '--log-level=warning'], check=True)
+        license_text = (shared / 'node_modules/yaml/LICENSE').read_text()
+        javascript = '/*! yaml 2.9.1 (ISC)\n' + license_text + '*/\n' + bundle.read_text()
     css = (ROOT / 'site/clash/style.css').read_text() + (SOURCE / 'style.css').read_text()
     html = (SOURCE / 'index.html').read_text()
     if '</script' in javascript.lower() or '</style' in css.lower():

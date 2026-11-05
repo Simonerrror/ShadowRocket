@@ -23,7 +23,7 @@ details{border-top:1px solid var(--line);margin-top:16px;padding-top:12px;color:
 <h2 id="shadowrocket-heading">Shadowrocket</h2>
 <p class="note">Конфиг для iPhone, iPad и Mac. Серверы добавляются своей подпиской.</p>
 <a class="button main" href="shadowrocket://config/add/https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/shadowrocket.conf">Добавить в Shadowrocket <span aria-hidden="true">↗</span></a>
-<a id="awg-converter" class="button" href="./awg/">AWG .conf / .vpn / ZIP → ссылки <span aria-hidden="true">↗</span></a>
+<a id="awg-converter" class="button" href="./awg/">AWG / TrustTunnel → Shadowrocket <span aria-hidden="true">↗</span></a>
 <details><summary>Как работает конфиг</summary><p>Российские домены и IP — напрямую. Остальные соединения — через выбранную группу PROXY. Отдельные правила задают исключения и блокировку.</p><p>Конфиг задаёт маршруты, а серверы добавляются отдельно — своей подпиской. После импорта выбери конфиг и установи глобальную маршрутизацию «Конфигурация».</p><p><a href="https://github.com/Simonerrror/ShadowRocket/blob/main/docs/setup.md">Правила и исключения на GitHub ↗</a></p><p><strong>Три группы и один селектор</strong></p>
 <p><strong>PROXY</strong> — главный переключатель: в нём выбирается одна из трёх групп.</p>
 <ul class="groups"><li><strong>AUTO-SPEED</strong> — включил и забыл. Автоматически тестирует серверы и выбирает быстрый доступный. Вручную переключать узлы для обычной работы не нужно.</li><li><strong>WL</strong> — если остальные серверы не работают. Выбери WL в PROXY, затем нужный сервер внутри WL.</li><li><strong>MANUAL-PROXY</strong> — если нужна конкретная страна или сервер. Выбери сервер внутри этой группы, затем MANUAL-PROXY в PROXY.</li></ul>

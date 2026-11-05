@@ -40,8 +40,8 @@ allowlist Gemini, списки russia_extended/voice_ports и модуль Twitc
 | `scripts/build_incy_routing.py` | Генерирует оба профиля INCY и SHA-256 sidecar геоданных |
 | `scripts/build_site.py` | Встраивает проверенные INCY deeplink в `docs/index.html` |
 | `scripts/build_clash_page.py` | Собирает автономный генератор Clash в `docs/clash/index.html` |
-| `scripts/build_awg_page.py` | Собирает автономный конвертер AWG в `docs/awg/index.html` |
-| `site/awg/` | Браузерное преобразование AWG .conf в ссылки Shadowrocket; только синтетические тесты |
+| `scripts/build_awg_page.py` | Собирает автономный конвертер AWG / TrustTunnel в `docs/awg/index.html` |
+| `site/awg/` | Браузерное преобразование AWG и TrustTunnel из Mihomo в ссылки Shadowrocket; только синтетические тесты |
 | `site/index.html` | Исходник страницы с прямыми ссылками импорта |
 | `docs/index.html`, `docs/images/`, `docs/favicon.svg` | Публикуемая страница GitHub Pages и её ресурсы |
 

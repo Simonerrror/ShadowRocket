@@ -1,4 +1,5 @@
 import {convertConf} from './converter.mjs';
+import {trustTunnelNodes} from '../clash/src/trusttunnel-export.mjs';
 import {inflateProfile, unpackProfileZip} from '../clash/src/archive.mjs';
 
 const VPN_LIMIT = 2 * 1024 * 1024;
@@ -53,33 +54,54 @@ async function vpnProfiles(data, filename) {
   return profiles;
 }
 
-export async function convertFiles(files) {
-  if (!files.length || files.length > 100) failInput('Добавьте файлы или текст .vpn: от 1 до 100 входов.');
+export async function convertFiles(files, pasted='') {
+  files=[...files];
+  const text=pasted.trim();
+  if(text) {
+    let amnezia=/^(?:vpn:\/\/)?[A-Za-z0-9_-]+={0,2}$/.test(text);
+    if(text.startsWith('{')) {
+      try { amnezia=Array.isArray(JSON.parse(text).containers); } catch {}
+    }
+    files.push(new File([text],amnezia?'pasted.vpn':'pasted.yaml',{type:'text/plain'}));
+  }
+  if (!files.length || files.length > 100) failInput('Добавьте файлы или текст профиля: от 1 до 100 входов.');
   if (files.reduce((sum,file)=>sum+file.size,0) > TOTAL_LIMIT) failInput('Выбранный набор больше 16 МиБ.');
-  const links=[], seen=new Set(); let expanded=0, configs=0;
+  const nodes=[], notes=new Set(), seen=new Set(); let expanded=0, configs=0, skipped=0;
+  const add = entries => {
+    for(const entry of entries) {
+      if(nodes.length>=100) failInput('Допускается до 100 узлов.');
+      if(seen.has(entry.identity)) failInput('Один профиль выбран несколько раз.');
+      seen.add(entry.identity); nodes.push({name:entry.name,link:entry.link});
+    }
+  };
   for (const [index,file] of files.entries()) {
     try {
-      const limit = /\.zip$/i.test(file.name) ? 8*1024*1024 : /\.vpn$/i.test(file.name) ? VPN_LIMIT : 65536;
-      if (!/\.(?:conf|vpn|zip)$/i.test(file.name) || file.size > limit)
-        failInput('Нужны .conf до 64 КиБ, .vpn до 2 МиБ или ZIP до 8 МиБ.');
+      const limit = /\.zip$/i.test(file.name) ? 8*1024*1024 : /\.(?:vpn|ya?ml|json)$/i.test(file.name) ? VPN_LIMIT : 65536;
+      if (!/\.(?:conf|vpn|zip|ya?ml|json)$/i.test(file.name) || file.size > limit)
+        failInput('Нужны .conf до 64 КиБ, .vpn или Mihomo YAML/JSON до 2 МиБ, ZIP до 8 МиБ.');
       let buffer;
       try { buffer = await file.arrayBuffer(); } catch { failInput('Не удалось прочитать файл.'); }
       if (buffer.byteLength > limit) failInput('Превышен размер файла.');
       const entries = /\.zip$/i.test(file.name)
-        ? await unpackProfileZip(buffer,{extensions:/\.(?:conf|vpn)$/i,binary:true})
+        ? await unpackProfileZip(buffer,{extensions:/\.(?:conf|vpn|ya?ml|json)$/i,binary:true})
         : [{name:file.name,data:new Uint8Array(buffer)}];
       for (const entry of entries) {
         expanded += entry.data.byteLength;
         if (expanded > TOTAL_LIMIT) failInput('Распакованный набор больше 16 МиБ.');
+        if(/\.(?:ya?ml|json)$/i.test(entry.name)) {
+          const result=trustTunnelNodes(decodeText(entry.data));
+          add(result.nodes);
+          skipped+=result.skipped;
+          for(const note of result.notes) notes.add(note);
+          continue;
+        }
         const profiles = /\.vpn$/i.test(entry.name) ? await vpnProfiles(entry.data,entry.name)
           : [{name:entry.name,text:decodeText(entry.data)}];
         for (const profile of profiles) {
           configs += textBytes(profile.text);
-          if (configs > TOTAL_LIMIT || links.length >= 100) failInput('Допускается до 100 профилей и 16 МиБ конфигов.');
+          if (configs > TOTAL_LIMIT) failInput('Допускается до 100 профилей и 16 МиБ конфигов.');
           const link = convertConf(profile.text,profile.name);
-          const identity = link.split('#')[0];
-          if (seen.has(identity)) failInput('Один AWG-профиль выбран несколько раз.');
-          seen.add(identity); links.push(link);
+          add([{link,name:decodeURIComponent(link.split('#')[1]),identity:'awg:'+link.split('#')[0]}]);
         }
       }
     } catch (error) {
@@ -89,5 +111,5 @@ export async function convertFiles(files) {
       failInput(`Файл ${index+1}: ${detail}`);
     }
   }
-  return links;
+  return {nodes,notes:[...(skipped?[`Пропущено узлов других протоколов: ${skipped}.`]:[]),...notes]};
 }

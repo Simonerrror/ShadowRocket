@@ -10,9 +10,20 @@ const output = document.getElementById('output');
 const status = document.getElementById('status');
 const openSR = document.getElementById('open-sr');
 const submitButton = document.getElementById('convert');
-let revision = 0, links = [];
+const nodeSelect = document.getElementById('node-select');
+const notes = document.getElementById('notes');
+let revision = 0, nodes = [];
+const selectedNodes = () => nodeSelect.value === 'all' ? nodes : [nodes[Number(nodeSelect.value)]].filter(Boolean);
+function renderSelection() {
+  const selected = selectedNodes();
+  output.value = selected.map(node=>node.link).join('\n');
+  if (!selected.length) { openSR.removeAttribute('href'); return; }
+  openSR.href = selected.length === 1 ? 'shadowrocket://add/' + selected[0].link : 'shadowrocket://';
+  openSR.textContent = selected.length === 1 ? 'Открыть узел в Shadowrocket ↗' : 'Добавить весь набор в Shadowrocket ↗';
+  status.textContent = `Выбрано узлов: ${selected.length} из ${nodes.length}.`;
+}
 function clear() {
-  revision += 1; links = []; submitButton.disabled = false;
+  revision += 1; nodes = []; nodeSelect.replaceChildren(); notes.textContent = ''; submitButton.disabled = false;
   output.value = ''; openSR.removeAttribute('href'); result.hidden = true; status.textContent = '';
 }
 function download(text, filename, type) {
@@ -32,17 +43,16 @@ form.addEventListener('submit', async event => {
   submitButton.disabled = true;
   status.textContent = 'Преобразую файлы…';
   try {
-    const files = [...fileInput.files];
-    const pasted = vpnText.value.trim();
-    if (pasted) files.push(new File([pasted], 'pasted.vpn', {type:'text/plain'}));
-    const converted = await convertFiles(files);
+    const converted = await convertFiles([...fileInput.files], vpnText.value);
     if (current !== revision) return;
-    links = converted;
-    output.value = links.join('\n');
-    openSR.href = links.length === 1 ? 'shadowrocket://add/' + links[0] : 'shadowrocket://';
-    openSR.textContent = links.length === 1 ? 'Открыть в Shadowrocket ↗' : 'Добавить весь набор в Shadowrocket ↗';
+    nodes = converted.nodes;
+    const option = (value, text) => { const el=document.createElement('option'); el.value=value; el.textContent=text; return el; };
+    nodeSelect.replaceChildren(option('all',`Весь набор (${nodes.length})`),...nodes.map((node,index)=>option(String(index),node.name)));
+    nodeSelect.value = 'all';
+    notes.textContent = converted.notes.join(' ');
+    renderSelection();
     result.hidden = false;
-    status.textContent = `Готово профилей: ${links.length}. Можно передать весь набор в Shadowrocket.`;
+    status.textContent = `Готово узлов: ${nodes.length}. Выберите один узел или весь набор.`;
   } catch (error) { if (current === revision) status.textContent = error.message; }
   finally { if (current === revision) submitButton.disabled = false; }
 });
@@ -52,7 +62,7 @@ async function copyOutput() {
   try {
     await navigator.clipboard.writeText(output.value);
     if (current !== revision) return false;
-    status.textContent = `Скопировано профилей: ${links.length}.`;
+    status.textContent = `Скопировано узлов: ${selectedNodes().length}.`;
     return true;
   } catch {
     if (current === revision) {
@@ -63,15 +73,16 @@ async function copyOutput() {
   }
 }
 openSR.addEventListener('click', async event => {
-  if (!links.length) { event.preventDefault(); return; }
-  if (links.length === 1) return; // Direct node URI, no clipboard permission needed.
+  if (!selectedNodes().length) { event.preventDefault(); return; }
+  if (selectedNodes().length === 1) return; // Direct node URI, no clipboard permission needed.
   event.preventDefault();
   if (await copyOutput()) window.location.assign('shadowrocket://');
 });
+nodeSelect.addEventListener('change', () => { revision += 1; renderSelection(); });
 document.getElementById('copy').addEventListener('click', copyOutput);
 document.getElementById('download').addEventListener('click', () => {
-  if (output.value) download(output.value + '\n', 'shadowrocket-awg.txt', 'text/plain;charset=utf-8');
+  if (output.value) download(output.value + '\n', 'shadowrocket-nodes.txt', 'text/plain;charset=utf-8');
 });
 document.getElementById('download-offline').addEventListener('click', () => {
-  download(offlineHTML, 'awg-shadowrocket-offline.html', 'text/html;charset=utf-8');
+  download(offlineHTML, 'shadowrocket-converter-offline.html', 'text/html;charset=utf-8');
 });

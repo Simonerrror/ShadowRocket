@@ -5,28 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; worker-src 'none'">
 <meta name="referrer" content="no-referrer">
-<title>AWG → Shadowrocket · Локальный конвертер</title>
-<meta name="description" content="Преобразуйте .conf, .vpn и ZIP с AmneziaWG в ссылки для Shadowrocket прямо в браузере. Без отправки файла и ключей на сервер.">
+<title>AWG / TrustTunnel → Shadowrocket · Локальный конвертер</title>
+<meta name="description" content="Преобразуйте AWG и TrustTunnel из .conf, .vpn, Mihomo YAML/JSON или ZIP в ссылки для Shadowrocket прямо в браузере. Без отправки файла и ключей на сервер.">
 <!-- STYLES -->
 </head>
 <body><main id="converter">
-<header><a class="brand" href="https://simonerrror.github.io/ShadowRocket/">🥔 <span>MotivatoPotato</span></a><span class="badge">AWG → Shadowrocket</span></header>
+<header><a class="brand" href="https://simonerrror.github.io/ShadowRocket/">🥔 <span>MotivatoPotato</span></a><span class="badge">AWG / TrustTunnel → Shadowrocket</span></header>
 <nav aria-label="Разделы сайта" class="site-nav"><a href="https://simonerrror.github.io/ShadowRocket/">Главная</a><a href="https://simonerrror.github.io/ShadowRocket/#shadowrocket">Shadowrocket</a><a href="https://simonerrror.github.io/ShadowRocket/#clash">Clash</a><a href="https://simonerrror.github.io/ShadowRocket/#incy">INCY</a></nav>
-<div class="intro"><p class="eyebrow">ФАЙЛ ОСТАЁТСЯ У ВАС</p><h1>Из файлов AWG —<br>в <em>Shadowrocket.</em></h1><p class="lead">Выберите .conf, .vpn или ZIP либо вставьте текст .vpn. Передайте весь набор в Shadowrocket одним действием. Преобразование выполняется в этой вкладке.</p></div>
-<section class="workspace" aria-label="Преобразование AWG">
+<div class="intro"><p class="eyebrow">ФАЙЛ ОСТАЁТСЯ У ВАС</p><h1>Из AWG и TrustTunnel —<br>в <em>Shadowrocket.</em></h1><p class="lead">Добавьте AWG-профили или конфиг Mihomo с TrustTunnel — файлами, ZIP или текстом. Передайте весь набор в Shadowrocket одним действием. Преобразование выполняется в этой вкладке.</p></div>
+<section class="workspace" aria-label="Преобразование AWG и TrustTunnel">
 <form autocomplete="off">
 <div class="step"><span>01</span><h2>Добавьте профили</h2></div>
-<label for="config-file">Профили AmneziaWG · .conf, .vpn, ZIP</label>
-<input id="config-file" type="file" multiple accept=".conf,.vpn,.zip" aria-describedby="file-hint">
-<p id="file-hint" class="hint">До 100 профилей. .conf — до 64 КиБ, .vpn — до 2 МиБ, ZIP — до 8 МиБ; весь набор — до 16 МиБ. ZIP может содержать папки с .conf и .vpn.</p>
-<label for="vpn-text">Текст .vpn или ссылка vpn://</label>
-<textarea id="vpn-text" rows="4" maxlength="2097152" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="vpn-text-hint" placeholder="vpn://…"></textarea>
-<p id="vpn-text-hint" class="hint">Вставьте содержимое одного .vpn: ссылку vpn:// или JSON Amnezia, до 2 МиБ. Файлы выбирать необязательно. Если добавить и текст, и файлы, они объединятся в один набор.</p>
+<label for="config-file">AWG и Mihomo · .conf, .vpn, YAML/JSON, ZIP</label>
+<input id="config-file" type="file" multiple accept=".conf,.vpn,.yaml,.yml,.json,.zip" aria-describedby="file-hint">
+<p id="file-hint" class="hint">До 100 узлов. .conf — до 64 КиБ, .vpn и YAML/JSON — до 2 МиБ, ZIP — до 8 МиБ; весь набор — до 16 МиБ. Из Mihomo извлекаются встроенные узлы TrustTunnel.</p>
+<label for="vpn-text">Текст .vpn или конфиг Mihomo</label>
+<textarea id="vpn-text" rows="4" maxlength="2097152" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="vpn-text-hint" placeholder="vpn://… или proxies: …"></textarea>
+<p id="vpn-text-hint" class="hint">Вставьте vpn://, JSON Amnezia или YAML/JSON Mihomo, до 2 МиБ. Файлы выбирать необязательно. Если добавить и текст, и файлы, они объединятся в один набор.</p>
 <div class="actions"><button id="convert" type="submit">Преобразовать <span aria-hidden="true">↗</span></button><button type="reset" class="secondary">Очистить</button></div>
 <p id="status" role="status" aria-live="polite"></p>
 <div id="result" hidden>
 <div class="step"><span>02</span><h2>Импортируйте в Shadowrocket</h2></div>
-<label for="output">Готовые ссылки wg:// · по одной на профиль</label>
+<label for="node-select">Что передать в Shadowrocket</label>
+<select id="node-select" aria-describedby="notes"></select>
+<p id="notes" class="hint"></p>
+<label for="output">Готовые ссылки · wg:// или tt://?</label>
 <textarea id="output" rows="5" readonly autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
 <div class="actions"><a id="open-sr" class="launch">Открыть в Shadowrocket ↗</a><button id="copy" type="button">Скопировать весь список</button><button id="download" type="button" class="secondary">Скачать TXT</button></div>
 <p class="hint">Для набора кнопка копирует все ссылки и открывает SR. Подтвердите импорт в приложении и разрешите чтение буфера. Если автораспознавание выключено, нажмите «Вставить» в SR. Ссылки содержат приватные ключи.</p>
