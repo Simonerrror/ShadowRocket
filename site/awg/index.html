@@ -12,14 +12,17 @@
 <body><main id="converter">
 <header><a class="brand" href="https://simonerrror.github.io/ShadowRocket/">🥔 <span>MotivatoPotato</span></a><span class="badge">AWG → Shadowrocket</span></header>
 <nav aria-label="Разделы сайта" class="site-nav"><a href="https://simonerrror.github.io/ShadowRocket/">Главная</a><a href="https://simonerrror.github.io/ShadowRocket/#shadowrocket">Shadowrocket</a><a href="https://simonerrror.github.io/ShadowRocket/#clash">Clash</a><a href="https://simonerrror.github.io/ShadowRocket/#incy">INCY</a></nav>
-<div class="intro"><p class="eyebrow">ФАЙЛ ОСТАЁТСЯ У ВАС</p><h1>Из файлов AWG —<br>в <em>Shadowrocket.</em></h1><p class="lead">Выберите .conf, .vpn или ZIP с профилями AmneziaWG. Передайте весь набор в Shadowrocket одним действием. Преобразование выполняется в этой вкладке.</p></div>
+<div class="intro"><p class="eyebrow">ФАЙЛ ОСТАЁТСЯ У ВАС</p><h1>Из файлов AWG —<br>в <em>Shadowrocket.</em></h1><p class="lead">Выберите .conf, .vpn или ZIP либо вставьте текст .vpn. Передайте весь набор в Shadowrocket одним действием. Преобразование выполняется в этой вкладке.</p></div>
 <section class="workspace" aria-label="Преобразование AWG">
 <form autocomplete="off">
-<div class="step"><span>01</span><h2>Выберите файлы</h2></div>
+<div class="step"><span>01</span><h2>Добавьте профили</h2></div>
 <label for="config-file">Профили AmneziaWG · .conf, .vpn, ZIP</label>
 <input id="config-file" type="file" multiple accept=".conf,.vpn,.zip" aria-describedby="file-hint">
 <p id="file-hint" class="hint">До 100 профилей. .conf — до 64 КиБ, .vpn — до 2 МиБ, ZIP — до 8 МиБ; весь набор — до 16 МиБ. ZIP может содержать папки с .conf и .vpn.</p>
-<div class="actions"><button id="convert" type="submit">Преобразовать файлы <span aria-hidden="true">↗</span></button><button type="reset" class="secondary">Очистить</button></div>
+<label for="vpn-text">Текст .vpn или ссылка vpn://</label>
+<textarea id="vpn-text" rows="4" maxlength="2097152" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="vpn-text-hint" placeholder="vpn://…"></textarea>
+<p id="vpn-text-hint" class="hint">Вставьте содержимое одного .vpn: ссылку vpn:// или JSON Amnezia, до 2 МиБ. Файлы выбирать необязательно. Если добавить и текст, и файлы, они объединятся в один набор.</p>
+<div class="actions"><button id="convert" type="submit">Преобразовать <span aria-hidden="true">↗</span></button><button type="reset" class="secondary">Очистить</button></div>
 <p id="status" role="status" aria-live="polite"></p>
 <div id="result" hidden>
 <div class="step"><span>02</span><h2>Импортируйте в Shadowrocket</h2></div>

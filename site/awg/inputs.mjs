@@ -54,7 +54,7 @@ async function vpnProfiles(data, filename) {
 }
 
 export async function convertFiles(files) {
-  if (!files.length || files.length > 100) failInput('Выберите от 1 до 100 файлов .conf, .vpn или ZIP.');
+  if (!files.length || files.length > 100) failInput('Добавьте файлы или текст .vpn: от 1 до 100 входов.');
   if (files.reduce((sum,file)=>sum+file.size,0) > TOTAL_LIMIT) failInput('Выбранный набор больше 16 МиБ.');
   const links=[], seen=new Set(); let expanded=0, configs=0;
   for (const [index,file] of files.entries()) {

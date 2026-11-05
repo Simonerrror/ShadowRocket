@@ -8,7 +8,7 @@ const source = readFileSync(new URL('../app.mjs', import.meta.url), 'utf8');
 const app = source.replace(/^import .+;\n/gm, '');
 function mount({clipboardFailure=false}={}) {
   const nodes = new Map();
-  for (const id of ['form','config-file','result','output','status','open-sr','copy','download','download-offline','convert']) {
+  for (const id of ['form','config-file','result','output','status','open-sr','copy','download','download-offline','convert','vpn-text']) {
     const handlers = {};
     nodes.set(id, {value:'',textContent:'',focus() {},select() {},hidden:id === 'result',files:[],href:undefined,
       addEventListener:(event,fn) => { handlers[event] = fn; },
@@ -17,7 +17,7 @@ function mount({clipboardFailure=false}={}) {
     });
   }
   const form = nodes.get('form');
-  form.reset = () => { nodes.get('config-file').files = []; form.handlers.reset(); };
+  form.reset = () => { nodes.get('vpn-text').value = ''; nodes.get('config-file').files = []; form.handlers.reset(); };
   const downloads = [];
   const document = {
     documentElement:{outerHTML:'<html>pristine tool</html>'},
@@ -27,7 +27,7 @@ function mount({clipboardFailure=false}={}) {
   const windowEvents = {}, clipboard=[], navigations=[];
   const context = vm.createContext({
     document, window:{location:{assign:uri=>navigations.push(uri)},addEventListener:(event,fn) => { windowEvents[event] = fn; }},
-    TextDecoder, Blob, URL:{createObjectURL:blob => { downloads.push(blob); return 'blob:synthetic'; },revokeObjectURL() {}},
+    TextDecoder, Blob, File, URL:{createObjectURL:blob => { downloads.push(blob); return 'blob:synthetic'; },revokeObjectURL() {}},
     setTimeout:fn => fn(), navigator:{clipboard:{writeText:async text => { if(clipboardFailure) throw new Error(); clipboard.push(text); }}},
     convertFiles:async files => { const links=[]; for(const file of files) { const text=new TextDecoder().decode(await file.arrayBuffer()); if(text === 'bad') throw new Error('Некорректный формат .conf.'); links.push('wg://vpn.example.test:443?privateKey=synthetic#' + encodeURIComponent(file.name)); } return links; },
   });
@@ -93,4 +93,27 @@ test('clipboard refusal does not launch SR with a partial batch', async () => {
   assert.equal(state.navigations.length,0);
   assert.match(state.nodes.get('status').textContent,/вручную/);
   assert.equal(state.nodes.get('output').value.split('\n').length,2);
+});
+
+test('pasted .vpn works without files and joins the same batch as selected files', async () => {
+  const state=mount();
+  state.nodes.get('vpn-text').value='  pasted-vpn  ';
+  await submit(state);
+  assert.equal(state.nodes.get('result').hidden,false);
+  assert.match(state.nodes.get('output').value,/#pasted.vpn$/);
+  state.select('file','file.conf');
+  await submit(state);
+  assert.equal(state.nodes.get('output').value.split('\n').length,2);
+});
+
+test('editing pasted text invalidates output; clearing removes text and links', async () => {
+  const state=mount(); state.select('file'); await submit(state);
+  state.nodes.get('vpn-text').value='bad';
+  state.nodes.get('vpn-text').handlers.input();
+  assert.equal(state.nodes.get('output').value,'');
+  assert.equal(state.nodes.get('open-sr').href,undefined);
+  await submit(state);
+  assert.equal(state.nodes.get('result').hidden,true);
+  state.form.reset();
+  assert.equal(state.nodes.get('vpn-text').value,'');
 });

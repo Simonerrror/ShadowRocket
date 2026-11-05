@@ -4,6 +4,7 @@ import {convertFiles} from './inputs.mjs';
 const offlineHTML = '<!doctype html>\n' + document.documentElement.outerHTML;
 const form = document.querySelector('form');
 const fileInput = document.getElementById('config-file');
+const vpnText = document.getElementById('vpn-text');
 const result = document.getElementById('result');
 const output = document.getElementById('output');
 const status = document.getElementById('status');
@@ -22,6 +23,7 @@ function download(text, filename, type) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 fileInput.addEventListener('change', clear);
+vpnText.addEventListener('input', clear);
 form.addEventListener('reset', clear);
 window.addEventListener('pagehide', () => { form.reset(); });
 form.addEventListener('submit', async event => {
@@ -30,7 +32,10 @@ form.addEventListener('submit', async event => {
   submitButton.disabled = true;
   status.textContent = 'Преобразую файлы…';
   try {
-    const converted = await convertFiles([...fileInput.files]);
+    const files = [...fileInput.files];
+    const pasted = vpnText.value.trim();
+    if (pasted) files.push(new File([pasted], 'pasted.vpn', {type:'text/plain'}));
+    const converted = await convertFiles(files);
     if (current !== revision) return;
     links = converted;
     output.value = links.join('\n');
