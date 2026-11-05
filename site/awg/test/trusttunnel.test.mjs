@@ -49,7 +49,7 @@ test('single TT mapping exports IPv6, QUIC, long UTF-8 values and explicit certi
 
 test('YAML aliases and merge defaults in a full config are resolved locally',()=>{
   const result=trustTunnelNodes(`defaults: &tt\n  type: trusttunnel\n  server: tt.example.test\n  port: 443\n  username: synthetic\n  password: synthetic\nproxies:\n  - <<: *tt\n    name: One\n  - <<: *tt\n    name: Two\n    port: 444\n`);
-  assert.deepEqual(result.nodes.map(node=>node.name),['One','Two']);
+  assert.deepEqual(result.nodes.map(node=>node.name),['One TT','Two TT']);
   assert.deepEqual(result.nodes.map(node=>ttProxies([node.link])[0].port),[443,444]);
 });
 
@@ -68,4 +68,12 @@ test('malformed, incomplete or unrepresentable TT is rejected without credential
   for(const text of bad)assert.throws(()=>trustTunnelNodes(text),error=>{
     assert.equal(error.message.includes(marker),false);assert.equal(error.message.includes(proxy.password),false);return true;
   });
+});
+
+test('TT source names become one final TT suffix in metadata and TLV',()=>{
+  for(const name of ['Germany','Germany TT','Germany tt TT','Germany NV','Germany AWG2']) {
+    const node=trustTunnelNodes(JSON.stringify({...proxy,name})).nodes[0];
+    assert.equal(node.name,'Germany TT');
+    assert.equal(fields(node.link).get(12).toString(),'Germany TT');
+  }
 });

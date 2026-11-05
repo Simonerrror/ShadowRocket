@@ -2,6 +2,8 @@
 
 ## Lessons
 
+- When generating Shadowrocket node names, end the name with the canonical protocol suffix AWG, TT or NV; normalize existing suffixes without duplication and use the same name in the encoded link, selector and TXT.
+
 - When arranging the public hub, keep each client’s main action visible before optional catalogs and instructions; use section anchors in the hub menu with scroll spacing. Exclude personal Tailscale modules from the site catalog.
 
 - When adding or changing a public page, keep a visible route to the main hub and the shared section navigation; verify cross-page links and preserve offline generation and its CSP.

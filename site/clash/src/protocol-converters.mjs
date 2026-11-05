@@ -24,6 +24,12 @@ function ip(value) {
   if (p.length !== 4 || p.some(s => !/^(0|[1-9]\d{0,2})$/.test(s) || +s > 255)) fail('Некорректный IPv4 AWG.');
   return 4;
 }
+// These final tokens are consumed by Shadowrocket policy filters.
+export function shadowrocketName(value, protocol) {
+  const base = String(value).trim().replace(/(?:(?:^|[\s_-]+)(?:(?:AWG|AVG)(?:[0-9]+(?:\.[0-9]+)?)?|TT|NV|Naive))+$/i, '').trim();
+  return `${base || 'Узел'} ${protocol}`;
+}
+
 export function awgConfLink(text, filename) {
   if (new TextEncoder().encode(text).length > 65536) fail('AWG-файл больше 64 КиБ.');
   const sections = Object.create(null); let section;

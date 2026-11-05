@@ -1,3 +1,5 @@
+import {shadowrocketName} from '../clash/src/protocol-converters.mjs';
+
 // Browser port of the maintained AWG → Shadowrocket conversion contract.
 // Only pure conversion lives here; no I/O, storage, or network APIs.
 const legacy = ['Jc','Jmin','Jmax','S1','S2','H1','H2','H3','H4'];
@@ -127,11 +129,9 @@ export function convertConf(text, filename = 'profile.conf') {
   }
   query.obfs = 'amneziawg'; query.obfsParam = JSON.stringify(obfs);
   if (inter.has('MTU')) { uint(inter.get('MTU'), 'MTU', 65535); query.mtu = inter.get('MTU'); }
-  const version = ['RandomTrailers','DisableCookies'].some(f => inter.has(f)) ? 'AWG3.1'
-    : Object.keys(extended).some(f => inter.has(f)) ? 'AWG3' : isExtended ? 'AWG2' : 'AWG';
   const stem = String(filename).replace(/\.conf$/i, '').replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 200) || 'profile';
   const flag = {nl:'🇳🇱',se:'🇸🇪',si:'🇸🇮'}[stem.split('_').at(-1).toLowerCase()];
-  const title = `${flag ? flag + ' ' : ''}${stem} ${version}`;
+  const title = shadowrocketName(`${flag ? flag + ' ' : ''}${stem}`, 'AWG');
   // Match the existing converter's percent encoding rather than form encoding.
   const encode = value => encodeURIComponent(value).replace(/[!'()*]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
   return `wg://${endpoint(peer.get('Endpoint'))}?${Object.entries(query).map(([k,v]) => `${k}=${encode(v)}`).join('&')}#${encode(title)}`;

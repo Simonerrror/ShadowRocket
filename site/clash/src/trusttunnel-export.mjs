@@ -1,4 +1,5 @@
 import {parseDocument} from 'yaml';
+import {shadowrocketName} from './protocol-converters.mjs';
 
 // Static v1 TLV layout matches the maintained Shadowrocket TT converter.
 const nonwire = ['client-fingerprint','health-check','udp'];
@@ -48,7 +49,7 @@ function base64url(fields) {
 }
 function encodeNode(proxy) {
   if(Object.keys(proxy).some(key=>!allowed.has(key))) reject('TrustTunnel: есть поле, которое нельзя перенести в TT-ссылку.');
-  const name=string(proxy.name,'name');
+  const name=shadowrocketName(string(proxy.name,'name'),'TT');
   const server=hostname(proxy.server,'server');
   const port=Number(proxy.port);
   if(!/^[0-9]+$/.test(String(proxy.port)) || !Number.isInteger(port) || port<1 || port>65535) reject('TrustTunnel: проверьте port.');
