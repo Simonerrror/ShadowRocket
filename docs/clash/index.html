@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-kYWGOuYbD7s868PqJJvYAZgUAfys9AsEt+uc+vqKmIA='; style-src 'sha256-c9Dk1P8ZVnn2TcMUUcW2+StOwEsKN9hRJDMHVEfoRLE='; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; worker-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-8NHWP0A5idluzTL/ggITf1Vc5b3pqtyTbTVQxeFKt2E='; style-src 'sha256-c9Dk1P8ZVnn2TcMUUcW2+StOwEsKN9hRJDMHVEfoRLE='; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; worker-src 'none'">
 <meta name="referrer" content="no-referrer">
 <title>Личный конфиг · FlClash / Clash Mi</title>
 <meta name="description" content="Соберите конфиг FlClash или Clash Mi из своих подписок. Обработка в браузере без отправки данных на сервер.">
@@ -312,7 +312,7 @@ proxy-groups:
     type: url-test
     use:
       - Main-Sub
-    exclude-filter: "(?i)Russia|Belarus|Ukraine|\\\\bWL\\\\b"
+    exclude-filter: "(?i)Russia|Belarus|Ukraine|\\\\b(?:WL|SS)\\\\b"
     url: "https://www.youtube.com/favicon.ico"
     interval: 180
     tolerance: 100

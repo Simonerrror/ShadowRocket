@@ -11,7 +11,7 @@ from scripts.build_clash_config import (
 )
 
 
-EXPECTED_MIHOMO_AUTO_EXCLUDE_FILTER = r"(?i)Russia|Belarus|Ukraine|\bWL\b"
+EXPECTED_MIHOMO_AUTO_EXCLUDE_FILTER = r"(?i)Russia|Belarus|Ukraine|\b(?:WL|SS)\b"
 
 
 class BuildClashConfigTests(unittest.TestCase):
@@ -56,6 +56,13 @@ class BuildClashConfigTests(unittest.TestCase):
         self.assertIn(f"    exclude-filter: {yaml_quote(EXPECTED_MIHOMO_AUTO_EXCLUDE_FILTER)}", group)
         self.assertIn("MATCH,Режим", content)
         self.assertNotIn("unsupported proxy-group option use=true", "\n".join(warnings))
+        pattern = re.compile(EXPECTED_MIHOMO_AUTO_EXCLUDE_FILTER)
+        for name in ("Germany", "Poland", "Japan Hysteria2", "USA Trojan", "MASS relay", "SSS relay"):
+            with self.subTest(name=name, expected="accept"):
+                self.assertIsNone(pattern.search(name))
+        for name in ("Russia", "Belarus", "Ukraine", "Germany SS", "Japan SS-lte", "Germany Hysteria2 SS", "WL-lte"):
+            with self.subTest(name=name, expected="reject"):
+                self.assertIsNotNone(pattern.search(name))
 
     def test_latest_dns_uses_loopback_hosts_and_separate_node_resolvers(self) -> None:
         content, _ = build_config(DEFAULT_CONF, DEFAULT_SUBSCRIPTION_URL)

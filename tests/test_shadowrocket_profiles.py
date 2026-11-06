@@ -14,10 +14,10 @@ TAILSCALE_DIRECT_MODULE = REPO_ROOT / "modules" / "tailscale_direct.module"
 TAILSCALE_MODULE = REPO_ROOT / "modules" / "tailscale_tailnet.module"
 WECHAT_MODULE = REPO_ROOT / "modules" / "wechat_direct.module"
 EXPECTED_MANUAL_FILTER = r"(?i)^(?!.*\bWL\b)(?!.*\bSS\b).*$"
-EXPECTED_AUTO_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\bWL\b).*\b(?:VLESS|TT|Naive|NV|MR|AWG(?:2|3\.1)?)\b.*$"
+EXPECTED_AUTO_FILTER = r"(?i)^(?!.*(?:Russia|Belarus|Ukraine))(?!.*\b(?:WL|SS)\b).*$"
 EXPECTED_WL_FILTER = r"(?i)\bWL\b"
 EXPECTED_PROVENANCE = [
-    "# Config-Version: 2026.10.15.2",
+    "# Config-Version: 2026.11.07.1",
     "# Maintainer: Simonerrror; contact: https://t.me/AIDHDaily",
     "# README: https://github.com/Simonerrror/ShadowRocket#readme",
 ]
@@ -277,6 +277,16 @@ class ShadowrocketProfilesTests(unittest.TestCase):
                     "🇩🇪 Германия AWG3.1",
                     "🇩🇪 Germany NV",
                     "🇨🇦 Canada MR",
+                    "Germany Hysteria",
+                    "Poland Hysteria2",
+                    "Japan HY2",
+                    "Germany",
+                    "Poland",
+                    "Japan",
+                    "USA Trojan",
+                    "🇸🇪 Sweden Mieru",
+                    "MASS relay",
+                    "SSS relay",
                 ),
                 (
                     "🇷🇺 Russia Vless",
@@ -286,16 +296,18 @@ class ShadowrocketProfilesTests(unittest.TestCase):
                     "🇧🇾 Belarus AWG2",
                     "🇺🇦 Ukraine AWG3.1",
                     "Germany AWG3.1 WL",
-                    "Germany AWG20",
-                    "Germany DRAWG",
-                    "Germany AWG3.10",
                     "🇫🇷 France WL Mobile Vless",
                     "Germany SS",
-                    "USA Trojan",
-                    "🇸🇪 Sweden Mieru",
-                    "🇯🇵 Japan Mierus",
-                    "🇯🇵 Japan NVx",
-                    "🇰🇷 Korea MRoad",
+                    "Russia HY2",
+                    "Belarus Hysteria2",
+                    "Ukraine Hysteria",
+                    "Germany HY2 WL",
+                    "Russia",
+                    "Belarus",
+                    "Ukraine",
+                    "Japan SS-lte",
+                    "Germany Hysteria2 SS",
+                    "WL-lte",
                 ),
             ),
         )
