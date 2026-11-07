@@ -333,7 +333,7 @@ class ShadowrocketProfilesTests(unittest.TestCase):
         self.assertEqual(base_general["dns-server"], custom_general["dns-server"])
         self.assertEqual(base_general["fallback-dns-server"], custom_general["fallback-dns-server"])
 
-    def test_gfn_catalog_and_session_use_region_pool_while_stream_stays_direct(self) -> None:
+    def test_gfn_only_catalog_uses_proxy_while_login_session_and_stream_stay_direct(self) -> None:
         from ipaddress import ip_address, ip_network
 
         module = REPO_ROOT / "modules/GFN-AM.module"
@@ -367,13 +367,13 @@ class ShadowrocketProfilesTests(unittest.TestCase):
             return None
 
         cases = [
-            ("oauth.gfn.am", "203.0.113.9", 443, "GFN Region"),
-            ("apps.gxn.nvidia.com", "203.0.113.10", 443, "GFN Region"),
-            ("public.games.geforce.com", "203.0.113.11", 443, "GFN Region"),
-            ("api.gdn.nvidia.com", "203.0.113.12", 443, "GFN Region"),
-            ("pcs.geforcenow.com", "203.0.113.13", 443, "GFN Region"),
-            ("am-west.gcs.geforcenow.nvidiagrid.net", "37.186.111.142", 443, "GFN Region"),
-            ("npa-gcs-evn-01.gcs.geforcenow.nvidiagrid.net", "37.186.111.142", 443, "GFN Region"),
+            ("oauth.gfn.am", "203.0.113.9", 443, "DIRECT"),
+            ("apps.gxn.nvidia.com", "203.0.113.10", 443, "PROXY"),
+            ("public.games.geforce.com", "203.0.113.11", 443, "DIRECT"),
+            ("api.gdn.nvidia.com", "203.0.113.12", 443, "DIRECT"),
+            ("pcs.geforcenow.com", "203.0.113.13", 443, "DIRECT"),
+            ("am-west.gcs.geforcenow.nvidiagrid.net", "37.186.111.142", 443, "DIRECT"),
+            ("npa-gcs-evn-01.gcs.geforcenow.nvidiagrid.net", "37.186.111.142", 443, "DIRECT"),
             ("am-west.gcs.geforcenow.nvidiagrid.net", "37.186.111.142", 322, "DIRECT"),
             ("npa-gcs-evn-01.gcs.geforcenow.nvidiagrid.net", "37.186.111.142", 49005, "DIRECT"),
             ("37-186-111-142.gcs.geforcenow.nvidiagrid.net", "37.186.111.142", 322, "DIRECT"),
@@ -385,27 +385,11 @@ class ShadowrocketProfilesTests(unittest.TestCase):
             with self.subTest(host=host, address=address, port=port):
                 self.assertEqual(route(host, address, port), expected)
 
-    def test_gfn_region_pool_selects_only_kazakhstan_ukraine_and_armenia(self) -> None:
-        group = key_values(REPO_ROOT / "modules/GFN-AM.module", "Proxy Group")["GFN Region"]
-        options = group.split(",")
-        self.assertEqual(options[0], "url-test")
-        self.assertIn("url=https://gfn.am/favicon.ico", options)
-        self.assertTrue(all("=" in option for option in options[1:]))
-        pattern = next(option.split("=", 1)[1] for option in options
-                       if option.startswith("policy-regex-filter="))
-        # Synthetic display names; no provider-specific names from real subscriptions.
-        accepted = ["KAZAKHSTAN synthetic VLESS", "Казахстан AWG", "KZ 1", "🇰🇿 VLESS",
-                    "Ukraine VLESS", "Украина TT", "Україна AWG", "UA 2", "🇺🇦 VLESS",
-                    "Armenia TT", "Армения VLESS", "Вірменія AWG", "Հայաստան 1", "AM 3", "🇦🇲 TT"]
-        rejected = ["Britain synthetic VLESS", "Germany VLESS", "Russia VLESS", "Belarus TT",
-                    "🇷🇺 AWG", "🇧🇾 VLESS", "USA synthetic", "PROXY", "DIRECT", "AUTO-SPEED",
-                    "AMAZON USA", "KZOO Germany", "GUAM", "MANUAL-PROXY"]
-        for name in accepted:
-            with self.subTest(node=name, expected="allowed"):
-                self.assertIsNotNone(re.search(pattern, name))
-        for name in rejected:
-            with self.subTest(node=name, expected="excluded"):
-                self.assertIsNone(re.search(pattern, name))
+    def test_gfn_reuses_profile_proxy_without_a_country_pool(self) -> None:
+        module = REPO_ROOT / "modules/GFN-AM.module"
+        self.assertEqual({}, key_values(module, "Proxy Group"))
+        for profile in (BASE_CONF, CUSTOM_CONF):
+            self.assertIn("PROXY", key_values(profile, "Proxy Group"))
 
     def test_gfn_and_ru_real_ip_settings_are_separate(self) -> None:
         module = REPO_ROOT / "modules" / "GFN-AM.module"

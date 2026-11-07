@@ -2,6 +2,8 @@
 
 ## Lessons
 
+- When changing GFN routing for a region-restricted catalog, verify catalog visibility, session creation and streaming separately. Restrict countries only for endpoints with evidence of that requirement; a working country is not an exhaustive allowlist, and catalog restrictions do not establish that session APIs need the same proxy.
+
 - When generating Shadowrocket node names, preserve the detected AWG version in the final suffix (AWG2 or AWG3.1), and use TT or NV for those protocols; normalize existing suffixes without duplication and use the same name in the encoded link, selector and TXT.
 
 - When arranging the public hub, keep each client’s main action visible before optional catalogs and instructions; use section anchors in the hub menu with scroll spacing. Exclude personal Tailscale modules from the site catalog.
