@@ -54,6 +54,40 @@ test('.vpn supports Amnezia text, JSON, raw qCompress and uncompressed base64 JS
   }
 });
 
+test('Amnezia DNS placeholders use export addresses in files, pasted text and ZIP', async () => {
+  const data={...config(conf.replace('DNS = 1.1.1.1','DNS = $PRIMARY_DNS, $SECONDARY_DNS')),
+    dns1:'9.9.9.9',dns2:'2606:4700:4700::1111'};
+  for (const body of [vpn(data),json(data),compress(data)]) {
+    const result=await convertFiles([file('profile.vpn',body)]);
+    assert.equal(new URL(result.nodes[0].link).searchParams.get('dns'),'9.9.9.9, 2606:4700:4700::1111');
+  }
+  for (const result of [await convertFiles([],vpn(data)),
+    await convertFiles([file('profiles.zip',zip({'profile.vpn':vpn(data)}))])]) {
+    assert.equal(new URL(result.nodes[0].link).searchParams.get('dns'),'9.9.9.9, 2606:4700:4700::1111');
+  }
+  const literal=await convertFiles([file('literal.vpn',vpn({...config(),dns1:'8.8.8.8',dns2:'8.8.4.4'}))]);
+  assert.equal(new URL(literal.nodes[0].link).searchParams.get('dns'),'1.1.1.1');
+  const primary=await convertFiles([file('primary.vpn',vpn({...config(conf.replace('1.1.1.1','$PRIMARY_DNS')),dns1:'9.9.9.9'}))]);
+  assert.equal(new URL(primary.nodes[0].link).searchParams.get('dns'),'9.9.9.9');
+});
+
+test('Amnezia DNS substitution rejects missing addresses, injection and unknown variables', async () => {
+  const marker='synthetic-secret-marker';
+  const data={...config(conf.replace('DNS = 1.1.1.1','DNS = $PRIMARY_DNS, $SECONDARY_DNS')),
+    dns1:'9.9.9.9',dns2:'1.1.1.1'};
+  for (const dns2 of [undefined,null,42,'',marker,'999.1.1.1','dns.example.test','1.1.1.1\nMTU = 1280']) {
+    await assert.rejects(convertFiles([file('invalid.vpn',vpn({...data,dns2}))]),error=>{
+      assert.equal(error.message.includes(marker),false);
+      assert.equal(error.message.includes(key(1)),false);
+      return true;
+    });
+  }
+  for (const text of [conf.replace('1.1.1.1','$UNKNOWN_DNS'),
+    conf.replace('1.1.1.1','$PRIMARY_DNS_EXTRA'),conf.replace(key(1),'$PRIMARY_DNS')]) {
+    await assert.rejects(convertFiles([file('invalid.vpn',vpn({...config(text),dns1:'9.9.9.9'}))]));
+  }
+});
+
 test('one .vpn extracts all ready AWG containers and ignores other protocols', async () => {
   const data=config();
   data.containers.unshift({container:'amnezia-dns',dns:{}});

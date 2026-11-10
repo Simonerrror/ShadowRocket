@@ -48,7 +48,15 @@ async function vpnProfiles(data, filename) {
       failInput('В .vpn нет готового клиентского AWG .conf. Экспортируйте подключение AWG, а не доступ к серверу.');
     const stem = typeof root.description === 'string' && root.description.trim()
       ? root.description.trim() : filename.replace(/\.vpn$/i,'');
-    profiles.push({name:stem + (profiles.length ? ` ${profiles.length+1}` : '') + '.conf',text:last.config});
+    const text = last.config.replace(/^[ \t]*DNS[ \t]*=[^\r\n]*/gm, line =>
+      line.replace(/\$(PRIMARY_DNS|SECONDARY_DNS)\b/g, (_, name) => {
+        const address = root[name === 'PRIMARY_DNS' ? 'dns1' : 'dns2'];
+        // Restrict replacements to address characters before the .conf parser validates IPs.
+        if (typeof address !== 'string' || !/^[0-9a-f:.]+$/i.test(address.trim()))
+          failInput('В .vpn отсутствует или некорректен адрес DNS для подстановки.');
+        return address.trim();
+      }));
+    profiles.push({name:stem + (profiles.length ? ` ${profiles.length+1}` : '') + '.conf',text});
   }
   if (!profiles.length) failInput('В .vpn нет клиентских профилей AWG.');
   return profiles;
