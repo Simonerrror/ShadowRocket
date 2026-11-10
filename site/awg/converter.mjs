@@ -76,7 +76,14 @@ export function convertConf(text, filename = 'profile.conf') {
     throw new Error('В .conf есть неподдерживаемое поле. Преобразование остановлено.');
   const isAwg = [...awg2,...Object.keys(extended)].some(f => inter.has(f));
   const isExtended = [...awg2.filter(f => !legacy.includes(f)),...Object.keys(extended)].some(f => inter.has(f));
-  const fields = isExtended ? awg2 : isAwg ? legacy : [];
+  if (inter.has('HeaderProtectionKey')) {
+    // Match AmneziaWG's message type defaults when custom headers are omitted.
+    for (const [index, field] of ['H1','H2','H3','H4'].entries()) {
+      if (!inter.has(field)) inter.set(field, String(index + 1));
+    }
+  }
+  const fields = (isExtended ? awg2 : isAwg ? legacy : [])
+    .filter(field => !field.startsWith('I') || inter.has(field));
   const protocol = isAwg ? 'AWG' : 'WireGuard';
   for (const f of ['PrivateKey','Address',...fields]) if (!inter.has(f))
     throw new Error(`В профиле ${protocol} отсутствует обязательное поле ${f}.`);

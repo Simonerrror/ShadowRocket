@@ -67,6 +67,26 @@ test('plain WG inside supported Amnezia containers works as a file and pasted vp
   }
 });
 
+test('AWG3.1 with header protection and omitted headers and CPS works in conf and vpn inputs', async () => {
+  const text=conf.replace(/^H[1-4] = .*\n/gm,'').replace('[Peer]',
+    `S3 = 12\nS4 = 12\nHeaderProtectionKey = ${key(4)}\nContentPaddingAddition = 8-24\nRandomTrailers = on\n[Peer]`);
+  const data=config(text,'Header protection');
+  data.containers[0].container='amnezia-awg2';
+  for (const result of [await convertFiles([file('protected.conf',text)]),
+    await convertFiles([file('protected.vpn',vpn(data))]),await convertFiles([],vpn(data))]) {
+    assert.equal(result.nodes.length,1);
+    assert.match(result.nodes[0].name,/ AWG3\.1$/);
+    const link=new URL(result.nodes[0].link);
+    assert.equal(link.host,'vpn.example.test:51820');
+    assert.equal(link.searchParams.get('privateKey'),key(1));
+    assert.deepEqual(JSON.parse(link.searchParams.get('obfsParam')),{
+      jc:'4',jmin:'40',jmax:'70',s1:'12',s2:'13',s3:'12',s4:'12',
+      h1:'1',h2:'2',h3:'3',h4:'4',header_protection_key:key(4),
+      content_padding_addition:'8-24',random_trailers:'true',
+    });
+  }
+});
+
 test('errors locate the bad ZIP entry and vpn profile without exposing input names or values', async () => {
   const marker='synthetic-secret-marker';
   const broken=conf.replace(/^Jc = .*\n/m,'');

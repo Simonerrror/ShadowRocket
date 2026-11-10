@@ -108,6 +108,31 @@ test('AWG3.1 preserves extended fields and normalizes boolean flags', () => {
   assert.ok(decodeURIComponent(link.hash).endsWith(' AWG3.1'));
 });
 
+test('header protection defaults only missing headers and preserves explicit ranges and optional CPS', () => {
+  const text=profile.replace(/^H[24] = .*\n|^I[1245] = .*\n/gm,'')
+    .replace('[Peer]',`HeaderProtectionKey = ${key(4)}\nRandomTrailers = on\n[Peer]`);
+  const obfs=JSON.parse(new URL(convertConf(text)).searchParams.get('obfsParam'));
+  assert.equal(obfs.h1,'1-3');
+  assert.equal(obfs.h2,'2');
+  assert.equal(obfs.h3,'5');
+  assert.equal(obfs.h4,'4');
+  assert.equal(obfs.i3,'<rc 10>');
+  for (const field of ['i1','i2','i4','i5']) assert.equal(Object.hasOwn(obfs,field),false);
+  for (const invalid of [text.replace('S4 = 15\n',''),text.replace(key(4),'invalid'),
+    text.replace('S1 = 12','S1 = 1'),text.replace('I3 = <rc 10>','I3 = invalid')])
+    assert.throws(()=>convertConf(invalid));
+  assert.throws(()=>convertConf(profile.replace('H1 = 1-3\n','')),/отсутствует обязательное поле H1/);
+});
+
+test('AWG2 accepts independently optional CPS fields without adding absent packets', () => {
+  const text=profile.replace(/^I[1245] = .*\n/gm,'');
+  const link=new URL(convertConf(text));
+  const obfs=JSON.parse(link.searchParams.get('obfsParam'));
+  assert.equal(obfs.i3,'<rc 10>');
+  for (const field of ['i1','i2','i4','i5']) assert.equal(Object.hasOwn(obfs,field),false);
+  assert.match(decodeURIComponent(link.hash),/ AWG2$/);
+});
+
 test('optional peer fields and DNS stay absent; IPv6 endpoint is supported', () => {
   const text = profile.replace(/^(DNS|PresharedKey|PersistentKeepalive) = .*\n/gm, '')
     .replace('vpn.example.test:51820', '[2001:db8::1]:443');
