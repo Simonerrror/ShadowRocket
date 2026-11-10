@@ -26,7 +26,7 @@ function ip(value) {
 }
 // These final tokens are consumed by Shadowrocket policy filters.
 export function shadowrocketName(value, protocol) {
-  const base = String(value).trim().replace(/(?:(?:^|[\s_-]+)(?:(?:AWG|AVG)(?:[0-9]+(?:\.[0-9]+)?)?|TT|NV|Naive))+$/i, '').trim();
+  const base = String(value).trim().replace(/(?:(?:^|[\s_-]+)(?:(?:AWG|AVG)(?:[0-9]+(?:\.[0-9]+)?)?|WG|TT|NV|Naive))+$/i, '').trim();
   return `${base || 'Узел'} ${protocol}`;
 }
 

@@ -10,6 +10,8 @@ test('protocol markers are canonical, final and never repeated',()=>{
     ['Germany TT tt','TT','Germany TT'],['Germany_NV','TT','Germany TT'],
     ['Finland Naive NV','NV','Finland NV'],['Finland - NV','NV','Finland NV'],
     ['Newton','NV','Newton NV'],['TT','TT','Узел TT'],
+    ['Germany WG','WG','Germany WG'],['Germany AWG2','WG','Germany WG'],
+    ['Germany WG','AWG2','Germany AWG2'],
   ];
   for(const [input,protocol,expected] of examples) {
     assert.equal(shadowrocketName(input,protocol),expected);
@@ -22,6 +24,6 @@ test('canonical protocol suffixes match both maintained Shadowrocket AUTO-SPEED 
     const conf=readFileSync(new URL('../../../'+name,import.meta.url),'utf8');
     const expression=conf.match(/^AUTO-SPEED = .*policy-regex-filter=(.*),interval=/m)[1];
     const filter=new RegExp(expression.replace(/^\(\?i\)/,''),'i');
-    for(const protocol of ['AWG','AWG2','AWG3.1','TT','NV']) assert.equal(filter.test(shadowrocketName('Germany',protocol)),true);
+    for(const protocol of ['WG','AWG','AWG2','AWG3.1','TT','NV']) assert.equal(filter.test(shadowrocketName('Germany',protocol)),true);
   }
 });

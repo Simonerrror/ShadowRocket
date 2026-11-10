@@ -31,6 +31,38 @@ AllowedIPs = 0.0.0.0/0, ::/0
 Endpoint = vpn.example.test:51820
 PersistentKeepalive = 25
 `;
+const wireguard = profile.replace(/^(?:Jc|Jmin|Jmax|S[1-4]|H[1-4]|I[1-5]) = .*\n/gm, '');
+
+test('plain WireGuard preserves connection fields without AWG obfuscation', () => {
+  const link = new URL(convertConf(wireguard, 'Germany AWG2.conf'));
+  assert.equal(link.host, 'vpn.example.test:51820');
+  assert.equal(link.searchParams.get('privateKey'), key(1));
+  assert.equal(link.searchParams.get('publicKey'), key(2));
+  assert.equal(link.searchParams.get('presharedKey'), key(3));
+  assert.equal(link.searchParams.get('ip'), '10.8.0.2/32, fd00::2/128');
+  assert.equal(link.searchParams.get('dns'), '1.1.1.1, 2606:4700:4700::1111');
+  assert.equal(link.searchParams.get('keepalive'), '25');
+  assert.equal(link.searchParams.get('mtu'), '1280');
+  assert.equal(link.searchParams.has('obfs'), false);
+  assert.equal(link.searchParams.has('obfsParam'), false);
+  assert.equal(decodeURIComponent(link.hash.slice(1)), 'Germany WG');
+  const minimalConfig = wireguard.replace(/^(DNS|MTU|PresharedKey|PersistentKeepalive) = .*\n/gm, '');
+  const minimal = new URL(convertConf(minimalConfig, 'Germany WG.conf'));
+  assert.equal(decodeURIComponent(minimal.hash.slice(1)), 'Germany WG');
+  for (const field of ['dns','mtu','presharedKey','keepalive','obfs','obfsParam'])
+    assert.equal(minimal.searchParams.has(field), false);
+});
+
+test('partial AWG is rejected with a missing-field error and invalid integers explain the range', () => {
+  assert.throws(() => convertConf(wireguard.replace('[Peer]', 'S1 = 12\n[Peer]')),
+    /AWG.*отсутствует обязательное поле Jc/);
+  assert.throws(() => convertConf(profile.replace('Jc = 4','Jc = invalid')),
+    /Jc.*целое число от 0 до 4294967295/);
+  assert.throws(() => convertConf(wireguard.replace(/^PublicKey = .*\n/m,'')),
+    /WireGuard.*отсутствует обязательное поле PublicKey/);
+  for (const text of [wireguard.replace(key(1),'invalid'),wireguard.replace('0.0.0.0/0, ::/0','10.0.0.0/8')])
+    assert.throws(() => convertConf(text));
+});
 
 test('AWG2 link preserves keys, IPs and obfuscation with a Unicode title', () => {
   const link = new URL(convertConf('\uFEFF' + profile.replaceAll('\n', '\r\n'), 'Тест_nl.conf'));

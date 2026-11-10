@@ -5,20 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; worker-src 'none'">
 <meta name="referrer" content="no-referrer">
-<title>AWG / TrustTunnel → Shadowrocket · Локальный конвертер</title>
-<meta name="description" content="Преобразуйте AWG и TrustTunnel из .conf, .vpn, Mihomo YAML/JSON или ZIP в ссылки для Shadowrocket прямо в браузере. Без отправки файла и ключей на сервер.">
+<title>WG / AWG / TrustTunnel → Shadowrocket · Локальный конвертер</title>
+<meta name="description" content="Преобразуйте WG, AWG и TrustTunnel из .conf, .vpn, Mihomo YAML/JSON или ZIP в ссылки для Shadowrocket прямо в браузере. Без отправки файла и ключей на сервер.">
 <!-- STYLES -->
 </head>
 <body><main id="converter">
-<header><a class="brand" href="https://simonerrror.github.io/ShadowRocket/">🥔 <span>MotivatoPotato</span></a><span class="badge">AWG / TrustTunnel → Shadowrocket</span></header>
+<header><a class="brand" href="https://simonerrror.github.io/ShadowRocket/">🥔 <span>MotivatoPotato</span></a><span class="badge">WG / AWG / TrustTunnel → Shadowrocket</span></header>
 <nav aria-label="Разделы сайта" class="site-nav"><a href="https://simonerrror.github.io/ShadowRocket/">Главная</a><a href="https://simonerrror.github.io/ShadowRocket/#shadowrocket">Shadowrocket</a><a href="https://simonerrror.github.io/ShadowRocket/#clash">Clash</a><a href="https://simonerrror.github.io/ShadowRocket/#incy">INCY</a></nav>
-<div class="intro"><p class="eyebrow">ФАЙЛ ОСТАЁТСЯ У ВАС</p><h1>Из AWG и TrustTunnel —<br>в <em>Shadowrocket.</em></h1><p class="lead">Добавьте AWG-профили или конфиг Mihomo с TrustTunnel — файлами, ZIP или текстом. Передайте весь набор в Shadowrocket одним действием. Преобразование выполняется в этой вкладке.</p></div>
-<section class="workspace" aria-label="Преобразование AWG и TrustTunnel">
+<div class="intro"><p class="eyebrow">ФАЙЛ ОСТАЁТСЯ У ВАС</p><h1>Из WG, AWG и TrustTunnel —<br>в <em>Shadowrocket.</em></h1><p class="lead">Добавьте профили WG/AWG или конфиг Mihomo с TrustTunnel — файлами, ZIP или текстом. Передайте весь набор в Shadowrocket одним действием. Преобразование выполняется в этой вкладке.</p></div>
+<section class="workspace" aria-label="Преобразование WG, AWG и TrustTunnel">
 <form autocomplete="off">
 <div class="step"><span>01</span><h2>Добавьте профили</h2></div>
-<label for="config-file">AWG и Mihomo · .conf, .vpn, YAML/JSON, ZIP</label>
+<label for="config-file">WG, AWG и Mihomo · .conf, .vpn, YAML/JSON, ZIP</label>
 <input id="config-file" type="file" multiple accept=".conf,.vpn,.yaml,.yml,.json,.zip" aria-describedby="file-hint">
-<p id="file-hint" class="hint">До 100 узлов. .conf — до 64 КиБ, .vpn и YAML/JSON — до 2 МиБ, ZIP — до 8 МиБ; весь набор — до 16 МиБ. Из Mihomo извлекаются встроенные узлы TrustTunnel.</p>
+<p id="file-hint" class="hint">До 100 узлов. .conf — до 64 КиБ, .vpn и YAML/JSON — до 2 МиБ, ZIP — до 8 МиБ; весь набор — до 16 МиБ. WG и AWG распознаются по полям конфига и могут находиться в одном ZIP. Из Mihomo извлекаются встроенные узлы TrustTunnel.</p>
 <label for="vpn-text">Текст .vpn или конфиг Mihomo</label>
 <textarea id="vpn-text" rows="4" maxlength="2097152" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="vpn-text-hint" placeholder="vpn://… или proxies: …"></textarea>
 <p id="vpn-text-hint" class="hint">Вставьте vpn://, JSON Amnezia или YAML/JSON Mihomo, до 2 МиБ. Файлы выбирать необязательно. Если добавить и текст, и файлы, они объединятся в один набор.</p>

@@ -41,11 +41,11 @@ async function vpnProfiles(data, filename) {
   if (!Array.isArray(root.containers) || root.containers.length > 100) failInput('В .vpn нет допустимого списка контейнеров Amnezia.');
   const profiles=[];
   for (const container of root.containers) {
-    if (!container || typeof container !== 'object' || !/^amnezia-awg(?:2)?$/.test(container.container)) continue;
-    const value = container.awg?.last_config;
+    if (!container || typeof container !== 'object' || !/^amnezia-(?:awg(?:2)?|wireguard)$/.test(container.container)) continue;
+    const value = (container.container === 'amnezia-wireguard' ? container.wireguard : container.awg)?.last_config;
     const last = typeof value === 'string' ? jsonObject(value) : value;
     if (!last || typeof last.config !== 'string' || textBytes(last.config) > 65536)
-      failInput('В .vpn нет готового клиентского AWG .conf. Экспортируйте подключение AWG, а не доступ к серверу.');
+      failInput('В .vpn нет готового клиентского WG/AWG .conf. Экспортируйте подключение WG/AWG.');
     const stem = typeof root.description === 'string' && root.description.trim()
       ? root.description.trim() : filename.replace(/\.vpn$/i,'');
     const text = last.config.replace(/^[ \t]*DNS[ \t]*=[^\r\n]*/gm, line =>
@@ -58,7 +58,7 @@ async function vpnProfiles(data, filename) {
       }));
     profiles.push({name:stem + (profiles.length ? ` ${profiles.length+1}` : '') + '.conf',text});
   }
-  if (!profiles.length) failInput('В .vpn нет клиентских профилей AWG.');
+  if (!profiles.length) failInput('В .vpn нет клиентских профилей WG/AWG.');
   return profiles;
 }
 
@@ -83,6 +83,8 @@ export async function convertFiles(files, pasted='') {
     }
   };
   for (const [index,file] of files.entries()) {
+    const source = text && index === files.length-1 ? 'Вставленный текст' : `Файл ${index+1}`;
+    let location = source;
     try {
       const limit = /\.zip$/i.test(file.name) ? 8*1024*1024 : /\.(?:vpn|ya?ml|json)$/i.test(file.name) ? VPN_LIMIT : 65536;
       if (!/\.(?:conf|vpn|zip|ya?ml|json)$/i.test(file.name) || file.size > limit)
@@ -93,7 +95,9 @@ export async function convertFiles(files, pasted='') {
       const entries = /\.zip$/i.test(file.name)
         ? await unpackProfileZip(buffer,{extensions:/\.(?:conf|vpn|ya?ml|json)$/i,binary:true})
         : [{name:file.name,data:new Uint8Array(buffer)}];
-      for (const entry of entries) {
+      for (const [entryIndex,entry] of entries.entries()) {
+        const entryLocation = source + (/\.zip$/i.test(file.name) ? `, запись ${entryIndex+1}` : '');
+        location = entryLocation;
         expanded += entry.data.byteLength;
         if (expanded > TOTAL_LIMIT) failInput('Распакованный набор больше 16 МиБ.');
         if(/\.(?:ya?ml|json)$/i.test(entry.name)) {
@@ -105,18 +109,19 @@ export async function convertFiles(files, pasted='') {
         }
         const profiles = /\.vpn$/i.test(entry.name) ? await vpnProfiles(entry.data,entry.name)
           : [{name:entry.name,text:decodeText(entry.data)}];
-        for (const profile of profiles) {
+        for (const [profileIndex,profile] of profiles.entries()) {
+          location = entryLocation + (/\.vpn$/i.test(entry.name) ? `, профиль ${profileIndex+1}` : '');
           configs += textBytes(profile.text);
           if (configs > TOTAL_LIMIT) failInput('Допускается до 100 профилей и 16 МиБ конфигов.');
           const link = convertConf(profile.text,profile.name);
-          add([{link,name:decodeURIComponent(link.split('#')[1]),identity:'awg:'+link.split('#')[0]}]);
+          add([{link,name:decodeURIComponent(link.split('#')[1]),identity:'wg:'+link.split('#')[0]}]);
         }
       }
     } catch (error) {
       // Only our converter messages can include field names; never echo parser input.
       const detail = error instanceof Error && !['SyntaxError','TypeError','RangeError'].includes(error.name)
         ? error.message : 'Некорректный профиль или архив.';
-      failInput(`Файл ${index+1}: ${detail}`);
+      failInput(`${location}. ${detail}`);
     }
   }
   return {nodes,notes:[...(skipped?[`Пропущено узлов других протоколов: ${skipped}.`]:[]),...notes]};

@@ -1,6 +1,6 @@
 import {shadowrocketName} from '../clash/src/protocol-converters.mjs';
 
-// Browser port of the maintained AWG → Shadowrocket conversion contract.
+// WG and AWG share connection validation and the Shadowrocket wg:// contract.
 // Only pure conversion lives here; no I/O, storage, or network APIs.
 const legacy = ['Jc','Jmin','Jmax','S1','S2','H1','H2','H3','H4'];
 const awg2 = ['Jc','Jmin','Jmax','S1','S2','S3','S4','H1','H2','H3','H4','I1','I2','I3','I4','I5'];
@@ -10,9 +10,10 @@ const extended = {
   KeepaliveTimeout:'keepalive_timeout', MaxHandshakeAttempts:'max_handshake_attempts',
   RandomTrailers:'random_trailers', DisableCookies:'disable_cookies',
 };
-const fail = field => { throw new Error(`Проверьте поле ${field}.`); };
+const fail = field => { throw new Error(`Недопустимое значение поля ${field}.`); };
 function uint(value, field, max = 4294967295) {
-  if (!/^[0-9]+$/.test(value) || value.length > String(max).length || Number(value) > max) fail(field);
+  if (!/^[0-9]+$/.test(value) || value.length > String(max).length || Number(value) > max)
+    throw new Error(`В поле ${field} требуется целое число от 0 до ${max}.`);
   return Number(value);
 }
 function range(value, field, max = 65535) {
@@ -73,16 +74,22 @@ export function convertConf(text, filename = 'profile.conf') {
   const allowedPeer = new Set(['PublicKey','PresharedKey','AllowedIPs','Endpoint','PersistentKeepalive']);
   if ([...inter.keys()].some(f => !allowedInterface.has(f)) || [...peer.keys()].some(f => !allowedPeer.has(f)))
     throw new Error('В .conf есть неподдерживаемое поле. Преобразование остановлено.');
+  const isAwg = [...awg2,...Object.keys(extended)].some(f => inter.has(f));
   const isExtended = [...awg2.filter(f => !legacy.includes(f)),...Object.keys(extended)].some(f => inter.has(f));
-  const fields = isExtended ? awg2 : legacy;
-  for (const f of ['PrivateKey','Address',...fields]) if (!inter.has(f)) fail(f);
-  for (const f of ['PublicKey','AllowedIPs','Endpoint']) if (!peer.has(f)) fail(f);
+  const fields = isExtended ? awg2 : isAwg ? legacy : [];
+  const protocol = isAwg ? 'AWG' : 'WireGuard';
+  for (const f of ['PrivateKey','Address',...fields]) if (!inter.has(f))
+    throw new Error(`В профиле ${protocol} отсутствует обязательное поле ${f}.`);
+  for (const f of ['PublicKey','AllowedIPs','Endpoint']) if (!peer.has(f))
+    throw new Error(`В профиле ${protocol} отсутствует обязательное поле ${f}.`);
   key(inter.get('PrivateKey'), 'PrivateKey'); key(peer.get('PublicKey'), 'PublicKey');
   if (peer.has('PresharedKey')) key(peer.get('PresharedKey'), 'PresharedKey');
-  uint(inter.get('Jc'), 'Jc');
-  if (uint(inter.get('Jmin'), 'Jmin') > uint(inter.get('Jmax'), 'Jmax')) fail('Jmin/Jmax');
+  if (isAwg) {
+    uint(inter.get('Jc'), 'Jc');
+    if (uint(inter.get('Jmin'), 'Jmin') > uint(inter.get('Jmax'), 'Jmax')) fail('Jmin/Jmax');
+  }
   for (const f of fields.filter(f => f.startsWith('S'))) uint(inter.get(f), f, 65535);
-  for (const f of ['H1','H2','H3','H4']) {
+  for (const f of fields.filter(f => f.startsWith('H'))) {
     if (isExtended) range(inter.get(f), f, 4294967295); else uint(inter.get(f), f);
   }
   for (const f of fields.filter(f => f.startsWith('I'))) {
@@ -127,9 +134,11 @@ export function convertConf(text, filename = 'profile.conf') {
     uint(peer.get('PersistentKeepalive'), 'PersistentKeepalive', 65535);
     query.keepalive = peer.get('PersistentKeepalive');
   }
-  query.obfs = 'amneziawg'; query.obfsParam = JSON.stringify(obfs);
+  if (isAwg) {
+    query.obfs = 'amneziawg'; query.obfsParam = JSON.stringify(obfs);
+  }
   if (inter.has('MTU')) { uint(inter.get('MTU'), 'MTU', 65535); query.mtu = inter.get('MTU'); }
-  const version = ['RandomTrailers','DisableCookies'].some(field => inter.has(field)) ? 'AWG3.1'
+  const version = !isAwg ? 'WG' : ['RandomTrailers','DisableCookies'].some(field => inter.has(field)) ? 'AWG3.1'
     : Object.keys(extended).some(field => inter.has(field)) ? 'AWG3' : isExtended ? 'AWG2' : 'AWG';
   const stem = String(filename).replace(/\.conf$/i, '').replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 200) || 'profile';
   const flag = {nl:'🇳🇱',se:'🇸🇪',si:'🇸🇮'}[stem.split('_').at(-1).toLowerCase()];

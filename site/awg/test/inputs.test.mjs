@@ -24,6 +24,7 @@ PublicKey = ${key(2)}
 AllowedIPs = 0.0.0.0/0
 Endpoint = vpn.example.test:51820
 `;
+const wireguard = conf.replace(/^(?:Jc|Jmin|Jmax|S[12]|H[1-4]) = .*\n/gm, '');
 const config = (text=conf,description='Тест') => ({description, containers:[{container:'amnezia-awg',awg:{last_config:JSON.stringify({config:text})}}]});
 const json = data => Buffer.from(JSON.stringify(data));
 function compress(data) {
@@ -36,6 +37,48 @@ function zip(entries,method=8) {
   const code = 'import sys,json,io,zipfile,base64\nb=io.BytesIO()\nwith zipfile.ZipFile(b,"w",compression=int(sys.argv[1])) as z:\n for name,data in json.load(sys.stdin).items(): z.writestr(name,base64.b64decode(data))\nsys.stdout.buffer.write(b.getvalue())';
   return execFileSync('python3',['-c',code,String(method)], {input:JSON.stringify(Object.fromEntries(Object.entries(entries).map(([name,data])=>[name,Buffer.from(data).toString('base64')])))});
 }
+
+test('mixed WG and AWG files and ZIP preserve every profile in order', async () => {
+  const wg = wireguard.replace('51820','51821');
+  for (const inputs of [[file('first.conf',conf),file('second.conf',wg)],
+    [file('mixed.zip',zip({'first.conf':conf,'second.conf':wg}))]]) {
+    const result=await convertFiles(inputs);
+    assert.deepEqual(result.nodes.map(node=>node.name),['first AWG','second WG']);
+    assert.deepEqual(result.nodes.map(node=>new URL(node.link).port),['51820','51821']);
+    assert.equal(new URL(result.nodes[0].link).searchParams.get('obfs'),'amneziawg');
+    assert.equal(new URL(result.nodes[1].link).searchParams.has('obfs'),false);
+  }
+});
+
+test('plain WG inside supported Amnezia containers works as a file and pasted vpn text', async () => {
+  for (const container of ['amnezia-awg','amnezia-awg2','amnezia-wireguard']) {
+    const protocol=container==='amnezia-wireguard'?'wireguard':'awg';
+    const lastConfig=JSON.stringify({config:wireguard.replace('1.1.1.1','$PRIMARY_DNS')});
+    const data={
+      description:'Тест',
+      dns1:'9.9.9.9',
+      containers:[{container,[protocol]:{last_config:lastConfig}}],
+    };
+    for (const result of [await convertFiles([file('plain.vpn',vpn(data))]),await convertFiles([],vpn(data))]) {
+      assert.equal(result.nodes[0].name,'Тест WG');
+      assert.equal(new URL(result.nodes[0].link).searchParams.get('dns'),'9.9.9.9');
+      assert.equal(new URL(result.nodes[0].link).searchParams.has('obfs'),false);
+    }
+  }
+});
+
+test('errors locate the bad ZIP entry and vpn profile without exposing input names or values', async () => {
+  const marker='synthetic-secret-marker';
+  const broken=conf.replace(/^Jc = .*\n/m,'');
+  await assert.rejects(convertFiles([file(marker+'.zip',zip({'first.conf':wireguard,[marker+'.conf']:broken}))]),error=>{
+    assert.match(error.message,/Файл 1, запись 2.*AWG.*отсутствует обязательное поле Jc/);
+    assert.equal(error.message.includes(marker),false);
+    assert.equal(error.message.includes(key(1)),false);
+    return true;
+  });
+  const data=config(); data.containers.push(config(broken).containers[0]);
+  await assert.rejects(convertFiles([],vpn(data)),/Вставленный текст, профиль 2.*отсутствует обязательное поле Jc/);
+});
 
 test('multiple selected .conf and .vpn produce one complete list with original names', async () => {
   const result = await convertLinks([file('first.conf',conf),file('second.vpn',vpn(config(conf.replace('51820','51821'),'Второй')))]);

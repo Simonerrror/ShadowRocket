@@ -2,6 +2,8 @@
 
 ## Lessons
 
+- When a converter failure is reported with a new file or pasted link, reproduce that exact input before claiming it is fixed. A previously tested file does not verify another input. Keep private inputs out of public fixtures and diagnostic output.
+
 - When changing GFN routing for a region-restricted catalog, verify catalog visibility, session creation and streaming separately. Restrict countries only for endpoints with evidence of that requirement; a working country is not an exhaustive allowlist, and catalog restrictions do not establish that session APIs need the same proxy.
 
 - When generating Shadowrocket node names, preserve the detected AWG version in the final suffix (AWG2 or AWG3.1), and use TT or NV for those protocols; normalize existing suffixes without duplication and use the same name in the encoded link, selector and TXT.
@@ -44,8 +46,8 @@ allowlist Gemini, списки russia_extended/voice_ports и модуль Twitc
 | `scripts/build_incy_routing.py` | Генерирует оба профиля INCY и SHA-256 sidecar геоданных |
 | `scripts/build_site.py` | Встраивает проверенные INCY deeplink в `docs/index.html` |
 | `scripts/build_clash_page.py` | Собирает автономный генератор Clash в `docs/clash/index.html` |
-| `scripts/build_awg_page.py` | Собирает автономный конвертер AWG / TrustTunnel в `docs/awg/index.html` |
-| `site/awg/` | Браузерное преобразование AWG и TrustTunnel из Mihomo в ссылки Shadowrocket; только синтетические тесты |
+| `scripts/build_awg_page.py` | Собирает автономный конвертер WG / AWG / TrustTunnel в `docs/awg/index.html` |
+| `site/awg/` | Браузерное преобразование WG, AWG и TrustTunnel из Mihomo в ссылки Shadowrocket; только синтетические тесты |
 | `site/index.html` | Исходник страницы с прямыми ссылками импорта |
 | `docs/index.html`, `docs/images/`, `docs/favicon.svg` | Публикуемая страница GitHub Pages и её ресурсы |
 
