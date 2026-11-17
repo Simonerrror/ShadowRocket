@@ -124,6 +124,17 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/wechat_d
 блокирующих правил. Модуль направляет напрямую только домены WeChat и нужные
 CDN; весь Tencent/QQ он не обходит.
 
+### Path of Exile напрямую
+
+Модуль `modules/pathofexile_direct.module` управляет прямым доступом к Path of Exile
+и `poecdn.com`. Правила PoE вынесены из общего списка `whitelist_direct` в этот модуль.
+
+Обновите удалённый список `whitelist_direct` в Shadowrocket. Импортируйте модуль
+через **Config → Modules**. При включённом модуле его правила направляют PoE через
+`DIRECT`. При выключенном модуле применяются обычные правила активного профиля.
+В основном профиле сайт использует `PROXY`, если раньше не сработало другое правило.
+Для сравнения открывайте сайт заново после переключения модуля.
+
 ## Блокировка рекламы
 
 Для анти-рекламы можно использовать модуль `modules/anti_advertising.module` по ссылке:
@@ -167,6 +178,7 @@ https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/rules/anti_adver
 | 20_01 · GFN Direct | `modules/GFN-AM.module` | Каталог через PROXY без фильтра стран; авторизация, запуск и поток DIRECT |
 | 20_02 · WeChat Direct | `modules/wechat_direct.module` | WeChat и его CDN через DIRECT |
 | 20_03 · Google AI Smart DNS | `modules/google_ai_smart_dns_mobile.module` | Google AI через DIRECT со Smart DNS из локальной копии DNS Override Example |
+| 20_04 · Path of Exile Direct | `modules/pathofexile_direct.module` | Переключаемый DIRECT для Path of Exile и его CDN |
 | 90_01 · Anti-Advertising | `modules/anti_advertising.module` | Общая блокировка после сервисных исключений |
 
 Включайте только один модуль уровня 10. Сервисные исключения уровня 20 имеют
@@ -199,4 +211,5 @@ DOMAIN-KEYWORD, DOMAIN-SUFFIX и IP-CIDR правила. Остальные пр
 | 20_01 | GFN Direct | [Добавить](https://simonerrror.github.io/ShadowRocket/#module-gfn) |
 | 20_02 | WeChat Direct | [Добавить](https://simonerrror.github.io/ShadowRocket/#module-wechat) |
 | 20_03 | Google AI Smart DNS | [Добавить](https://simonerrror.github.io/ShadowRocket/#module-google-ai) |
+| 20_04 | Path of Exile Direct | [Добавить](https://simonerrror.github.io/ShadowRocket/#module-pathofexile) |
 | 90_01 | Anti-Advertising | [Добавить](https://simonerrror.github.io/ShadowRocket/#module-anti-advertising) |

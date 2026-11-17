@@ -125,6 +125,22 @@ class ShadowrocketProfilesTests(unittest.TestCase):
             proxy = next(i for i, rule in enumerate(routing) if "greylist_proxy.list" in rule)
             self.assertLess(direct, proxy)
 
+    def test_pathofexile_direct_is_controlled_by_its_optional_module(self) -> None:
+        expected = [
+            "DOMAIN-SUFFIX,pathofexile.com,DIRECT",
+            "DOMAIN-SUFFIX,poecdn.com,DIRECT",
+            "DOMAIN-KEYWORD,pathofexile,DIRECT",
+            "DOMAIN-KEYWORD,pasthofexile,DIRECT",
+        ]
+        for path in ("rules/whitelist_direct.list", "distillate/text/domain/sr-direct.txt"):
+            content = (REPO_ROOT / path).read_text()
+            for marker in ("pathofexile", "poecdn.com", "pasthofexile"):
+                with self.subTest(path=path, marker=marker):
+                    self.assertNotIn(marker, content)
+        module = REPO_ROOT / "modules/pathofexile_direct.module"
+        self.assertEqual(section_lines(module, "Rule"), expected)
+        self.assertEqual(section_lines(module, "General"), [])
+
     def test_googlevideo_uses_geoip_exception_list_before_ru_direct(self) -> None:
         self.assertIn("DOMAIN-SUFFIX,googlevideo.com",
                       (REPO_ROOT / "rules/greylist_proxy.list").read_text().splitlines())

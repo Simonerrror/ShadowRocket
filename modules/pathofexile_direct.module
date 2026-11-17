@@ -1,0 +1,9 @@
+#!url=https://raw.githubusercontent.com/Simonerrror/ShadowRocket/main/modules/pathofexile_direct.module
+#!name=20_04 · Path of Exile Direct
+#!desc=Enable direct routing for Path of Exile and its CDN. Disable to use the profile rules.
+
+[Rule]
+DOMAIN-SUFFIX,pathofexile.com,DIRECT
+DOMAIN-SUFFIX,poecdn.com,DIRECT
+DOMAIN-KEYWORD,pathofexile,DIRECT
+DOMAIN-KEYWORD,pasthofexile,DIRECT

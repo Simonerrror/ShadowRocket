@@ -18,10 +18,6 @@ domain:vk.cc
 domain:userapi.com
 domain:mycdn.me
 domain:2gis.com
-domain:pathofexile.com
-domain:poecdn.com
-keyword:pathofexile
-keyword:pasthofexile
 domain:bee-link.com.cn
 domain:com-x.life
 domain:ru
